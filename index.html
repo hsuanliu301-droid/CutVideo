@@ -1,1 +1,1537 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>DanceCut Studio 剪舞工坊</title>
+  <!-- Google Fonts & 開源免費繁體字體庫 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chiron+Hei+HK:wght@400;700&family=Chiron+Sung+HK:wght@400;700&family=Iansui&family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;700;900&family=Noto+Serif+TC:wght@400;700&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+  <style>
+    /* 額外開源繁體字體 CDN (粉圓體、台北黑體、辰宇落雁體、源泉圓體、得意黑、俐方體11號、探空體) */
+    @import url('https://cdn.jsdelivr.net/npm/open-huninn-font@1.1.0/font.css');
+    @import url('https://cdn.jsdelivr.net/npm/cubic-11@1.0.1/fonts/web/cubic-11.css');
+    @import url('https://cdn.jsdelivr.net/npm/smiley-sans@2.0.1/dist/smiley-sans.css');
 
+    @font-face {
+      font-family: 'Taipei Sans TC';
+      src: url('https://cdn.jsdelivr.net/gh/max32002/taipeisanstc@master/webfont/TaipeiSansTCBeta-Regular.woff2') format('woff2');
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'ChenYuluoyan';
+      src: url('https://cdn.jsdelivr.net/gh/Chenyu-otf/chenyuluoyan_thin@main/ChenYuluoyan-Thin-Monospaced.woff2') format('woff2');
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'GenSenRounded';
+      src: url('https://cdn.jsdelivr.net/gh/ButTaiwan/gensen-font@master/webfont/GenSenRounded-M.woff2') format('woff2');
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'TASA Explorer';
+      src: url('https://cdn.jsdelivr.net/gh/ButTaiwan/tasa-explorer@main/webfont/TASAExplorer-Medium.woff2') format('woff2');
+      font-display: swap;
+    }
+
+    :root {
+      --bg-dark: #0f1014;
+      --bg-panel: #181a20;
+      --bg-card: #22252e;
+      --accent: #ff3b7f;
+      --accent-soft: rgba(255, 59, 127, 0.2);
+      --gold: #ffcc33;
+      --cyan: #2ce6c3;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border: #2c303c;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Bar */
+    .topbar {
+      height: 48px;
+      padding: 0 12px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      font-weight: 900;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand span {
+      background: linear-gradient(135deg, #ff3b7f, #ff8a3d);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .ratio-group {
+      display: flex;
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .ratio-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .ratio-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-export {
+      background: linear-gradient(135deg, #ff3b7f, #ff6b4a);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Stage / Preview Area */
+    .stage-wrap {
+      flex: 1;
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #090a0d;
+      position: relative;
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    canvas#previewCanvas {
+      background: #000;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+      border-radius: 6px;
+      max-width: 100%;
+      max-height: 100%;
+      touch-action: none;
+    }
+
+    .stage-hint {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.55);
+      color: #d1d5db;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 99px;
+      pointer-events: none;
+    }
+
+    /* Playback Controls */
+    .transport {
+      height: 40px;
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      flex-shrink: 0;
+    }
+
+    .time-readout {
+      font-variant-numeric: tabular-nums;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .time-readout strong {
+      color: var(--text-main);
+    }
+
+    .play-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: var(--text-main);
+      color: var(--bg-dark);
+      font-size: 13px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .chip-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Timeline */
+    .timeline-area {
+      height: 145px;
+      background: #13151a;
+      position: relative;
+      overflow-x: auto;
+      overflow-y: hidden;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .timeline-inner {
+      position: relative;
+      height: 100%;
+      min-width: 100%;
+      padding: 22px 45vw 10px 45vw;
+    }
+
+    .ruler {
+      position: absolute;
+      top: 0;
+      left: 45vw;
+      right: 45vw;
+      height: 20px;
+      border-bottom: 1px solid #262934;
+      display: flex;
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
+    .playhead {
+      position: fixed;
+      left: 50%;
+      width: 2px;
+      height: 145px;
+      background: #fff;
+      z-index: 20;
+      pointer-events: none;
+      box-shadow: 0 0 6px rgba(255,255,255,0.8);
+    }
+
+    .playhead::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -5px;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 8px solid #fff;
+    }
+
+    .track-row {
+      height: 34px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .clip-block {
+      height: 32px;
+      background: linear-gradient(90deg, #2d3446, #394258);
+      border: 1.5px solid #4b556e;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+      padding: 0 8px;
+      cursor: pointer;
+    }
+
+    .clip-block.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .trans-node {
+      width: 22px;
+      height: 22px;
+      margin: 0 -6px;
+      z-index: 5;
+      background: var(--bg-panel);
+      border: 1.5px solid var(--cyan);
+      color: var(--cyan);
+      border-radius: 6px;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .kf-diamond {
+      position: absolute;
+      width: 9px;
+      height: 9px;
+      background: var(--gold);
+      transform: translateX(-50%) rotate(45deg);
+      top: 3px;
+      border: 1px solid #000;
+      pointer-events: none;
+    }
+
+    .sub-block {
+      position: absolute;
+      height: 24px;
+      background: rgba(255, 59, 127, 0.28);
+      border: 1px solid var(--accent);
+      border-radius: 5px;
+      font-size: 10px;
+      padding: 0 6px;
+      display: flex;
+      align-items: center;
+      color: #ffd1e1;
+      overflow: hidden;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .sub-block.selected {
+      background: rgba(255, 59, 127, 0.55);
+      color: #fff;
+    }
+
+    .audio-block {
+      position: absolute;
+      height: 24px;
+      background: rgba(44, 230, 195, 0.2);
+      border: 1px solid var(--cyan);
+      border-radius: 5px;
+      font-size: 10px;
+      padding: 0 8px;
+      display: flex;
+      align-items: center;
+      color: #a7f3d0;
+    }
+
+    /* Tool Drawer */
+    .drawer {
+      background: var(--bg-panel);
+      height: 215px;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .drawer-content {
+      flex: 1;
+      padding: 10px 12px;
+      overflow-y: auto;
+      font-size: 12px;
+    }
+
+    .nav-tabs {
+      height: 52px;
+      background: #121318;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .nav-tab {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+
+    .nav-tab.active {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .nav-tab span.icon {
+      font-size: 16px;
+    }
+
+    /* Controls inside Drawer */
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+
+    .control-row label {
+      color: var(--text-muted);
+      font-size: 11px;
+      min-width: 64px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+    }
+
+    input[type="text"], select {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      flex: 1;
+    }
+
+    .pill-group {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+
+    .pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .pill.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .font-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .font-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      text-align: left;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .font-card.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .font-card .sample {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .font-card .meta {
+      font-size: 9px;
+      color: var(--text-muted);
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .box-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 10px 6px;
+      border-radius: 8px;
+      font-size: 11px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .box-btn.primary {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .hidden-input {
+      display: none;
+    }
+
+    #toast {
+      position: fixed;
+      top: 58px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(24, 26, 32, 0.95);
+      border: 1px solid var(--accent);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 12px;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toast">提示訊息</div>
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="brand">🎬 <span>DanceCut</span> 剪舞工坊</div>
+    <div class="ratio-group">
+      <button class="ratio-btn active" data-ratio="9:16">9:16</button>
+      <button class="ratio-btn" data-ratio="16:9">16:9</button>
+      <button class="ratio-btn" data-ratio="1:1">1:1</button>
+    </div>
+    <button class="btn-export" id="exportBtn">匯出影片</button>
+  </div>
+
+  <!-- Stage -->
+  <div class="stage-wrap">
+    <div class="stage-hint" id="stageHint">手指拖曳字幕移動位置 · 雙指可縮放</div>
+    <canvas id="previewCanvas" width="360" height="640"></canvas>
+  </div>
+
+  <!-- Transport -->
+  <div class="transport">
+    <div class="time-readout"><strong id="curTimeLabel">00:00.0</strong> / <span id="totTimeLabel">00:12.0</span></div>
+    <button class="play-btn" id="playBtn">▶</button>
+    <div class="quick-actions">
+      <button class="chip-btn" id="splitBtn">✂️ 分割</button>
+      <button class="chip-btn" id="addDemoBtn">✨ 示範片段</button>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="timeline-area" id="timelineScroll">
+    <div class="playhead"></div>
+    <div class="timeline-inner" id="timelineInner">
+      <div class="ruler" id="ruler"></div>
+      <div class="track-row" id="videoTrack"></div>
+      <div class="track-row" id="subTrack"></div>
+      <div class="track-row" id="audioTrack"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Drawer -->
+  <div class="drawer">
+    <div class="drawer-content" id="drawerContent"></div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="media"><span class="icon">🎞️</span>剪輯</button>
+      <button class="nav-tab" data-tab="keyframe"><span class="icon">◆</span>關鍵幀</button>
+      <button class="nav-tab" data-tab="text"><span class="icon">T</span>文字字庫</button>
+      <button class="nav-tab" data-tab="color"><span class="icon">🎨</span>調色濾鏡</button>
+      <button class="nav-tab" data-tab="audio"><span class="icon">🎵</span>音訊</button>
+    </div>
+  </div>
+
+  <input type="file" id="videoFileInput" class="hidden-input" accept="video/*" multiple />
+  <input type="file" id="audioFileInput" class="hidden-input" accept="audio/*" />
+  <input type="file" id="fontFileInput" class="hidden-input" accept=".ttf,.otf,.woff,.woff2" />
+
+  <script>
+    // ====== 14 款免費開源繁體字體清單 ======
+    const FREE_FONTS = [
+      { name: '思源黑體', family: "'Noto Sans TC', sans-serif", cat: '現代', desc: '清晰百搭 · 教學解說' },
+      { name: '台北黑體', family: "'Taipei Sans TC', 'Noto Sans TC', sans-serif", cat: '現代', desc: '俐落平衡 · Vlog字幕' },
+      { name: '昭源黑體', family: "'Chiron Hei HK', sans-serif", cat: '現代', desc: '現代簡潔 · 時尚標題' },
+      { name: '探空體', family: "'TASA Explorer', sans-serif", cat: '現代', desc: '未來科技 · 帥氣舞風' },
+      { name: '芫荽體', family: "'Iansui', cursive", cat: '手寫', desc: '硬筆楷書 · 生活溫度' },
+      { name: '霞鶩文楷', family: "'LXGW WenKai TC', serif", cat: '手寫', desc: '溫潤楷韻 · 古典抒情' },
+      { name: '辰宇落雁體', family: "'ChenYuluoyan', cursive", cat: '手寫', desc: '飄逸手寫 · 感性歌詞' },
+      { name: 'jf open 粉圓', family: "'jf-openhuninn', sans-serif", cat: '圓體', desc: '圓潤可愛 · 旅遊美食' },
+      { name: '源泉圓體', family: "'GenSenRounded', sans-serif", cat: '圓體', desc: '飽滿圓角 · 親切活潑' },
+      { name: '思源宋體', family: "'Noto Serif TC', serif", cat: '古典', desc: '典雅大氣 · 電影質感' },
+      { name: '昭源宋體', family: "'Chiron Sung HK', serif", cat: '古典', desc: '文學書卷 · 藝文紀錄' },
+      { name: '得意黑', family: "'Smiley Sans', sans-serif", cat: '特色', desc: '斜體張力 · 節拍標題' },
+      { name: '俐方體11號', family: "'Cubic 11', monospace", cat: '特色', desc: '復古像素 · 趣味梗圖' },
+      { name: '站酷快樂體', family: "'ZCOOL KuaiLe', sans-serif", cat: '特色', desc: '動感活潑 · 綜藝字卡' }
+    ];
+
+    const FILTER_PRESETS = [
+      { id: 'none', name: '原圖', b: 100, c: 100, s: 100, warm: 0 },
+      { id: 'dance', name: '練舞室高對比', b: 105, c: 122, s: 112, warm: -5 },
+      { id: 'vlog', name: '日系清新 Vlog', b: 108, c: 94, s: 92, warm: 10 },
+      { id: 'warm', name: '暖陽微光', b: 104, c: 105, s: 115, warm: 22 },
+      { id: 'film', name: '復古膠片', b: 96, c: 114, s: 82, warm: 14 },
+      { id: 'bw', name: '黑白極簡', b: 105, c: 125, s: 0, warm: 0 }
+    ];
+
+    const TRANSITIONS = [
+      { id: 'none', name: '無轉場', icon: '｜' },
+      { id: 'fade', name: '疊化淡入', icon: '◐' },
+      { id: 'zoom', name: '節拍推進', icon: '⊕' },
+      { id: 'flash', name: '節拍閃白', icon: '⚡' },
+      { id: 'slide', name: '向左滑動', icon: '⇄' }
+    ];
+
+    // ====== 核心狀態 ======
+    const PX_PER_SEC = 55;
+    let state = {
+      ratio: '9:16',
+      currentTime: 0,
+      isPlaying: false,
+      activeTab: 'media',
+      selectedClipId: 'clip-1',
+      selectedSubId: 'sub-1',
+      fontFilter: '全部',
+      clips: [
+        {
+          id: 'clip-1',
+          name: '練舞室鏡面 Take 1',
+          duration: 6.0,
+          speed: 1.0,
+          transitionAfter: 'zoom',
+          color: { b: 105, c: 122, s: 112, warm: -5 },
+          isDemo: true,
+          demoTheme: 0,
+          videoEl: null,
+          keyframes: [
+            { t: 0, scale: 1.0, x: 0, y: 0, rot: 0 },
+            { t: 3.0, scale: 1.25, x: 0, y: -35, rot: 0 }
+          ]
+        },
+        {
+          id: 'clip-2',
+          name: '日常咖啡廳 Vlog',
+          duration: 6.0,
+          speed: 1.0,
+          transitionAfter: 'none',
+          color: { b: 108, c: 94, s: 92, warm: 10 },
+          isDemo: true,
+          demoTheme: 1,
+          videoEl: null,
+          keyframes: [
+            { t: 0, scale: 1.0, x: 0, y: 0, rot: 0 }
+          ]
+        }
+      ],
+      subtitles: [
+        {
+          id: 'sub-1',
+          text: 'DANCE PRACTICE · 副歌八拍細節',
+          start: 0.4,
+          duration: 4.5,
+          x: 0.5,
+          y: 0.80,
+          size: 24,
+          font: "'Smiley Sans', sans-serif",
+          color: '#ffffff',
+          stroke: '#ff3b7f',
+          bg: 'rgba(0,0,0,0.55)'
+        },
+        {
+          id: 'sub-2',
+          text: '午後陽光與拿鐵日常 ☕',
+          start: 6.5,
+          duration: 4.8,
+          x: 0.5,
+          y: 0.82,
+          size: 22,
+          font: "'LXGW WenKai TC', serif",
+          color: '#fff8e7',
+          stroke: '#3a2c1a',
+          bg: 'rgba(30,22,14,0.45)'
+        }
+      ],
+      audio: {
+        name: '內建節拍器節奏 120 BPM (示範)',
+        volume: 0.8,
+        url: null,
+        el: null
+      }
+    };
+
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    const timelineScroll = document.getElementById('timelineScroll');
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.opacity = '1';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.style.opacity = '0', 2200);
+    }
+
+    function getTotalDuration() {
+      return state.clips.reduce((acc, c) => acc + c.duration, 0) || 1;
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = (sec % 60).toFixed(1);
+      return `${String(m).padStart(2, '0')}:${s.padStart(4, '0')}`;
+    }
+
+    // ====== 關鍵幀內插計算 ======
+    function getInterpolatedTransform(clip, localT) {
+      const kfs = [...clip.keyframes].sort((a, b) => a.t - b.t);
+      if (kfs.length === 0) return { scale: 1, x: 0, y: 0, rot: 0 };
+      if (localT <= kfs[0].t) return { ...kfs[0] };
+      if (localT >= kfs[kfs.length - 1].t) return { ...kfs[kfs.length - 1] };
+
+      for (let i = 0; i < kfs.length - 1; i++) {
+        const k1 = kfs[i], k2 = kfs[i + 1];
+        if (localT >= k1.t && localT <= k2.t) {
+          const rawRatio = (localT - k1.t) / Math.max(0.001, k2.t - k1.t);
+          // Smoothstep 緩動曲線讓運鏡更自然
+          const ratio = rawRatio * rawRatio * (3 - 2 * rawRatio);
+          return {
+            scale: k1.scale + (k2.scale - k1.scale) * ratio,
+            x: k1.x + (k2.x - k1.x) * ratio,
+            y: k1.y + (k2.y - k1.y) * ratio,
+            rot: k1.rot + (k2.rot - k1.rot) * ratio
+          };
+        }
+      }
+      return { scale: 1, x: 0, y: 0, rot: 0 };
+    }
+
+    // ====== 渲染畫布 ======
+    function renderFrame() {
+      const W = canvas.width;
+      const H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, W, H);
+
+      // 找出目前時間點所屬片段
+      let acc = 0;
+      let activeClip = state.clips[0];
+      let localT = 0;
+      let clipIndex = 0;
+
+      for (let i = 0; i < state.clips.length; i++) {
+        const c = state.clips[i];
+        if (state.currentTime >= acc && state.currentTime < acc + c.duration) {
+          activeClip = c;
+          localT = state.currentTime - acc;
+          clipIndex = i;
+          break;
+        }
+        acc += c.duration;
+        if (i === state.clips.length - 1) {
+          activeClip = c;
+          localT = c.duration;
+          clipIndex = i;
+        }
+      }
+
+      if (activeClip) {
+        const tr = getInterpolatedTransform(activeClip, localT);
+        ctx.save();
+        ctx.translate(W / 2 + tr.x, H / 2 + tr.y);
+        ctx.rotate((tr.rot * Math.PI) / 180);
+        ctx.scale(tr.scale, tr.scale);
+
+        // 套用調色濾鏡
+        const col = activeClip.color;
+        const sepia = col.warm > 0 ? col.warm * 0.6 : 0;
+        const hue = col.warm < 0 ? col.warm * 0.8 : 0;
+        ctx.filter = `brightness(${col.b}%) contrast(${col.c}%) saturate(${col.s}%) sepia(${sepia}%) hue-rotate(${hue}deg)`;
+
+        if (activeClip.videoEl && activeClip.videoEl.readyState >= 2) {
+          const v = activeClip.videoEl;
+          const vRatio = v.videoWidth / v.videoHeight;
+          const cRatio = W / H;
+          let dw = W, dh = H;
+          if (vRatio > cRatio) {
+            dh = H;
+            dw = H * vRatio;
+          } else {
+            dw = W;
+            dh = W / vRatio;
+          }
+          ctx.drawImage(v, -dw / 2, -dh / 2, dw, dh);
+        } else {
+          drawDemoScene(ctx, W, H, activeClip.demoTheme, state.currentTime);
+        }
+        ctx.restore();
+
+        // 片段結尾轉場特效預覽 (最後 0.6 秒)
+        const timeLeft = activeClip.duration - localT;
+        if (timeLeft <= 0.6 && activeClip.transitionAfter !== 'none' && clipIndex < state.clips.length - 1) {
+          const p = 1 - (timeLeft / 0.6); // 0 -> 1
+          if (activeClip.transitionAfter === 'fade') {
+            ctx.fillStyle = `rgba(0, 0, 0, ${p})`;
+            ctx.fillRect(0, 0, W, H);
+          } else if (activeClip.transitionAfter === 'flash') {
+            ctx.fillStyle = `rgba(255, 255, 255, ${Math.sin(p * Math.PI) * 0.85})`;
+            ctx.fillRect(0, 0, W, H);
+          } else if (activeClip.transitionAfter === 'zoom') {
+            ctx.strokeStyle = `rgba(255, 59, 127, ${1 - p})`;
+            ctx.lineWidth = 12 * (1 - p);
+            ctx.strokeRect(p * 30, p * 30, W - p * 60, H - p * 60);
+          } else if (activeClip.transitionAfter === 'slide') {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(W * (1 - p), 0, W * p, H);
+          }
+        }
+      }
+
+      // 繪製字幕層
+      state.subtitles.forEach(sub => {
+        if (state.currentTime >= sub.start && state.currentTime <= sub.start + sub.duration) {
+          ctx.save();
+          ctx.font = `700 ${sub.size}px ${sub.font}`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+
+          const sx = sub.x * W;
+          const sy = sub.y * H;
+          const metrics = ctx.measureText(sub.text);
+          const padX = 14, padY = 8;
+          const boxW = metrics.width + padX * 2;
+          const boxH = sub.size + padY * 2;
+
+          if (sub.bg && sub.bg !== 'transparent') {
+            ctx.fillStyle = sub.bg;
+            ctx.beginPath();
+            ctx.roundRect(sx - boxW / 2, sy - boxH / 2, boxW, boxH, 8);
+            ctx.fill();
+          }
+
+          if (sub.stroke) {
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = sub.stroke;
+            ctx.strokeText(sub.text, sx, sy);
+          }
+
+          ctx.fillStyle = sub.color;
+          ctx.fillText(sub.text, sx, sy);
+
+          // 選取框提示
+          if (sub.id === state.selectedSubId && !state.isPlaying) {
+            ctx.strokeStyle = '#ff3b7f';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 3]);
+            ctx.strokeRect(sx - boxW / 2 - 4, sy - boxH / 2 - 4, boxW + 8, boxH + 8);
+          }
+          ctx.restore();
+        }
+      });
+
+      document.getElementById('curTimeLabel').textContent = formatTime(state.currentTime);
+      document.getElementById('totTimeLabel').textContent = formatTime(getTotalDuration());
+    }
+
+    // 內建動態示範畫面（讓使用者打開就能測試運鏡、濾鏡與字幕）
+    function drawDemoScene(ctx, W, H, theme, t) {
+      const grad = ctx.createLinearGradient(-W/2, -H/2, W/2, H/2);
+      if (theme === 0) {
+        grad.addColorStop(0, '#1f1c2c');
+        grad.addColorStop(1, '#928dab');
+      } else {
+        grad.addColorStop(0, '#3a2d28');
+        grad.addColorStop(1, '#c99e7c');
+      }
+      ctx.fillStyle = grad;
+      ctx.fillRect(-W/2, -H/2, W, H);
+
+      // 鏡面地板透視線
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 1;
+      for (let i = -3; i <= 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * 40, 20);
+        ctx.lineTo(i * 110, H/2);
+        ctx.stroke();
+      }
+
+      // 動態節拍舞者剪影幾何動畫
+      const beat = Math.sin(t * Math.PI * 2);
+      const bounce = Math.abs(Math.cos(t * Math.PI * 2)) * 14;
+      ctx.fillStyle = theme === 0 ? '#ff3b7f' : '#ffe6c7';
+      ctx.beginPath();
+      ctx.arc(beat * 18, -30 - bounce, 22, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 8;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(beat * 18, -5 - bounce);
+      ctx.lineTo(beat * 10, 55 - bounce * 0.5);
+      // 手臂律動
+      ctx.moveTo(beat * 15, 10 - bounce);
+      ctx.lineTo(beat * 15 - 45, -15 + beat * 20);
+      ctx.moveTo(beat * 15, 10 - bounce);
+      ctx.lineTo(beat * 15 + 45, -15 - beat * 20);
+      ctx.stroke();
+    }
+
+    // ====== 渲染時間軸 ======
+    function renderTimeline() {
+      const total = getTotalDuration();
+      const totalPx = total * PX_PER_SEC;
+      const ruler = document.getElementById('ruler');
+      ruler.style.width = totalPx + 'px';
+      ruler.innerHTML = '';
+      for (let s = 0; s <= Math.ceil(total); s++) {
+        const mark = document.createElement('div');
+        mark.style.position = 'absolute';
+        mark.style.left = (s * PX_PER_SEC) + 'px';
+        mark.textContent = `${s}s`;
+        ruler.appendChild(mark);
+      }
+
+      // 影片軌道
+      const vTrack = document.getElementById('videoTrack');
+      vTrack.innerHTML = '';
+      state.clips.forEach((clip, idx) => {
+        const el = document.createElement('div');
+        el.className = 'clip-block' + (clip.id === state.selectedClipId ? ' selected' : '');
+        el.style.width = (clip.duration * PX_PER_SEC) + 'px';
+        el.textContent = `${clip.name} (${clip.duration.toFixed(1)}s)`;
+        el.onclick = () => {
+          state.selectedClipId = clip.id;
+          renderTimeline();
+          renderDrawer();
+        };
+
+        // 關鍵幀菱形標記
+        clip.keyframes.forEach(kf => {
+          const d = document.createElement('div');
+          d.className = 'kf-diamond';
+          d.style.left = (kf.t * PX_PER_SEC) + 'px';
+          el.appendChild(d);
+        });
+
+        vTrack.appendChild(el);
+
+        // 轉場按鈕
+        if (idx < state.clips.length - 1) {
+          const trBtn = document.createElement('div');
+          trBtn.className = 'trans-node';
+          const trObj = TRANSITIONS.find(t => t.id === clip.transitionAfter) || TRANSITIONS[0];
+          trBtn.textContent = trObj.icon;
+          trBtn.title = '切換轉場特效';
+          trBtn.onclick = (e) => {
+            e.stopPropagation();
+            const curIdx = TRANSITIONS.findIndex(t => t.id === clip.transitionAfter);
+            const next = TRANSITIONS[(curIdx + 1) % TRANSITIONS.length];
+            clip.transitionAfter = next.id;
+            showToast(`已切換轉場：${next.name}`);
+            renderTimeline();
+            renderFrame();
+          };
+          vTrack.appendChild(trBtn);
+        }
+      });
+
+      // 字幕軌道
+      const sTrack = document.getElementById('subTrack');
+      sTrack.innerHTML = '';
+      state.subtitles.forEach(sub => {
+        const el = document.createElement('div');
+        el.className = 'sub-block' + (sub.id === state.selectedSubId ? ' selected' : '');
+        el.style.left = (sub.start * PX_PER_SEC) + 'px';
+        el.style.width = (sub.duration * PX_PER_SEC) + 'px';
+        el.textContent = `T ${sub.text}`;
+        el.onclick = () => {
+          state.selectedSubId = sub.id;
+          state.activeTab = 'text';
+          updateTabsUI();
+          renderTimeline();
+          renderDrawer();
+        };
+        sTrack.appendChild(el);
+      });
+
+      // 音訊軌道
+      const aTrack = document.getElementById('audioTrack');
+      aTrack.innerHTML = '';
+      const aEl = document.createElement('div');
+      aEl.className = 'audio-block';
+      aEl.style.left = '0px';
+      aEl.style.width = totalPx + 'px';
+      aEl.textContent = `🎵 ${state.audio.name}`;
+      aTrack.appendChild(aEl);
+    }
+
+    // 時間軸滑動同步播放頭
+    timelineScroll.addEventListener('scroll', () => {
+      if (state.isPlaying) return;
+      const t = Math.max(0, Math.min(getTotalDuration(), timelineScroll.scrollLeft / PX_PER_SEC));
+      state.currentTime = t;
+      syncVideoElements();
+      renderFrame();
+    });
+
+    function syncVideoElements() {
+      let acc = 0;
+      state.clips.forEach(c => {
+        if (c.videoEl) {
+          if (state.currentTime >= acc && state.currentTime < acc + c.duration) {
+            const targetT = (state.currentTime - acc) * c.speed;
+            if (Math.abs(c.videoEl.currentTime - targetT) > 0.15) {
+              c.videoEl.currentTime = Math.min(c.videoEl.duration || 999, targetT);
+            }
+          } else {
+            c.videoEl.pause();
+          }
+        }
+        acc += c.duration;
+      });
+    }
+
+    // ====== 底部抽屜工具面板 ======
+    function renderDrawer() {
+      const container = document.getElementById('drawerContent');
+      const clip = state.clips.find(c => c.id === state.selectedClipId) || state.clips[0];
+      const sub = state.subtitles.find(s => s.id === state.selectedSubId) || state.subtitles[0];
+
+      if (state.activeTab === 'media') {
+        container.innerHTML = `
+          <div class="action-grid" style="margin-bottom:12px;">
+            <button class="box-btn primary" onclick="document.getElementById('videoFileInput').click()">＋ 匯入手機影片</button>
+            <button class="box-btn" id="drawerSplitBtn">✂️ 在此分割</button>
+            <button class="box-btn" id="delClipBtn">🗑️ 刪除選取片段</button>
+          </div>
+          ${clip ? `
+            <div class="control-row">
+              <label>片段時長</label>
+              <input type="range" min="1" max="20" step="0.5" value="${clip.duration}" id="clipDurRange">
+              <span>${clip.duration.toFixed(1)}s</span>
+            </div>
+            <div class="control-row">
+              <label>變速倍率</label>
+              <input type="range" min="0.5" max="2.0" step="0.25" value="${clip.speed}" id="clipSpeedRange">
+              <span>${clip.speed}x</span>
+            </div>
+          ` : ''}
+        `;
+        document.getElementById('drawerSplitBtn').onclick = splitAtPlayhead;
+        document.getElementById('delClipBtn').onclick = () => {
+          if (state.clips.length <= 1) return showToast('至少需保留一段影片');
+          state.clips = state.clips.filter(c => c.id !== clip.id);
+          state.selectedClipId = state.clips[0].id;
+          renderTimeline(); renderDrawer(); renderFrame();
+        };
+        if (clip) {
+          document.getElementById('clipDurRange').oninput = (e) => {
+            clip.duration = parseFloat(e.target.value);
+            renderTimeline(); renderDrawer(); renderFrame();
+          };
+          document.getElementById('clipSpeedRange').oninput = (e) => {
+            clip.speed = parseFloat(e.target.value);
+            renderDrawer();
+          };
+        }
+      }
+
+      else if (state.activeTab === 'keyframe') {
+        // 計算目前片段內的相對時間與數值
+        let acc = 0, localT = 0;
+        for (const c of state.clips) {
+          if (c.id === clip.id) {
+            localT = Math.max(0, Math.min(c.duration, state.currentTime - acc));
+            break;
+          }
+          acc += c.duration;
+        }
+        const curTr = getInterpolatedTransform(clip, localT);
+
+        container.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="color:#ffcc33; font-weight:700;">◆ 關鍵幀運鏡（練舞局部放大 / 跟拍）</span>
+            <button class="chip-btn" style="border-color:#ffcc33; color:#ffcc33;" id="addKfBtn">＋ 打關鍵幀</button>
+          </div>
+          <div class="control-row">
+            <label>畫面縮放</label>
+            <input type="range" min="0.6" max="2.5" step="0.05" value="${curTr.scale}" id="kfScale">
+            <span>${curTr.scale.toFixed(2)}x</span>
+          </div>
+          <div class="control-row">
+            <label>水平位移</label>
+            <input type="range" min="-150" max="150" step="2" value="${curTr.x}" id="kfX">
+            <span>${Math.round(curTr.x)}</span>
+          </div>
+          <div class="control-row">
+            <label>垂直位移</label>
+            <input type="range" min="-200" max="200" step="2" value="${curTr.y}" id="kfY">
+            <span>${Math.round(curTr.y)}</span>
+          </div>
+        `;
+
+        const upsertKf = (patch) => {
+          let existing = clip.keyframes.find(k => Math.abs(k.t - localT) < 0.25);
+          if (!existing) {
+            existing = { t: localT, ...curTr };
+            clip.keyframes.push(existing);
+          }
+          Object.assign(existing, patch);
+          renderTimeline();
+          renderFrame();
+        };
+
+        document.getElementById('addKfBtn').onclick = () => {
+          upsertKf({});
+          showToast(`已在 ${localT.toFixed(1)}s 加入關鍵幀 ◆`);
+        };
+        document.getElementById('kfScale').oninput = (e) => upsertKf({ scale: parseFloat(e.target.value) });
+        document.getElementById('kfX').oninput = (e) => upsertKf({ x: parseFloat(e.target.value) });
+        document.getElementById('kfY').oninput = (e) => upsertKf({ y: parseFloat(e.target.value) });
+      }
+
+      else if (state.activeTab === 'text') {
+        const cats = ['全部', '現代', '手寫', '圓體', '古典', '特色'];
+        const filteredFonts = state.fontFilter === '全部'
+          ? FREE_FONTS
+          : FREE_FONTS.filter(f => f.cat === state.fontFilter);
+
+        container.innerHTML = `
+          <div class="control-row">
+            <button class="chip-btn" style="background:var(--accent); border:none; color:#fff;" id="newSubBtn">＋ 新增字幕</button>
+            <input type="text" id="subTextInput" value="${sub ? sub.text : ''}" placeholder="輸入字幕內容...">
+          </div>
+          <div class="control-row">
+            <label>字級/顏色</label>
+            <input type="range" min="14" max="48" value="${sub ? sub.size : 24}" id="subSizeRange">
+            <input type="color" value="${sub ? sub.color : '#ffffff'}" id="subColorPick" style="width:32px; height:26px; border:none; background:none;">
+          </div>
+          <div class="pill-group">
+            ${cats.map(c => `<button class="pill ${state.fontFilter === c ? 'active' : ''}" data-cat="${c}">${c}</button>`).join('')}
+            <button class="pill" onclick="document.getElementById('fontFileInput').click()">＋ 本機字體</button>
+          </div>
+          <div class="font-grid">
+            ${filteredFonts.map(f => `
+              <button class="font-card ${sub && sub.font === f.family ? 'active' : ''}" data-family="${f.family.replace(/"/g, '&quot;')}">
+                <span class="sample" style="font-family:${f.family};">${f.name}</span>
+                <span class="meta">${f.desc}</span>
+              </button>
+            `).join('')}
+          </div>
+        `;
+
+        document.getElementById('newSubBtn').onclick = () => {
+          const id = 'sub-' + Date.now();
+          state.subtitles.push({
+            id,
+            text: '新字幕點此編輯',
+            start: state.currentTime,
+            duration: 3.0,
+            x: 0.5,
+            y: 0.75,
+            size: 24,
+            font: "'Noto Sans TC', sans-serif",
+            color: '#ffffff',
+            stroke: '#000000',
+            bg: 'rgba(0,0,0,0.45)'
+          });
+          state.selectedSubId = id;
+          renderTimeline(); renderDrawer(); renderFrame();
+        };
+
+        if (sub) {
+          document.getElementById('subTextInput').oninput = (e) => {
+            sub.text = e.target.value;
+            renderTimeline(); renderFrame();
+          };
+          document.getElementById('subSizeRange').oninput = (e) => {
+            sub.size = parseInt(e.target.value, 10);
+            renderFrame();
+          };
+          document.getElementById('subColorPick').oninput = (e) => {
+            sub.color = e.target.value;
+            renderFrame();
+          };
+        }
+
+        container.querySelectorAll('.pill[data-cat]').forEach(btn => {
+          btn.onclick = () => {
+            state.fontFilter = btn.dataset.cat;
+            renderDrawer();
+          };
+        });
+
+        container.querySelectorAll('.font-card').forEach(card => {
+          card.onclick = () => {
+            if (!sub) return;
+            sub.font = card.dataset.family;
+            renderDrawer();
+            // 延遲重繪確保雲端字體載入完成後刷新畫布
+            renderFrame();
+            setTimeout(renderFrame, 600);
+          };
+        });
+      }
+
+      else if (state.activeTab === 'color') {
+        const col = clip.color;
+        container.innerHTML = `
+          <div class="pill-group">
+            ${FILTER_PRESETS.map(p => `<button class="pill" data-preset="${p.id}">${p.name}</button>`).join('')}
+          </div>
+          <div class="control-row">
+            <label>亮度</label>
+            <input type="range" min="60" max="150" value="${col.b}" id="colB">
+            <span>${col.b}%</span>
+          </div>
+          <div class="control-row">
+            <label>對比度</label>
+            <input type="range" min="60" max="160" value="${col.c}" id="colC">
+            <span>${col.c}%</span>
+          </div>
+          <div class="control-row">
+            <label>飽和度</label>
+            <input type="range" min="0" max="180" value="${col.s}" id="colS">
+            <span>${col.s}%</span>
+          </div>
+          <div class="control-row">
+            <label>色溫冷暖</label>
+            <input type="range" min="-40" max="40" value="${col.warm}" id="colW">
+            <span>${col.warm}</span>
+          </div>
+        `;
+
+        container.querySelectorAll('[data-preset]').forEach(btn => {
+          btn.onclick = () => {
+            const p = FILTER_PRESETS.find(x => x.id === btn.dataset.preset);
+            clip.color = { b: p.b, c: p.c, s: p.s, warm: p.warm };
+            showToast(`已套用濾鏡：${p.name}`);
+            renderDrawer(); renderFrame();
+          };
+        });
+
+        ['colB', 'colC', 'colS', 'colW'].forEach(id => {
+          document.getElementById(id).oninput = (e) => {
+            const val = parseInt(e.target.value, 10);
+            if (id === 'colB') col.b = val;
+            if (id === 'colC') col.c = val;
+            if (id === 'colS') col.s = val;
+            if (id === 'colW') col.warm = val;
+            renderFrame();
+          };
+        });
+      }
+
+      else if (state.activeTab === 'audio') {
+        container.innerHTML = `
+          <div class="control-row">
+            <button class="box-btn primary" style="flex:1;" onclick="document.getElementById('audioFileInput').click()">🎵 插入手機音樂 / 伴奏檔</button>
+          </div>
+          <div class="control-row">
+            <label>音樂音量</label>
+            <input type="range" min="0" max="1" step="0.05" value="${state.audio.volume}" id="audioVolRange">
+            <span>${Math.round(state.audio.volume * 100)}%</span>
+          </div>
+          <p style="color:var(--text-muted); font-size:11px; margin:6px 0 0;">
+            目前音軌：${state.audio.name}
+          </p>
+        `;
+        document.getElementById('audioVolRange').oninput = (e) => {
+          state.audio.volume = parseFloat(e.target.value);
+          if (state.audio.el) state.audio.el.volume = state.audio.volume;
+          renderDrawer();
+        };
+      }
+    }
+
+    function updateTabsUI() {
+      document.querySelectorAll('.nav-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === state.activeTab);
+      });
+    }
+
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.onclick = () => {
+        state.activeTab = tab.dataset.tab;
+        updateTabsUI();
+        renderDrawer();
+      };
+    });
+
+    // ====== 畫面比例切換 ======
+    document.querySelectorAll('.ratio-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.ratio = btn.dataset.ratio;
+        if (state.ratio === '9:16') { canvas.width = 360; canvas.height = 640; }
+        if (state.ratio === '16:9') { canvas.width = 640; canvas.height = 360; }
+        if (state.ratio === '1:1')  { canvas.width = 480; canvas.height = 480; }
+        renderFrame();
+      };
+    });
+
+    // ====== 分割片段 ======
+    function splitAtPlayhead() {
+      let acc = 0;
+      for (let i = 0; i < state.clips.length; i++) {
+        const c = state.clips[i];
+        if (state.currentTime > acc + 0.3 && state.currentTime < acc + c.duration - 0.3) {
+          const leftDur = state.currentTime - acc;
+          const rightDur = c.duration - leftDur;
+          c.duration = leftDur;
+          const clone = {
+            ...JSON.parse(JSON.stringify(c)),
+            id: 'clip-' + Date.now(),
+            name: c.name + ' (切段)',
+            duration: rightDur,
+            videoEl: c.videoEl
+          };
+          state.clips.splice(i + 1, 0, clone);
+          state.selectedClipId = clone.id;
+          showToast('已從播放頭位置分割片段 ✂️');
+          renderTimeline(); renderDrawer(); renderFrame();
+          return;
+        }
+        acc += c.duration;
+      }
+      showToast('請將播放頭移至片段中間再分割');
+    }
+
+    document.getElementById('splitBtn').onclick = splitAtPlayhead;
+
+    document.getElementById('addDemoBtn').onclick = () => {
+      const id = 'clip-' + Date.now();
+      state.clips.push({
+        id,
+        name: '新增舞蹈八拍片段',
+        duration: 4.0,
+        speed: 1.0,
+        transitionAfter: 'fade',
+        color: { b: 105, c: 115, s: 110, warm: 0 },
+        isDemo: true,
+        demoTheme: state.clips.length % 2,
+        videoEl: null,
+        keyframes: [{ t: 0, scale: 1.0, x: 0, y: 0, rot: 0 }]
+      });
+      state.selectedClipId = id;
+      renderTimeline(); renderDrawer(); renderFrame();
+      showToast('已加入新的示範片段');
+    };
+
+    // ====== 檔案匯入（影片 / 音訊 / 字體） ======
+    document.getElementById('videoFileInput').onchange = (e) => {
+      const files = Array.from(e.target.files);
+      files.forEach(file => {
+        const url = URL.createObjectURL(file);
+        const vid = document.createElement('video');
+        vid.src = url;
+        vid.muted = true;
+        vid.playsInline = true;
+        vid.onloadedmetadata = () => {
+          const id = 'clip-' + Date.now() + Math.random();
+          state.clips.push({
+            id,
+            name: file.name.slice(0, 14),
+            duration: Math.min(30, vid.duration || 5),
+            speed: 1.0,
+            transitionAfter: 'fade',
+            color: { b: 100, c: 100, s: 100, warm: 0 },
+            isDemo: false,
+            videoEl: vid,
+            keyframes: [{ t: 0, scale: 1.0, x: 0, y: 0, rot: 0 }]
+          });
+          state.selectedClipId = id;
+          renderTimeline(); renderDrawer(); renderFrame();
+          showToast(`已匯入影片：${file.name}`);
+        };
+      });
+    };
+
+    document.getElementById('audioFileInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const audioEl = new Audio(url);
+      audioEl.volume = state.audio.volume;
+      state.audio = { name: file.name, volume: state.audio.volume, url, el: audioEl };
+      renderTimeline(); renderDrawer();
+      showToast(`已插入音訊：${file.name}`);
+    };
+
+    document.getElementById('fontFileInput').onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const fontName = 'CustomFont_' + Date.now();
+      const buf = await file.arrayBuffer();
+      const face = new FontFace(fontName, buf);
+      await face.load();
+      document.fonts.add(face);
+      FREE_FONTS.unshift({
+        name: file.name.replace(/\.[^/.]+$/, ''),
+        family: `'${fontName}', sans-serif`,
+        cat: '特色',
+        desc: '本機匯入自訂字體'
+      });
+      const sub = state.subtitles.find(s => s.id === state.selectedSubId);
+      if (sub) sub.font = `'${fontName}', sans-serif`;
+      renderDrawer(); renderFrame();
+      showToast('自訂字體載入成功！');
+    };
+
+    // ====== 觸控拖曳畫布字幕 ======
+    let draggingSub = false;
+    canvas.addEventListener('pointerdown', (e) => {
+      const sub = state.subtitles.find(s => s.id === state.selectedSubId);
+      if (!sub) return;
+      draggingSub = true;
+      updateSubPos(e, sub);
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!draggingSub) return;
+      const sub = state.subtitles.find(s => s.id === state.selectedSubId);
+      if (sub) updateSubPos(e, sub);
+    });
+    window.addEventListener('pointerup', () => draggingSub = false);
+
+    function updateSubPos(e, sub) {
+      const rect = canvas.getBoundingClientRect();
+      sub.x = Math.max(0.05, Math.min(0.95, (e.clientX - rect.left) / rect.width));
+      sub.y = Math.max(0.05, Math.min(0.95, (e.clientY - rect.top) / rect.height));
+      renderFrame();
+    }
+
+    // ====== 播放迴圈 ======
+    let lastTs = 0;
+    function tick(ts) {
+      if (!state.isPlaying) return;
+      if (!lastTs) lastTs = ts;
+      const dt = (ts - lastTs) / 1000;
+      lastTs = ts;
+
+      state.currentTime += dt;
+      if (state.currentTime >= getTotalDuration()) {
+        state.currentTime = 0;
+        togglePlay(false);
+      } else {
+        timelineScroll.scrollLeft = state.currentTime * PX_PER_SEC;
+        syncVideoElements();
+        renderFrame();
+        requestAnimationFrame(tick);
+      }
+    }
+
+    function togglePlay(force) {
+      state.isPlaying = typeof force === 'boolean' ? force : !state.isPlaying;
+      document.getElementById('playBtn').textContent = state.isPlaying ? '⏸' : '▶';
+      if (state.isPlaying) {
+        lastTs = 0;
+        if (state.audio.el) {
+          state.audio.el.currentTime = state.currentTime;
+          state.audio.el.play().catch(() => {});
+        }
+        state.clips.forEach(c => { if (c.videoEl) c.videoEl.play().catch(() => {}); });
+        requestAnimationFrame(tick);
+      } else {
+        if (state.audio.el) state.audio.el.pause();
+        state.clips.forEach(c => { if (c.videoEl) c.videoEl.pause(); });
+        renderFrame();
+      }
+    }
+
+    document.getElementById('playBtn').onclick = () => togglePlay();
+
+    // ====== 匯出錄製成影片檔 ======
+    document.getElementById('exportBtn').onclick = () => {
+      if (typeof MediaRecorder === 'undefined') {
+        return showToast('目前瀏覽器不支援直接錄製匯出，請改用 Chrome 或 Safari 最新版');
+      }
+      showToast('正在高速渲染並匯出影片，請稍候...');
+      const stream = canvas.captureStream(30);
+      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      const chunks = [];
+      recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `DanceCut_${Date.now()}.webm`;
+        a.click();
+        showToast('影片匯出完成！已開始下載 🎬');
+      };
+
+      state.currentTime = 0;
+      recorder.start();
+      togglePlay(true);
+
+      const checkStop = setInterval(() => {
+        if (!state.isPlaying) {
+          clearInterval(checkStop);
+          if (recorder.state !== 'inactive') recorder.stop();
+        }
+      }, 200);
+    };
+
+    // 初始化啟動
+    renderTimeline();
+    renderDrawer();
+    renderFrame();
+  </script>
+</body>
+</html>
