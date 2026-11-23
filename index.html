@@ -265,7 +265,7 @@
       color: #fff;
     }
 
-    /* Timeline */
+    /* Timeline - 支援直接按住軌道拖曳 */
     .timeline-area {
       height: 155px;
       background: #13151a;
@@ -275,6 +275,12 @@
       flex-shrink: 0;
       border-bottom: 1px solid var(--border);
       scroll-behavior: auto;
+      cursor: grab;
+      touch-action: pan-x;
+    }
+
+    .timeline-area.grabbing {
+      cursor: grabbing;
     }
 
     .timeline-inner {
@@ -293,7 +299,6 @@
       display: flex;
       font-size: 10px;
       color: var(--text-muted);
-      cursor: pointer;
     }
 
     .playhead {
@@ -357,7 +362,6 @@
       overflow: visible;
       white-space: nowrap;
       padding: 0 16px;
-      cursor: pointer;
       flex-shrink: 0;
       will-change: width;
     }
@@ -377,7 +381,7 @@
       position: absolute;
       top: -1px;
       bottom: -1px;
-      width: 14px;
+      width: 15px;
       background: rgba(255, 255, 255, 0.25);
       display: flex;
       align-items: center;
@@ -450,7 +454,6 @@
       align-items: center;
       color: #ffd1e1;
       white-space: nowrap;
-      cursor: pointer;
     }
 
     .sub-block.selected {
@@ -470,7 +473,6 @@
       display: flex;
       align-items: center;
       color: #a7f3d0;
-      cursor: pointer;
       white-space: nowrap;
     }
 
@@ -697,7 +699,7 @@
 
   <!-- Stage -->
   <div class="stage-wrap">
-    <div class="stage-hint">拖拉開頭白條 ⋮ 往右自動裁掉前面 · 滑動時間軸即時預覽</div>
+    <div class="stage-hint">按住時間軸左右拖曳可即時預覽 · 拖拉開頭白條 ⋮ 可裁切</div>
     <canvas id="previewCanvas" width="360" height="640"></canvas>
   </div>
 
@@ -717,7 +719,7 @@
   <div class="timeline-area" id="timelineScroll">
     <div class="playhead"></div>
     <div class="timeline-inner" id="timelineInner">
-      <div class="ruler" id="ruler" title="點擊刻度可直接跳轉時間"></div>
+      <div class="ruler" id="ruler"></div>
       <div class="track-row" id="videoTrack"></div>
       <div class="track-row" id="subTrack"></div>
       <div class="track-row" id="audioTrack"></div>
@@ -1066,8 +1068,6 @@
         if (activeTrim.type === 'clip') {
           const maxTotal = item.maxDuration || 120;
           if (edge === 'left') {
-            // 開頭手把往右拉 (deltaSec > 0) = 裁掉前面畫面 (trimStart 增加, duration 減少)
-            // 開頭手把往左拉 (deltaSec < 0) = 還原前面被裁掉的畫面 (trimStart 減少直到 0, duration 增加)
             const minDelta = -activeTrim.origTrimStart;
             const maxDelta = activeTrim.origDur - 0.5;
             const clampedDelta = Math.max(minDelta, Math.min(maxDelta, deltaSec));
@@ -1075,7 +1075,6 @@
             item.trimStart = activeTrim.origTrimStart + clampedDelta;
             item.duration = activeTrim.origDur - clampedDelta;
 
-            // 即時定位影片到新的開頭位置讓使用者看到裁到哪一格
             if (item.videoEl) {
               item.videoEl.currentTime = item.trimStart;
             }
@@ -1084,7 +1083,6 @@
             item.duration = Math.max(0.5, Math.min(maxAvailDur, activeTrim.origDur + deltaSec));
           }
 
-          // 拖曳過程中只更新寬度與文字，不重建 DOM，達到零延遲絲滑手感
           if (blockEl) blockEl.style.width = (item.duration * PX_PER_SEC) + 'px';
           if (labelEl) {
             const trimTag = (item.trimStart || 0) > 0.05 ? ` [裁切 ${(item.trimStart).toFixed(1)}s~]` : '';
@@ -1149,7 +1147,7 @@
         const emptyBtn = document.createElement('div');
         emptyBtn.className = 'empty-track-hint';
         emptyBtn.textContent = '＋ 點此匯入影片檔（目前無影片）';
-        emptyBtn.onclick = () => document.getElementById('videoFileInput').click();
+        emptyBtn.onclick = () => { if (!timelineWasDragged) document.getElementById('videoFileInput').click(); };
         vTrack.appendChild(emptyBtn);
       } else {
         state.clips.forEach((clip, idx) => {
@@ -1179,6 +1177,7 @@
           el.appendChild(rightHandle);
 
           el.onclick = () => {
+            if (timelineWasDragged) return;
             state.selectedClipId = clip.id;
             state.lastSelectedType = 'clip';
             updateDeleteButtonLabel();
@@ -1204,6 +1203,7 @@
             trBtn.title = '切換轉場特效';
             trBtn.onclick = (e) => {
               e.stopPropagation();
+              if (timelineWasDragged) return;
               pushUndo();
               const curIdx = TRANSITIONS.findIndex(t => t.id === clip.transitionAfter);
               const next = TRANSITIONS[(curIdx + 1) % TRANSITIONS.length];
@@ -1224,7 +1224,7 @@
         const emptySub = document.createElement('div');
         emptySub.className = 'empty-track-hint';
         emptySub.textContent = '＋ 點此新增字幕（目前無字幕）';
-        emptySub.onclick = () => addNewSubtitle();
+        emptySub.onclick = () => { if (!timelineWasDragged) addNewSubtitle(); };
         sTrack.appendChild(emptySub);
       } else {
         state.subtitles.forEach(sub => {
@@ -1252,6 +1252,7 @@
           el.appendChild(rightHandle);
 
           el.onclick = () => {
+            if (timelineWasDragged) return;
             state.selectedSubId = sub.id;
             state.lastSelectedType = 'sub';
             state.activeTab = 'text';
@@ -1272,7 +1273,7 @@
         const emptyAudio = document.createElement('div');
         emptyAudio.className = 'empty-track-hint';
         emptyAudio.textContent = '＋ 點此插入音樂 / 伴奏（目前無音訊）';
-        emptyAudio.onclick = () => document.getElementById('audioFileInput').click();
+        emptyAudio.onclick = () => { if (!timelineWasDragged) document.getElementById('audioFileInput').click(); };
         aTrack.appendChild(emptyAudio);
       } else {
         const isSel = state.lastSelectedType === 'audio';
@@ -1282,6 +1283,7 @@
         aEl.style.width = Math.max(140, total * PX_PER_SEC) + 'px';
         aEl.textContent = `🎵 ${state.audio.name}`;
         aEl.onclick = () => {
+          if (timelineWasDragged) return;
           state.lastSelectedType = 'audio';
           state.activeTab = 'audio';
           updateTabsUI();
@@ -1293,12 +1295,56 @@
       }
     }
 
+    // ====== 按住時間軸軌道直接左右拖曳（Pointer Drag Scrubbing） ======
+    let isDraggingTimeline = false;
+    let timelineWasDragged = false;
+    let dragStartX = 0;
+    let dragStartScrollLeft = 0;
+
+    timelineScroll.addEventListener('pointerdown', (e) => {
+      // 如果點到兩側白色裁切手把，交給裁切手把處理
+      if (e.target.closest('.trim-handle') || activeTrim) return;
+      if (state.isPlaying) togglePlay(false);
+
+      isDraggingTimeline = true;
+      timelineWasDragged = false;
+      dragStartX = e.clientX;
+      dragStartScrollLeft = timelineScroll.scrollLeft;
+      timelineScroll.classList.add('grabbing');
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isDraggingTimeline || activeTrim) return;
+      const dx = e.clientX - dragStartX;
+      if (Math.abs(dx) > 4) {
+        timelineWasDragged = true;
+      }
+      const nextScroll = Math.max(0, dragStartScrollLeft - dx);
+      timelineScroll.scrollLeft = nextScroll;
+
+      const t = Math.max(0, Math.min(getTotalDuration(), nextScroll / PX_PER_SEC));
+      state.currentTime = t;
+      document.getElementById('curTimeLabel').textContent = formatTime(t);
+      syncVideoElements(true);
+      renderFrame();
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (!isDraggingTimeline) return;
+      isDraggingTimeline = false;
+      timelineScroll.classList.remove('grabbing');
+      setTimeout(() => { timelineWasDragged = false; }, 30);
+    });
+
+    // 點擊刻度尺直接跳轉
     document.getElementById('ruler').addEventListener('click', (e) => {
+      if (timelineWasDragged) return;
       const rect = e.currentTarget.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
       seekTo(clickX / PX_PER_SEC);
     });
 
+    // 滑鼠滾輪支援橫向捲動時間軸
     timelineScroll.addEventListener('wheel', (e) => {
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         e.preventDefault();
@@ -1306,10 +1352,10 @@
       }
     }, { passive: false });
 
-    // 零延遲即時時間軸滑動渲染（使用 requestAnimationFrame 節流防止重複排隊）
+    // 瀏覽器原生捲動同步（觸控慣性捲動時也能即時刷新）
     let scrubRafPending = false;
     timelineScroll.addEventListener('scroll', () => {
-      if (state.isPlaying) return;
+      if (state.isPlaying || isDraggingTimeline) return;
       const t = Math.max(0, Math.min(getTotalDuration(), timelineScroll.scrollLeft / PX_PER_SEC));
       state.currentTime = t;
       document.getElementById('curTimeLabel').textContent = formatTime(t);
@@ -1324,7 +1370,7 @@
       }
     }, { passive: true });
 
-    // 即時同步影片畫面（加入 trimStart 入點偏移與零容錯即時定位）
+    // 即時同步影片畫面
     function syncVideoElements(immediate = false) {
       let acc = 0;
       state.clips.forEach(c => {
@@ -1335,12 +1381,8 @@
             const clampedT = Math.min(c.videoEl.duration || 999, targetT);
             const diff = Math.abs(c.videoEl.currentTime - clampedT);
 
-            if (immediate ? diff > 0.015 : diff > 0.12) {
-              if (typeof c.videoEl.fastSeek === 'function' && !state.isPlaying && diff > 0.3) {
-                c.videoEl.fastSeek(clampedT);
-              } else {
-                c.videoEl.currentTime = clampedT;
-              }
+            if (immediate ? diff > 0.01 : diff > 0.12) {
+              c.videoEl.currentTime = clampedT;
             }
           } else {
             if (!c.videoEl.paused) c.videoEl.pause();
@@ -1785,7 +1827,7 @@
       };
     });
 
-    // ====== 分割片段（自動繼承並累加 trimStart 入點） ======
+    // ====== 分割片段 ======
     function splitAtPlayhead() {
       let acc = 0;
       for (let i = 0; i < state.clips.length; i++) {
@@ -1821,7 +1863,7 @@
 
     document.getElementById('splitBtn').onclick = splitAtPlayhead;
 
-    // ====== 檔案匯入（強制解碼第一幀畫面） ======
+    // ====== 檔案匯入 ======
     document.getElementById('videoFileInput').onchange = (e) => {
       const files = Array.from(e.target.files);
       if (files.length > 0) pushUndo();
@@ -1864,7 +1906,6 @@
           finalizeImport();
         };
 
-        // 每次瀏覽器解碼完成新影格時立刻重繪畫布，徹底消除延遲感
         vid.onseeked = () => {
           renderFrame();
         };
