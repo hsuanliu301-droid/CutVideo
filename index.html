@@ -403,7 +403,6 @@
       box-shadow: 0 0 0 1.5px var(--accent);
     }
 
-    /* 縮略排序方塊樣式：所有影片縮成一眼看清的精簡方塊 */
     .clip-block.compact-card {
       height: 48px !important;
       padding: 4px 8px !important;
@@ -772,7 +771,7 @@
 
   <!-- Stage -->
   <div class="stage-wrap">
-    <div class="stage-hint">長按片段自動縮成全局小方塊調換順序 · 拖拉白條 ⋮ 即時裁切</div>
+    <div class="stage-hint">拖拉前後白條 ⋮ 畫面即時跟著動 · 長按片段縮略調換順序</div>
     <canvas id="previewCanvas" width="360" height="640"></canvas>
   </div>
 
@@ -872,6 +871,27 @@
     const canvas = document.getElementById('previewCanvas');
     const ctx = canvas.getContext('2d');
     const timelineScroll = document.getElementById('timelineScroll');
+
+    // ====== 抗塞車即時影格排程器（解決連續拖曳時 <video> 卡頓不刷新的問題） ======
+    function requestVideoSeek(vid, targetTime) {
+      if (!vid) return;
+      const dur = (vid.duration && isFinite(vid.duration)) ? vid.duration : 999;
+      const clamped = Math.max(0.01, Math.min(dur - 0.01, targetTime));
+
+      // 如果解碼器目前正在解碼上一幀，先排隊最新位置，等上一幀完成立刻無縫接力
+      if (vid.seeking) {
+        vid._pendingSeekTime = clamped;
+        return;
+      }
+
+      if (Math.abs(vid.currentTime - clamped) < 0.008) {
+        renderFrame();
+        return;
+      }
+
+      vid._pendingSeekTime = null;
+      vid.currentTime = clamped;
+    }
 
     function pushUndo() {
       const snapshot = {
@@ -1048,18 +1068,18 @@
 
         if (activeTrim && activeTrim.type === 'clip') {
           ctx.save();
-          ctx.fillStyle = 'rgba(255, 59, 127, 0.9)';
+          ctx.fillStyle = 'rgba(255, 59, 127, 0.92)';
           ctx.beginPath();
-          ctx.roundRect(10, H - 38, 175, 26, 6);
+          ctx.roundRect(10, H - 38, 195, 26, 6);
           ctx.fill();
           ctx.fillStyle = '#fff';
           ctx.font = "700 11px 'Noto Sans TC', sans-serif";
           ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
           const edgeText = activeTrim.edge === 'left'
-            ? `裁切開頭：${(activeClip.trimStart || 0).toFixed(2)}s`
-            : `裁切結尾：${((activeClip.trimStart || 0) + activeClip.duration).toFixed(2)}s`;
-          ctx.fillText(edgeText, 18, H - 25);
+            ? `裁切開頭：${(activeClip.trimStart || 0).toFixed(2)}s（片長 ${activeClip.duration.toFixed(1)}s）`
+            : `裁切結尾：${((activeClip.trimStart || 0) + activeClip.duration).toFixed(2)}s（片長 ${activeClip.duration.toFixed(1)}s）`;
+          ctx.fillText(edgeText, 16, H - 25);
           ctx.restore();
         }
 
@@ -1151,7 +1171,7 @@
       document.getElementById('totTimeLabel').textContent = formatTime(getTotalDuration());
     }
 
-    // ====== 雙向即時裁切（Instant Frame-Accurate Trim） ======
+    // ====== 雙向即時裁切（拖曳過程中畫面連續跟著動） ======
     let activeTrim = null;
 
     function attachTrimEvents(handleEl, type, item, edge, blockEl, labelEl) {
@@ -1180,8 +1200,8 @@
         if (type === 'clip' && item.videoEl) {
           const target = edge === 'left'
             ? (item.trimStart || 0)
-            : Math.max(0.01, (item.trimStart || 0) + item.duration * item.speed - 0.03);
-          item.videoEl.currentTime = Math.min(item.videoEl.duration || 999, Math.max(0.01, target));
+            : (item.trimStart || 0) + item.duration * item.speed - 0.02;
+          requestVideoSeek(item.videoEl, target);
         }
         renderFrame();
       });
@@ -1202,16 +1222,15 @@
             item.duration = activeTrim.origDur - clampedDelta;
 
             if (item.videoEl) {
-              const seekTarget = Math.max(0.01, Math.min(item.videoEl.duration || 999, item.trimStart));
-              item.videoEl.currentTime = seekTarget;
+              requestVideoSeek(item.videoEl, item.trimStart);
             }
           } else if (edge === 'right') {
             const maxAvailDur = Math.max(0.4, maxTotal - (item.trimStart || 0));
             item.duration = Math.max(0.4, Math.min(maxAvailDur, activeTrim.origDur + deltaSec));
 
             if (item.videoEl) {
-              const endTarget = Math.max(0.01, Math.min(item.videoEl.duration || 999, (item.trimStart || 0) + item.duration * item.speed - 0.03));
-              item.videoEl.currentTime = endTarget;
+              const endTarget = (item.trimStart || 0) + item.duration * item.speed - 0.02;
+              requestVideoSeek(item.videoEl, endTarget);
             }
           }
 
@@ -1298,7 +1317,7 @@
         updateDeleteButtonLabel();
 
         if (clip.videoEl) {
-          clip.videoEl.currentTime = Math.max(0.01, clip.trimStart || 0);
+          requestVideoSeek(clip.videoEl, clip.trimStart || 0);
         }
 
         if (navigator.vibrate) navigator.vibrate(25);
@@ -1324,7 +1343,6 @@
       const clipEls = document.querySelectorAll('#videoTrack .clip-block');
       if (!clipEls[curIdx]) return;
 
-      // 往左拖過前一個縮略方塊中心 -> 往前互換
       if (curIdx > 0) {
         const prevRect = clipEls[curIdx - 1].getBoundingClientRect();
         const prevMid = prevRect.left + prevRect.width / 2;
@@ -1339,7 +1357,6 @@
         }
       }
 
-      // 往右拖過後一個縮略方塊中心 -> 往後互換
       if (curIdx < state.clips.length - 1) {
         const nextRect = clipEls[curIdx + 1].getBoundingClientRect();
         const nextMid = nextRect.left + nextRect.width / 2;
@@ -1361,7 +1378,6 @@
         const movedId = reorderState.clipId;
         reorderState = null;
 
-        // 恢復正常時間軸並自動定位到剛移動的片段開頭
         let newStartSec = 0;
         for (const c of state.clips) {
           if (c.id === movedId) break;
@@ -1378,7 +1394,7 @@
     window.addEventListener('pointerup', endReorder);
     window.addEventListener('pointercancel', endReorder);
 
-    // ====== 渲染時間軸（支援一般比例模式與全局縮略排序模式） ======
+    // ====== 渲染時間軸 ======
     function renderTimeline() {
       const isCompactReorder = Boolean(reorderState);
       timelineScroll.classList.toggle('reorder-mode', isCompactReorder);
@@ -1407,7 +1423,6 @@
         emptyBtn.onclick = () => { if (!timelineWasDragged) document.getElementById('videoFileInput').click(); };
         vTrack.appendChild(emptyBtn);
       } else {
-        // 計算全局縮略模式下每個方塊的自適應寬度，確保畫面一眼容納所有片段
         const availW = Math.max(260, timelineScroll.clientWidth - 40);
         const compactW = Math.max(46, Math.min(92, Math.floor((availW - (state.clips.length - 1) * 8) / state.clips.length)));
 
@@ -1652,11 +1667,10 @@
           if (state.currentTime >= acc && state.currentTime <= acc + c.duration) {
             const offset = c.trimStart || 0;
             const targetT = Math.max(0.01, offset + (state.currentTime - acc) * c.speed);
-            const clampedT = Math.min(c.videoEl.duration || 999, targetT);
-            const diff = Math.abs(c.videoEl.currentTime - clampedT);
-
-            if (immediate ? diff > 0.01 : diff > 0.12) {
-              c.videoEl.currentTime = clampedT;
+            if (immediate) {
+              requestVideoSeek(c.videoEl, targetT);
+            } else if (Math.abs(c.videoEl.currentTime - targetT) > 0.15) {
+              c.videoEl.currentTime = targetT;
             }
           } else {
             if (!c.videoEl.paused) c.videoEl.pause();
@@ -1828,13 +1842,13 @@
             const oldEnd = (clip.trimStart || 0) + clip.duration;
             clip.trimStart = newStart;
             clip.duration = Math.max(0.4, oldEnd - newStart);
-            if (clip.videoEl) clip.videoEl.currentTime = Math.max(0.01, newStart);
+            if (clip.videoEl) requestVideoSeek(clip.videoEl, newStart);
             renderTimeline(); renderDrawer(); renderFrame();
           };
           document.getElementById('clipDurRange').oninput = (e) => {
             clip.duration = parseFloat(e.target.value);
             if (clip.videoEl) {
-              clip.videoEl.currentTime = Math.max(0.01, (clip.trimStart || 0) + clip.duration * clip.speed - 0.03);
+              requestVideoSeek(clip.videoEl, (clip.trimStart || 0) + clip.duration * clip.speed - 0.02);
             }
             renderTimeline(); renderDrawer(); renderFrame();
           };
@@ -2180,12 +2194,20 @@
         };
 
         vid.onloadeddata = () => {
-          vid.currentTime = 0.01;
+          requestVideoSeek(vid, 0.01);
           finalizeImport();
         };
 
+        // 每次解碼完成立刻刷新畫布，並檢查是否有排隊中的最新影格要繼續解碼
         vid.onseeked = () => {
           renderFrame();
+          if (typeof vid._pendingSeekTime === 'number') {
+            const nextT = vid._pendingSeekTime;
+            vid._pendingSeekTime = null;
+            if (Math.abs(vid.currentTime - nextT) > 0.008) {
+              vid.currentTime = nextT;
+            }
+          }
         };
 
         vid.onerror = () => {
