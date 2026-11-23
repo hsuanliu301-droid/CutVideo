@@ -173,7 +173,7 @@
       position: absolute;
       top: 8px;
       left: 10px;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.65);
       color: #d1d5db;
       font-size: 10px;
       padding: 3px 9px;
@@ -274,6 +274,7 @@
       overflow-y: hidden;
       flex-shrink: 0;
       border-bottom: 1px solid var(--border);
+      scroll-behavior: auto;
     }
 
     .timeline-inner {
@@ -355,9 +356,10 @@
       position: relative;
       overflow: visible;
       white-space: nowrap;
-      padding: 0 14px;
+      padding: 0 16px;
       cursor: pointer;
       flex-shrink: 0;
+      will-change: width;
     }
 
     .clip-block.selected {
@@ -375,8 +377,8 @@
       position: absolute;
       top: -1px;
       bottom: -1px;
-      width: 13px;
-      background: rgba(255, 255, 255, 0.22);
+      width: 14px;
+      background: rgba(255, 255, 255, 0.25);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -392,13 +394,13 @@
     .trim-handle.left {
       left: -1px;
       border-radius: 5px 0 0 5px;
-      border-right: 1px solid rgba(255,255,255,0.35);
+      border-right: 1px solid rgba(255,255,255,0.4);
     }
 
     .trim-handle.right {
       right: -1px;
       border-radius: 0 5px 5px 0;
-      border-left: 1px solid rgba(255,255,255,0.35);
+      border-left: 1px solid rgba(255,255,255,0.4);
     }
 
     .trim-handle::after {
@@ -443,7 +445,7 @@
       border: 1px solid var(--accent);
       border-radius: 5px;
       font-size: 10px;
-      padding: 0 13px;
+      padding: 0 14px;
       display: flex;
       align-items: center;
       color: #ffd1e1;
@@ -695,7 +697,7 @@
 
   <!-- Stage -->
   <div class="stage-wrap">
-    <div class="stage-hint">點選時間軸項目即可刪除 · 兩側白條 ⋮ 可拖拉長度</div>
+    <div class="stage-hint">拖拉開頭白條 ⋮ 往右自動裁掉前面 · 滑動時間軸即時預覽</div>
     <canvas id="previewCanvas" width="360" height="640"></canvas>
   </div>
 
@@ -774,7 +776,7 @@
       { id: 'slide', name: '向左滑動', icon: '⇄' }
     ];
 
-    // ====== 核心狀態（預設完全空白，無任何示範小人、示範字幕或音樂） ======
+    // ====== 核心狀態 ======
     const PX_PER_SEC = 55;
     let undoStack = [];
 
@@ -821,6 +823,7 @@
       updateDeleteButtonLabel();
       renderTimeline();
       renderDrawer();
+      syncVideoElements(true);
       renderFrame();
       showToast('已復原上一步 ↩️');
     }
@@ -850,7 +853,7 @@
     function seekTo(sec) {
       state.currentTime = Math.max(0, Math.min(getTotalDuration(), sec));
       timelineScroll.scrollLeft = state.currentTime * PX_PER_SEC;
-      syncVideoElements();
+      syncVideoElements(true);
       renderFrame();
     }
 
@@ -888,7 +891,7 @@
       return { scale: 1, x: 0, y: 0, rot: 0 };
     }
 
-    // ====== 渲染畫布（已完全移除跳舞小人） ======
+    // ====== 渲染畫布 ======
     function renderFrame() {
       const W = canvas.width;
       const H = canvas.height;
@@ -1032,10 +1035,10 @@
       document.getElementById('totTimeLabel').textContent = formatTime(getTotalDuration());
     }
 
-    // ====== 拖拉調整長度（Trimming）核心邏輯 ======
+    // ====== 雙向裁切（Trim In-Point & Out-Point）核心邏輯 ======
     let activeTrim = null;
 
-    function attachTrimEvents(handleEl, type, item, edge) {
+    function attachTrimEvents(handleEl, type, item, edge, blockEl, labelEl) {
       handleEl.addEventListener('pointerdown', (e) => {
         e.stopPropagation();
         pushUndo();
@@ -1046,9 +1049,12 @@
           item,
           edge,
           startX: e.clientX,
+          origTrimStart: item.trimStart || 0,
           origStart: item.start || 0,
           origDur: item.duration,
-          handleEl
+          handleEl,
+          blockEl,
+          labelEl
         };
       });
 
@@ -1058,12 +1064,33 @@
         const deltaSec = (e.clientX - activeTrim.startX) / PX_PER_SEC;
 
         if (activeTrim.type === 'clip') {
-          const maxD = item.maxDuration || 120;
-          if (edge === 'right') {
-            item.duration = Math.max(0.5, Math.min(maxD, activeTrim.origDur + deltaSec));
-          } else if (edge === 'left') {
-            item.duration = Math.max(0.5, Math.min(maxD, activeTrim.origDur - deltaSec));
+          const maxTotal = item.maxDuration || 120;
+          if (edge === 'left') {
+            // 開頭手把往右拉 (deltaSec > 0) = 裁掉前面畫面 (trimStart 增加, duration 減少)
+            // 開頭手把往左拉 (deltaSec < 0) = 還原前面被裁掉的畫面 (trimStart 減少直到 0, duration 增加)
+            const minDelta = -activeTrim.origTrimStart;
+            const maxDelta = activeTrim.origDur - 0.5;
+            const clampedDelta = Math.max(minDelta, Math.min(maxDelta, deltaSec));
+
+            item.trimStart = activeTrim.origTrimStart + clampedDelta;
+            item.duration = activeTrim.origDur - clampedDelta;
+
+            // 即時定位影片到新的開頭位置讓使用者看到裁到哪一格
+            if (item.videoEl) {
+              item.videoEl.currentTime = item.trimStart;
+            }
+          } else if (edge === 'right') {
+            const maxAvailDur = Math.max(0.5, maxTotal - (item.trimStart || 0));
+            item.duration = Math.max(0.5, Math.min(maxAvailDur, activeTrim.origDur + deltaSec));
           }
+
+          // 拖曳過程中只更新寬度與文字，不重建 DOM，達到零延遲絲滑手感
+          if (blockEl) blockEl.style.width = (item.duration * PX_PER_SEC) + 'px';
+          if (labelEl) {
+            const trimTag = (item.trimStart || 0) > 0.05 ? ` [裁切 ${(item.trimStart).toFixed(1)}s~]` : '';
+            labelEl.textContent = `${item.name}${trimTag} (${item.duration.toFixed(1)}s)`;
+          }
+          renderFrame();
         } else if (activeTrim.type === 'sub') {
           if (edge === 'right') {
             item.duration = Math.max(0.5, activeTrim.origDur + deltaSec);
@@ -1073,19 +1100,29 @@
             item.start = activeTrim.origStart + shift;
             item.duration = activeTrim.origDur - shift;
           }
+          if (blockEl) {
+            blockEl.style.left = (item.start * PX_PER_SEC) + 'px';
+            blockEl.style.width = (item.duration * PX_PER_SEC) + 'px';
+          }
+          if (labelEl) labelEl.textContent = `T ${item.text} (${item.duration.toFixed(1)}s)`;
+          renderFrame();
         }
-
-        renderTimeline();
-        renderDrawer();
-        renderFrame();
       });
 
       handleEl.addEventListener('pointerup', (e) => {
         if (!activeTrim || activeTrim.handleEl !== handleEl) return;
         e.stopPropagation();
         handleEl.classList.remove('active');
-        showToast(`已調整長度：${item.duration.toFixed(1)} 秒`);
+        if (activeTrim.type === 'clip' && edge === 'left') {
+          showToast(`已裁切開頭至 ${(item.trimStart || 0).toFixed(1)}s（片段長 ${item.duration.toFixed(1)}s）`);
+        } else {
+          showToast(`已調整長度：${item.duration.toFixed(1)} 秒`);
+        }
         activeTrim = null;
+        renderTimeline();
+        renderDrawer();
+        syncVideoElements(true);
+        renderFrame();
       });
     }
 
@@ -1123,15 +1160,19 @@
 
           const leftHandle = document.createElement('div');
           leftHandle.className = 'trim-handle left';
-          attachTrimEvents(leftHandle, 'clip', clip, 'left');
+          leftHandle.title = '往右拉自動裁切開頭 · 往左拉還原';
 
           const labelSpan = document.createElement('span');
           labelSpan.className = 'clip-label';
-          labelSpan.textContent = `${clip.name} (${clip.duration.toFixed(1)}s)`;
+          const trimTag = (clip.trimStart || 0) > 0.05 ? ` [開頭 ${(clip.trimStart).toFixed(1)}s]` : '';
+          labelSpan.textContent = `${clip.name}${trimTag} (${clip.duration.toFixed(1)}s)`;
 
           const rightHandle = document.createElement('div');
           rightHandle.className = 'trim-handle right';
-          attachTrimEvents(rightHandle, 'clip', clip, 'right');
+          rightHandle.title = '左右拖拉調整結尾長度';
+
+          attachTrimEvents(leftHandle, 'clip', clip, 'left', el, labelSpan);
+          attachTrimEvents(rightHandle, 'clip', clip, 'right', el, labelSpan);
 
           el.appendChild(leftHandle);
           el.appendChild(labelSpan);
@@ -1195,7 +1236,6 @@
 
           const leftHandle = document.createElement('div');
           leftHandle.className = 'trim-handle left';
-          attachTrimEvents(leftHandle, 'sub', sub, 'left');
 
           const labelSpan = document.createElement('span');
           labelSpan.className = 'clip-label';
@@ -1203,7 +1243,9 @@
 
           const rightHandle = document.createElement('div');
           rightHandle.className = 'trim-handle right';
-          attachTrimEvents(rightHandle, 'sub', sub, 'right');
+
+          attachTrimEvents(leftHandle, 'sub', sub, 'left', el, labelSpan);
+          attachTrimEvents(rightHandle, 'sub', sub, 'right', el, labelSpan);
 
           el.appendChild(leftHandle);
           el.appendChild(labelSpan);
@@ -1264,25 +1306,44 @@
       }
     }, { passive: false });
 
+    // 零延遲即時時間軸滑動渲染（使用 requestAnimationFrame 節流防止重複排隊）
+    let scrubRafPending = false;
     timelineScroll.addEventListener('scroll', () => {
       if (state.isPlaying) return;
       const t = Math.max(0, Math.min(getTotalDuration(), timelineScroll.scrollLeft / PX_PER_SEC));
       state.currentTime = t;
-      syncVideoElements();
-      renderFrame();
-    });
+      document.getElementById('curTimeLabel').textContent = formatTime(t);
 
-    function syncVideoElements() {
+      if (!scrubRafPending) {
+        scrubRafPending = true;
+        requestAnimationFrame(() => {
+          scrubRafPending = false;
+          syncVideoElements(true);
+          renderFrame();
+        });
+      }
+    }, { passive: true });
+
+    // 即時同步影片畫面（加入 trimStart 入點偏移與零容錯即時定位）
+    function syncVideoElements(immediate = false) {
       let acc = 0;
       state.clips.forEach(c => {
         if (c.videoEl) {
           if (state.currentTime >= acc && state.currentTime <= acc + c.duration) {
-            const targetT = Math.max(0.01, (state.currentTime - acc) * c.speed);
-            if (Math.abs(c.videoEl.currentTime - targetT) > 0.1) {
-              c.videoEl.currentTime = Math.min(c.videoEl.duration || 999, targetT);
+            const offset = c.trimStart || 0;
+            const targetT = Math.max(0.01, offset + (state.currentTime - acc) * c.speed);
+            const clampedT = Math.min(c.videoEl.duration || 999, targetT);
+            const diff = Math.abs(c.videoEl.currentTime - clampedT);
+
+            if (immediate ? diff > 0.015 : diff > 0.12) {
+              if (typeof c.videoEl.fastSeek === 'function' && !state.isPlaying && diff > 0.3) {
+                c.videoEl.fastSeek(clampedT);
+              } else {
+                c.videoEl.currentTime = clampedT;
+              }
             }
           } else {
-            c.videoEl.pause();
+            if (!c.videoEl.paused) c.videoEl.pause();
           }
         }
         acc += c.duration;
@@ -1420,8 +1481,13 @@
           </div>
           ${clip ? `
             <div class="control-row">
+              <label>開頭裁切</label>
+              <input type="range" min="0" max="${Math.max(0, (clip.maxDuration || 60) - 0.5)}" step="0.1" value="${clip.trimStart || 0}" id="clipTrimStartRange">
+              <span>${(clip.trimStart || 0).toFixed(1)}s</span>
+            </div>
+            <div class="control-row">
               <label>片段時長</label>
-              <input type="range" min="0.5" max="${clip.maxDuration || 120}" step="0.1" value="${clip.duration}" id="clipDurRange">
+              <input type="range" min="0.5" max="${Math.max(0.5, (clip.maxDuration || 60) - (clip.trimStart || 0))}" step="0.1" value="${clip.duration}" id="clipDurRange">
               <span>${clip.duration.toFixed(1)}s</span>
             </div>
             <div class="control-row">
@@ -1441,6 +1507,13 @@
           deleteCurrentSelected();
         };
         if (clip) {
+          document.getElementById('clipTrimStartRange').oninput = (e) => {
+            const newStart = parseFloat(e.target.value);
+            const oldEnd = (clip.trimStart || 0) + clip.duration;
+            clip.trimStart = newStart;
+            clip.duration = Math.max(0.5, oldEnd - newStart);
+            renderTimeline(); renderDrawer(); syncVideoElements(true); renderFrame();
+          };
           document.getElementById('clipDurRange').oninput = (e) => {
             clip.duration = parseFloat(e.target.value);
             renderTimeline(); renderDrawer(); renderFrame();
@@ -1712,7 +1785,7 @@
       };
     });
 
-    // ====== 分割片段 ======
+    // ====== 分割片段（自動繼承並累加 trimStart 入點） ======
     function splitAtPlayhead() {
       let acc = 0;
       for (let i = 0; i < state.clips.length; i++) {
@@ -1721,11 +1794,14 @@
           pushUndo();
           const leftDur = state.currentTime - acc;
           const rightDur = c.duration - leftDur;
+          const origTrimStart = c.trimStart || 0;
           c.duration = leftDur;
+
           const clone = {
             ...JSON.parse(JSON.stringify(c)),
             id: 'clip-' + Date.now(),
             name: c.name + ' (切段)',
+            trimStart: origTrimStart + leftDur * c.speed,
             duration: rightDur,
             maxDuration: c.maxDuration || 120,
             videoEl: c.videoEl
@@ -1735,7 +1811,7 @@
           state.lastSelectedType = 'clip';
           updateDeleteButtonLabel();
           showToast('已從播放頭位置分割片段 ✂️');
-          renderTimeline(); renderDrawer(); renderFrame();
+          renderTimeline(); renderDrawer(); syncVideoElements(true); renderFrame();
           return;
         }
         acc += c.duration;
@@ -1767,8 +1843,9 @@
           state.clips.push({
             id,
             name: file.name.slice(0, 14),
+            trimStart: 0,
             duration: realDur,
-            maxDuration: Math.max(realDur, 120),
+            maxDuration: realDur,
             speed: 1.0,
             transitionAfter: 'fade',
             color: { b: 100, c: 100, s: 100, warm: 0 },
@@ -1787,6 +1864,7 @@
           finalizeImport();
         };
 
+        // 每次瀏覽器解碼完成新影格時立刻重繪畫布，徹底消除延遲感
         vid.onseeked = () => {
           renderFrame();
         };
@@ -1875,7 +1953,7 @@
         togglePlay(false);
       } else {
         timelineScroll.scrollLeft = state.currentTime * PX_PER_SEC;
-        syncVideoElements();
+        syncVideoElements(false);
         renderFrame();
         requestAnimationFrame(tick);
       }
@@ -1889,6 +1967,7 @@
       document.getElementById('playBtn').textContent = state.isPlaying ? '⏸' : '▶';
       if (state.isPlaying) {
         lastTs = 0;
+        syncVideoElements(true);
         if (state.audio && state.audio.el) {
           state.audio.el.currentTime = state.currentTime;
           state.audio.el.play().catch(() => {});
