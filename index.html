@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>DanceCut Studio 剪舞工坊 · 雙端專業版</title>
+  <title>DanceCut Studio 剪舞工坊</title>
   <!-- Google Fonts & 開源免費繁體字體庫 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -326,12 +326,18 @@
 
     .empty-track-hint {
       font-size: 11px;
-      color: #6b7280;
-      border: 1px dashed #374151;
+      color: #9ca3af;
+      border: 1px dashed #4b5563;
       border-radius: 6px;
       padding: 6px 12px;
       cursor: pointer;
       white-space: nowrap;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .empty-track-hint:hover {
+      border-color: var(--accent);
+      color: #fff;
     }
 
     /* Clip Block & Trim Handles */
@@ -365,7 +371,6 @@
       pointer-events: none;
     }
 
-    /* 雙向拉長度手把 */
     .trim-handle {
       position: absolute;
       top: -1px;
@@ -696,13 +701,13 @@
 
   <!-- Transport & Mobile/Desktop Direct Buttons -->
   <div class="transport">
-    <div class="time-readout"><strong id="curTimeLabel">00:00.0</strong>/<span id="totTimeLabel">00:12.0</span></div>
+    <div class="time-readout"><strong id="curTimeLabel">00:00.0</strong>/<span id="totTimeLabel">00:01.0</span></div>
     <button class="play-btn" id="playBtn" title="播放/暫停 (Space)">▶</button>
     <div class="quick-actions">
       <button class="chip-btn" id="splitBtn" title="分割片段 (S)">✂️ 分割</button>
       <button class="chip-btn danger" id="deleteSelectedBtn" title="刪除選取項目 (Delete)">🗑️ 刪除</button>
       <button class="chip-btn" id="undoBtn" title="復原上一步 (Ctrl+Z)">↩️ 復原</button>
-      <button class="chip-btn" id="clearDemoBtn" title="清除所有示範素材">🧹 清空示範</button>
+      <button class="chip-btn" id="clearAllBtn" title="清空全部軌道">🧹 全部清空</button>
     </div>
   </div>
 
@@ -769,7 +774,7 @@
       { id: 'slide', name: '向左滑動', icon: '⇄' }
     ];
 
-    // ====== 核心狀態 ======
+    // ====== 核心狀態（預設完全空白，無任何示範小人、示範字幕或音樂） ======
     const PX_PER_SEC = 55;
     let undoStack = [];
 
@@ -778,84 +783,19 @@
       currentTime: 0,
       isPlaying: false,
       activeTab: 'media',
-      lastSelectedType: 'clip', // 'clip' | 'sub' | 'audio'
-      selectedClipId: 'clip-1',
-      selectedSubId: 'sub-1',
+      lastSelectedType: 'clip',
+      selectedClipId: null,
+      selectedSubId: null,
       fontFilter: '全部',
-      clips: [
-        {
-          id: 'clip-1',
-          name: '練舞室示範 1',
-          duration: 6.0,
-          maxDuration: 60.0,
-          speed: 1.0,
-          transitionAfter: 'zoom',
-          color: { b: 105, c: 122, s: 112, warm: -5 },
-          isDemo: true,
-          demoTheme: 0,
-          videoEl: null,
-          keyframes: [
-            { t: 0, scale: 1.0, x: 0, y: 0, rot: 0 },
-            { t: 3.0, scale: 1.25, x: 0, y: -35, rot: 0 }
-          ]
-        },
-        {
-          id: 'clip-2',
-          name: '日常Vlog示範 2',
-          duration: 6.0,
-          maxDuration: 60.0,
-          speed: 1.0,
-          transitionAfter: 'none',
-          color: { b: 108, c: 94, s: 92, warm: 10 },
-          isDemo: true,
-          demoTheme: 1,
-          videoEl: null,
-          keyframes: [
-            { t: 0, scale: 1.0, x: 0, y: 0, rot: 0 }
-          ]
-        }
-      ],
-      subtitles: [
-        {
-          id: 'sub-1',
-          text: 'DANCE PRACTICE · 副歌八拍細節',
-          start: 0.4,
-          duration: 4.5,
-          x: 0.5,
-          y: 0.80,
-          size: 24,
-          font: "'Smiley Sans', sans-serif",
-          color: '#ffffff',
-          stroke: '#ff3b7f',
-          bg: 'rgba(0,0,0,0.55)'
-        },
-        {
-          id: 'sub-2',
-          text: '午後陽光與拿鐵日常 ☕',
-          start: 6.5,
-          duration: 4.8,
-          x: 0.5,
-          y: 0.82,
-          size: 22,
-          font: "'LXGW WenKai TC', serif",
-          color: '#fff8e7',
-          stroke: '#3a2c1a',
-          bg: 'rgba(30,22,14,0.45)'
-        }
-      ],
-      audio: {
-        name: '示範音軌 120 BPM (可點選刪除)',
-        volume: 0.8,
-        url: null,
-        el: null
-      }
+      clips: [],
+      subtitles: [],
+      audio: null
     };
 
     const canvas = document.getElementById('previewCanvas');
     const ctx = canvas.getContext('2d');
     const timelineScroll = document.getElementById('timelineScroll');
 
-    // 保存操作快照供「復原」使用
     function pushUndo() {
       const snapshot = {
         clips: state.clips.map(c => ({ ...c, keyframes: JSON.parse(JSON.stringify(c.keyframes)), color: { ...c.color } })),
@@ -914,7 +854,6 @@
       renderFrame();
     }
 
-    // 動態更新刪除按鈕文字，讓手機與電腦使用者一眼就知道會刪掉什麼
     function updateDeleteButtonLabel() {
       const btn = document.getElementById('deleteSelectedBtn');
       if (state.lastSelectedType === 'sub' && state.selectedSubId) {
@@ -949,7 +888,7 @@
       return { scale: 1, x: 0, y: 0, rot: 0 };
     }
 
-    // ====== 渲染畫布 ======
+    // ====== 渲染畫布（已完全移除跳舞小人） ======
     function renderFrame() {
       const W = canvas.width;
       const H = canvas.height;
@@ -964,7 +903,7 @@
 
       for (let i = 0; i < state.clips.length; i++) {
         const c = state.clips[i];
-        if (state.currentTime >= acc && state.currentTime < acc + c.duration) {
+        if (state.currentTime >= acc && state.currentTime <= acc + c.duration) {
           activeClip = c;
           localT = state.currentTime - acc;
           clipIndex = i;
@@ -985,23 +924,39 @@
         const hue = col.warm < 0 ? col.warm * 0.8 : 0;
         ctx.filter = `brightness(${col.b}%) contrast(${col.c}%) saturate(${col.s}%) sepia(${sepia}%) hue-rotate(${hue}deg)`;
 
-        if (activeClip.videoEl && activeClip.videoEl.readyState >= 2) {
+        if (activeClip.videoEl) {
           const v = activeClip.videoEl;
-          const vRatio = v.videoWidth / v.videoHeight;
-          const cRatio = W / H;
-          let dw = W, dh = H;
-          if (vRatio > cRatio) {
-            dh = H;
-            dw = H * vRatio;
+          if (v.error) {
+            ctx.restore();
+            ctx.fillStyle = '#fca5a5';
+            ctx.font = "600 13px 'Noto Sans TC', sans-serif";
+            ctx.textAlign = 'center';
+            ctx.fillText('⚠️ 瀏覽器不支援此影片編碼格式', W / 2, H / 2 - 10);
+            ctx.font = "400 11px 'Noto Sans TC', sans-serif";
+            ctx.fillText('建議使用標準 H.264 MP4 檔案', W / 2, H / 2 + 12);
+          } else if (v.readyState >= 1 && v.videoWidth > 0) {
+            const vRatio = v.videoWidth / v.videoHeight;
+            const cRatio = W / H;
+            let dw = W, dh = H;
+            if (vRatio > cRatio) {
+              dh = H;
+              dw = H * vRatio;
+            } else {
+              dw = W;
+              dh = W / vRatio;
+            }
+            ctx.drawImage(v, -dw / 2, -dh / 2, dw, dh);
+            ctx.restore();
           } else {
-            dw = W;
-            dh = W / vRatio;
+            ctx.restore();
+            ctx.fillStyle = '#9ca3af';
+            ctx.font = "500 13px 'Noto Sans TC', sans-serif";
+            ctx.textAlign = 'center';
+            ctx.fillText('正在解碼影片畫面...', W / 2, H / 2);
           }
-          ctx.drawImage(v, -dw / 2, -dh / 2, dw, dh);
         } else {
-          drawDemoScene(ctx, W, H, activeClip.demoTheme, state.currentTime);
+          ctx.restore();
         }
-        ctx.restore();
 
         const timeLeft = activeClip.duration - localT;
         if (timeLeft <= 0.6 && activeClip.transitionAfter !== 'none' && clipIndex < state.clips.length - 1) {
@@ -1022,13 +977,12 @@
           }
         }
       } else if (state.clips.length === 0) {
-        // 空白專案提示畫面
         ctx.fillStyle = '#181a20';
         ctx.fillRect(0, 0, W, H);
         ctx.fillStyle = '#9ca3af';
         ctx.font = "600 14px 'Noto Sans TC', sans-serif";
         ctx.textAlign = 'center';
-        ctx.fillText('目前無影片畫面', W / 2, H / 2 - 10);
+        ctx.fillText('空白專案（無影片）', W / 2, H / 2 - 10);
         ctx.font = "400 12px 'Noto Sans TC', sans-serif";
         ctx.fillText('請點下方「＋ 匯入影片檔」開始剪輯', W / 2, H / 2 + 14);
       }
@@ -1078,47 +1032,6 @@
       document.getElementById('totTimeLabel').textContent = formatTime(getTotalDuration());
     }
 
-    function drawDemoScene(ctx, W, H, theme, t) {
-      const grad = ctx.createLinearGradient(-W/2, -H/2, W/2, H/2);
-      if (theme === 0) {
-        grad.addColorStop(0, '#1f1c2c');
-        grad.addColorStop(1, '#928dab');
-      } else {
-        grad.addColorStop(0, '#3a2d28');
-        grad.addColorStop(1, '#c99e7c');
-      }
-      ctx.fillStyle = grad;
-      ctx.fillRect(-W/2, -H/2, W, H);
-
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-      ctx.lineWidth = 1;
-      for (let i = -3; i <= 3; i++) {
-        ctx.beginPath();
-        ctx.moveTo(i * 40, 20);
-        ctx.lineTo(i * 110, H/2);
-        ctx.stroke();
-      }
-
-      const beat = Math.sin(t * Math.PI * 2);
-      const bounce = Math.abs(Math.cos(t * Math.PI * 2)) * 14;
-      ctx.fillStyle = theme === 0 ? '#ff3b7f' : '#ffe6c7';
-      ctx.beginPath();
-      ctx.arc(beat * 18, -30 - bounce, 22, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 8;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(beat * 18, -5 - bounce);
-      ctx.lineTo(beat * 10, 55 - bounce * 0.5);
-      ctx.moveTo(beat * 15, 10 - bounce);
-      ctx.lineTo(beat * 15 - 45, -15 + beat * 20);
-      ctx.moveTo(beat * 15, 10 - bounce);
-      ctx.lineTo(beat * 15 + 45, -15 - beat * 20);
-      ctx.stroke();
-    }
-
     // ====== 拖拉調整長度（Trimming）核心邏輯 ======
     let activeTrim = null;
 
@@ -1145,7 +1058,7 @@
         const deltaSec = (e.clientX - activeTrim.startX) / PX_PER_SEC;
 
         if (activeTrim.type === 'clip') {
-          const maxD = item.maxDuration || 60;
+          const maxD = item.maxDuration || 120;
           if (edge === 'right') {
             item.duration = Math.max(0.5, Math.min(maxD, activeTrim.origDur + deltaSec));
           } else if (edge === 'left') {
@@ -1198,7 +1111,7 @@
       if (state.clips.length === 0) {
         const emptyBtn = document.createElement('div');
         emptyBtn.className = 'empty-track-hint';
-        emptyBtn.textContent = '＋ 點此匯入影片檔（影片軌道為空）';
+        emptyBtn.textContent = '＋ 點此匯入影片檔（目前無影片）';
         emptyBtn.onclick = () => document.getElementById('videoFileInput').click();
         vTrack.appendChild(emptyBtn);
       } else {
@@ -1310,7 +1223,7 @@
         });
       }
 
-      // 3. 音訊軌道（支援點選與刪除）
+      // 3. 音訊軌道
       const aTrack = document.getElementById('audioTrack');
       aTrack.innerHTML = '';
       if (!state.audio) {
@@ -1338,14 +1251,12 @@
       }
     }
 
-    // 點擊時間刻度尺跳轉
     document.getElementById('ruler').addEventListener('click', (e) => {
       const rect = e.currentTarget.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
       seekTo(clickX / PX_PER_SEC);
     });
 
-    // 電腦版滑鼠滾輪支援橫向捲動時間軸
     timelineScroll.addEventListener('wheel', (e) => {
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         e.preventDefault();
@@ -1365,9 +1276,9 @@
       let acc = 0;
       state.clips.forEach(c => {
         if (c.videoEl) {
-          if (state.currentTime >= acc && state.currentTime < acc + c.duration) {
-            const targetT = (state.currentTime - acc) * c.speed;
-            if (Math.abs(c.videoEl.currentTime - targetT) > 0.15) {
+          if (state.currentTime >= acc && state.currentTime <= acc + c.duration) {
+            const targetT = Math.max(0.01, (state.currentTime - acc) * c.speed);
+            if (Math.abs(c.videoEl.currentTime - targetT) > 0.1) {
               c.videoEl.currentTime = Math.min(c.videoEl.duration || 999, targetT);
             }
           } else {
@@ -1378,7 +1289,7 @@
       });
     }
 
-    // ====== 刪除目前選取項目（支援手機點擊與電腦 Delete 鍵） ======
+    // ====== 刪除目前選取項目 ======
     function deleteCurrentSelected() {
       if (state.lastSelectedType === 'sub' && state.selectedSubId) {
         const target = state.subtitles.find(s => s.id === state.selectedSubId);
@@ -1420,14 +1331,14 @@
 
     document.getElementById('deleteSelectedBtn').onclick = deleteCurrentSelected;
 
-    // 一鍵清空所有內建示範素材
-    document.getElementById('clearDemoBtn').onclick = () => {
+    // 清空全部軌道
+    document.getElementById('clearAllBtn').onclick = () => {
       pushUndo();
       if (state.audio?.el) state.audio.el.pause();
-      state.clips = state.clips.filter(c => !c.isDemo);
+      state.clips = [];
       state.subtitles = [];
       state.audio = null;
-      state.selectedClipId = state.clips[0]?.id || null;
+      state.selectedClipId = null;
       state.selectedSubId = null;
       state.lastSelectedType = 'clip';
       state.currentTime = 0;
@@ -1436,7 +1347,7 @@
       renderTimeline();
       renderDrawer();
       renderFrame();
-      showToast('已清空所有示範素材，可開始匯入檔案 🧹');
+      showToast('已清空所有軌道 🧹');
     };
 
     // ====== 電腦鍵盤快捷鍵監聽 ======
@@ -1510,7 +1421,7 @@
           ${clip ? `
             <div class="control-row">
               <label>片段時長</label>
-              <input type="range" min="0.5" max="${clip.maxDuration || 60}" step="0.1" value="${clip.duration}" id="clipDurRange">
+              <input type="range" min="0.5" max="${clip.maxDuration || 120}" step="0.1" value="${clip.duration}" id="clipDurRange">
               <span>${clip.duration.toFixed(1)}s</span>
             </div>
             <div class="control-row">
@@ -1519,9 +1430,8 @@
               <span>${clip.speed}x</span>
             </div>
           ` : `
-            <div style="text-align:center; padding:12px 0; color:var(--text-muted);">
-              目前沒有影片片段，請點上方「＋ 匯入影片檔」或
-              <button class="chip-btn" id="restoreDemoBtn" style="margin-left:4px;">✨ 加入示範片段</button>
+            <div style="text-align:center; padding:16px 0; color:var(--text-muted);">
+              目前為空白專案，請點擊上方「＋ 匯入影片檔」載入你的舞蹈或 Vlog 影片。
             </div>
           `}
         `;
@@ -1530,9 +1440,6 @@
           state.lastSelectedType = 'clip';
           deleteCurrentSelected();
         };
-        if (document.getElementById('restoreDemoBtn')) {
-          document.getElementById('restoreDemoBtn').onclick = addDemoClip;
-        }
         if (clip) {
           document.getElementById('clipDurRange').oninput = (e) => {
             clip.duration = parseFloat(e.target.value);
@@ -1547,7 +1454,7 @@
 
       else if (state.activeTab === 'keyframe') {
         if (!clip) {
-          container.innerHTML = `<p style="color:var(--text-muted); text-align:center; margin-top:20px;">請先匯入或選取一段影片，再設定關鍵幀運鏡 ◆</p>`;
+          container.innerHTML = `<p style="color:var(--text-muted); text-align:center; margin-top:20px;">請先匯入一段影片，再設定關鍵幀運鏡 ◆</p>`;
           return;
         }
         let acc = 0, localT = 0;
@@ -1689,7 +1596,7 @@
 
       else if (state.activeTab === 'color') {
         if (!clip) {
-          container.innerHTML = `<p style="color:var(--text-muted); text-align:center; margin-top:20px;">請先匯入或選取一段影片，再調整濾鏡調色 🎨</p>`;
+          container.innerHTML = `<p style="color:var(--text-muted); text-align:center; margin-top:20px;">請先匯入一段影片，再調整濾鏡調色 🎨</p>`;
           return;
         }
         const col = clip.color;
@@ -1820,7 +1727,7 @@
             id: 'clip-' + Date.now(),
             name: c.name + ' (切段)',
             duration: rightDur,
-            maxDuration: c.maxDuration || 60,
+            maxDuration: c.maxDuration || 120,
             videoEl: c.videoEl
           };
           state.clips.splice(i + 1, 0, clone);
@@ -1838,30 +1745,7 @@
 
     document.getElementById('splitBtn').onclick = splitAtPlayhead;
 
-    function addDemoClip() {
-      pushUndo();
-      const id = 'clip-' + Date.now();
-      state.clips.push({
-        id,
-        name: '示範舞蹈片段',
-        duration: 4.0,
-        maxDuration: 60.0,
-        speed: 1.0,
-        transitionAfter: 'fade',
-        color: { b: 105, c: 115, s: 110, warm: 0 },
-        isDemo: true,
-        demoTheme: state.clips.length % 2,
-        videoEl: null,
-        keyframes: [{ t: 0, scale: 1.0, x: 0, y: 0, rot: 0 }]
-      });
-      state.selectedClipId = id;
-      state.lastSelectedType = 'clip';
-      updateDeleteButtonLabel();
-      renderTimeline(); renderDrawer(); renderFrame();
-      showToast('已加入示範片段');
-    }
-
-    // ====== 檔案匯入（影片 / 音訊 / 字體） ======
+    // ====== 檔案匯入（強制解碼第一幀畫面） ======
     document.getElementById('videoFileInput').onchange = (e) => {
       const files = Array.from(e.target.files);
       if (files.length > 0) pushUndo();
@@ -1869,20 +1753,25 @@
         const url = URL.createObjectURL(file);
         const vid = document.createElement('video');
         vid.src = url;
+        vid.preload = 'auto';
         vid.muted = true;
         vid.playsInline = true;
-        vid.onloadedmetadata = () => {
+        vid.setAttribute('playsinline', '');
+        vid.setAttribute('webkit-playsinline', '');
+
+        const finalizeImport = () => {
+          if (vid._imported) return;
+          vid._imported = true;
           const id = 'clip-' + Date.now() + Math.random();
-          const realDur = vid.duration || 5;
+          const realDur = (vid.duration && isFinite(vid.duration)) ? vid.duration : 10;
           state.clips.push({
             id,
             name: file.name.slice(0, 14),
-            duration: Math.min(30, realDur),
-            maxDuration: Math.max(realDur, 60),
+            duration: realDur,
+            maxDuration: Math.max(realDur, 120),
             speed: 1.0,
             transitionAfter: 'fade',
             color: { b: 100, c: 100, s: 100, warm: 0 },
-            isDemo: false,
             videoEl: vid,
             keyframes: [{ t: 0, scale: 1.0, x: 0, y: 0, rot: 0 }]
           });
@@ -1892,6 +1781,22 @@
           renderTimeline(); renderDrawer(); renderFrame();
           showToast(`已匯入影片：${file.name}`);
         };
+
+        vid.onloadeddata = () => {
+          vid.currentTime = 0.01;
+          finalizeImport();
+        };
+
+        vid.onseeked = () => {
+          renderFrame();
+        };
+
+        vid.onerror = () => {
+          finalizeImport();
+          showToast('此影片編碼格式可能不支援瀏覽器預覽');
+        };
+
+        vid.load();
       });
       e.target.value = '';
     };
@@ -1977,6 +1882,9 @@
     }
 
     function togglePlay(force) {
+      if (state.clips.length === 0 && state.subtitles.length === 0) {
+        return showToast('請先匯入影片或新增字幕再播放');
+      }
       state.isPlaying = typeof force === 'boolean' ? force : !state.isPlaying;
       document.getElementById('playBtn').textContent = state.isPlaying ? '⏸' : '▶';
       if (state.isPlaying) {
@@ -1998,6 +1906,7 @@
 
     // ====== 匯出錄製成影片檔 ======
     document.getElementById('exportBtn').onclick = () => {
+      if (state.clips.length === 0) return showToast('請先匯入影片再匯出');
       if (typeof MediaRecorder === 'undefined') {
         return showToast('目前瀏覽器不支援直接錄製匯出，請改用 Chrome 或 Safari 最新版');
       }
