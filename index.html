@@ -490,7 +490,7 @@
       .zoom-box input[type="range"] { width: 85px; }
     }
 
-    /* Multi-Layer Timeline */
+    /* Multi-Layer Timeline（0秒基準線與白色播放線 100% 重合無偏移） */
     .timeline-shell {
       position: relative;
       flex: 1;
@@ -521,13 +521,14 @@
       position: relative;
       min-height: 100%;
       min-width: 100%;
+      /* 左右各留 50vw，確保 0.00s 精準對齊螢幕正中央 50% 白色播放線 */
       padding: 24px 50vw 18px 50vw;
     }
 
     .ruler {
       position: sticky;
       top: 0;
-      left: 50vw;
+      left: 0;
       height: 20px;
       background: rgba(18, 20, 25, 0.95);
       border-bottom: 1px solid #2a2e3b;
@@ -561,54 +562,29 @@
       border-top: 8px solid #fff;
     }
 
-    .track-row {
-      height: 34px;
-      margin-bottom: 5px;
+    /* 固定懸浮在時間軸最左側的獨立軌道眼睛／標籤欄（不佔用軌道 0 秒空間） */
+    .track-sidebar-overlay {
+      position: absolute;
+      top: 24px;
+      left: 4px;
+      z-index: 22;
       display: flex;
-      align-items: center;
-      position: relative;
-      border-radius: 6px;
-      transition: opacity 0.18s, background 0.15s;
-    }
-
-    .track-row.pip-track {
-      background: rgba(168, 85, 247, 0.06);
-      border-left: 2px solid var(--purple);
-    }
-
-    .track-row.main-track {
-      background: rgba(59, 130, 246, 0.05);
-      border-left: 2px solid #3b82f6;
-    }
-
-    .track-row.audio-track {
-      background: rgba(44, 230, 195, 0.04);
-      border-left: 2px solid var(--cyan);
-    }
-
-    .track-row.track-hidden {
-      opacity: 0.36;
-      filter: grayscale(0.85);
-    }
-
-    .track-row.drop-target {
-      background: rgba(255, 204, 51, 0.18) !important;
-      outline: 1.5px dashed var(--gold);
+      flex-direction: column;
+      gap: 5px;
+      pointer-events: none;
     }
 
     .track-controls {
-      position: sticky;
-      left: 4px;
-      z-index: 14;
+      height: 34px;
       display: inline-flex;
       align-items: center;
       gap: 3px;
       background: rgba(15, 16, 20, 0.9);
-      padding: 2px 4px;
-      border-radius: 5px;
-      border: 1px solid rgba(255,255,255,0.08);
-      margin-right: 6px;
-      flex-shrink: 0;
+      padding: 0 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.1);
+      pointer-events: auto;
+      width: fit-content;
     }
 
     .eye-btn {
@@ -632,6 +608,38 @@
       font-weight: 700;
       color: var(--text-muted);
       pointer-events: none;
+    }
+
+    .track-row {
+      height: 34px;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      position: relative;
+      border-radius: 6px;
+      transition: opacity 0.18s, background 0.15s;
+    }
+
+    .track-row.pip-track {
+      background: rgba(168, 85, 247, 0.06);
+    }
+
+    .track-row.main-track {
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .track-row.audio-track {
+      background: rgba(44, 230, 195, 0.04);
+    }
+
+    .track-row.track-hidden {
+      opacity: 0.36;
+      filter: grayscale(0.85);
+    }
+
+    .track-row.drop-target {
+      background: rgba(255, 204, 51, 0.18) !important;
+      outline: 1.5px dashed var(--gold);
     }
 
     .empty-track-hint {
@@ -734,11 +742,15 @@
       font-weight: bold;
     }
 
+    /* 轉場節點改為絕對定位懸浮在接縫正上方，絕不擠佔時間軸橫向寬度 */
     .trans-node {
-      width: 20px;
-      height: 20px;
-      margin: 0 2px;
-      z-index: 5;
+      position: absolute;
+      right: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      z-index: 18;
       background: var(--bg-panel);
       border: 1.5px solid var(--cyan);
       color: var(--cyan);
@@ -748,7 +760,6 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      flex-shrink: 0;
     }
 
     .kf-diamond {
@@ -868,6 +879,9 @@
     }
 
     .drawer-toggle-tab {
+      position: sticky;
+      right: 0;
+      z-index: 10;
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -1098,7 +1112,7 @@
   <div class="topbar">
     <div class="brand">
       🎬 <span>CutVideo</span>
-      <span class="shortcut-badge">支援雙軌 AI 配音（免費語音＋克隆音色）· 可調整軌道磁吸強度</span>
+      <span class="shortcut-badge">已修正時間軸 0 秒基準對齊 · 白色播放線停在幾秒就精準切在幾秒</span>
     </div>
     <div class="ratio-group">
       <button class="ratio-btn active" data-ratio="9:16">9:16</button>
@@ -1110,7 +1124,7 @@
 
   <!-- Stage -->
   <div class="stage-wrap" id="stageWrap">
-    <div class="stage-hint" id="stageHint">磁吸對齊已開啟 · 點「🎙️ AI配音」可依字幕或講稿生成配音</div>
+    <div class="stage-hint" id="stageHint">白線停在幾秒就精準切在幾秒 · 拖曳控制點自由調整大小</div>
     <div class="stage-top-right">
       <div class="stage-pill-box" title="切換畫布框線操作模式">
         <button class="stage-mode-btn active" id="modeTransformBtn">↔️ 拉伸/移動</button>
@@ -1151,7 +1165,9 @@
 
   <!-- Multi-Layer Timeline -->
   <div class="timeline-shell">
-    <div class="playhead"></div>
+    <div class="playhead" id="playheadLine"></div>
+    <!-- 懸浮於最左側的獨立眼睛／標籤欄（完全不佔用軌道 0 秒橫向空間） -->
+    <div class="track-sidebar-overlay" id="trackSidebarOverlay"></div>
     <div class="timeline-area" id="timelineScroll">
       <div class="timeline-inner" id="timelineInner">
         <div class="ruler" id="ruler"></div>
@@ -1268,8 +1284,8 @@
 
     let state = {
       pxPerSec: 55,
-      snapEnabled: true,       // 磁吸開關
-      snapThresholdPx: 14,     // 磁吸觸發距離（像素：4px 弱 ~ 30px 強）
+      snapEnabled: true,
+      snapThresholdPx: 14,
       ratio: '9:16',
       currentTime: 0,
       isPlaying: false,
@@ -1290,7 +1306,7 @@
         sub: true
       },
       voiceConfig: {
-        engine: savedVoiceCfg.engine || 'browser', // 'browser' | 'clone'
+        engine: savedVoiceCfg.engine || 'browser',
         browserVoiceURI: savedVoiceCfg.browserVoiceURI || '',
         rate: savedVoiceCfg.rate || 1.0,
         autoSyncPlayback: savedVoiceCfg.autoSyncPlayback !== false,
@@ -1338,7 +1354,6 @@
       } catch (_) {}
     }
 
-    // 收集所有軌道上可作為磁吸對齊目標的時間點（播放頭、0秒、各片段頭尾、各字幕與音軌頭尾）
     function collectSnapTargets(excludeId = null) {
       const points = new Set([0, roundSec(state.currentTime)]);
       let acc = 0;
@@ -1367,7 +1382,6 @@
       return Array.from(points);
     }
 
-    // 執行時間磁吸計算（若關閉磁吸或超出門檻則直接回傳精準四捨五入秒數）
     function snapTimeValue(rawSec, excludeId = null) {
       const clamped = Math.max(0, rawSec);
       if (!state.snapEnabled || state.snapThresholdPx <= 0) {
@@ -1388,7 +1402,6 @@
       return roundSec(bestTarget);
     }
 
-    // 綁定頂部控制列「🧲 磁吸開關」與「🧲 磁吸強度滑桿」
     const toggleSnapBtn = document.getElementById('toggleSnapBtn');
     const snapStrengthRange = document.getElementById('snapStrengthRange');
 
@@ -1417,7 +1430,7 @@
     const stageResizer = document.getElementById('stageResizer');
     const bottomDrawer = document.getElementById('bottomDrawer');
 
-    // ====== 雙軌 AI 配音引擎（1. 免費內建系統語音 + 2. 自訂克隆聲音 API） ======
+    // ====== 雙軌 AI 配音引擎 ======
     let availableSystemVoices = [];
     const spokenSubIdsThisRun = new Set();
 
@@ -1425,7 +1438,6 @@
       if (!('speechSynthesis' in window)) return;
       const list = window.speechSynthesis.getVoices();
       if (list && list.length > 0) {
-        // 優先將繁體中文與中文語音排在最前面
         availableSystemVoices = [...list].sort((a, b) => {
           const aZh = a.lang.toLowerCase().includes('zh') ? 0 : 1;
           const bZh = b.lang.toLowerCase().includes('zh') ? 0 : 1;
@@ -1521,7 +1533,6 @@
             muted: false,
             mediaEl: audioEl
           });
-          // 若有對應字幕且字幕比語音短，自動微調延長字幕長度讓字聲完美同步
           if (linkedSub && linkedSub.duration < realDur) {
             linkedSub.duration = realDur;
           }
@@ -1531,7 +1542,6 @@
       });
     }
 
-    // 方案 A：依現有時間軸上的字幕段落生成 AI 配音
     async function generateVoiceFromSubtitles() {
       if (state.subtitles.length === 0) {
         return showToast('目前沒有字幕，請先新增字幕或使用下方「方案B」輸入講稿');
@@ -1549,7 +1559,6 @@
         return;
       }
 
-      // 克隆聲音 API 模式：逐段生成真實音訊檔並精準放進對應字幕時間點
       try {
         for (let i = 0; i < state.subtitles.length; i++) {
           const sub = state.subtitles[i];
@@ -1566,7 +1575,6 @@
       }
     }
 
-    // 方案 B：貼上多行講稿 ➔ 自動接續生成「字幕 ＋ AI 配音」
     async function generateVoiceAndSubtitlesFromScript() {
       const raw = (state.voiceConfig.scriptDraft || '').trim();
       if (!raw) return showToast('請先在文字框輸入講稿（一行一句）');
@@ -2847,7 +2855,7 @@
       handleEl.addEventListener('pointercancel', finishTrim);
     }
 
-    // ====== 長按片段拖曳（帶磁吸零跑位對齊） ======
+    // ====== 長按片段拖曳 ======
     let longPressTimer = null;
     let reorderState = null;
 
@@ -3059,7 +3067,7 @@
       return wrap;
     }
 
-    // ====== 渲染多層時間軸 ======
+    // ====== 渲染多層時間軸（側邊欄獨立懸浮，軌道 0 秒與白色播放線 100% 精準對齊） ======
     function renderTimeline() {
       const pps = state.pxPerSec;
       const total = getTotalDuration();
@@ -3078,24 +3086,26 @@
         ruler.appendChild(mark);
       }
 
+      const sidebar = document.getElementById('trackSidebarOverlay');
+      sidebar.innerHTML = '';
       const container = document.getElementById('tracksContainer');
       container.innerHTML = '';
 
       // 1. 畫中畫軌道
       state.pipTracks.forEach((pTrack, tIdx) => {
         const isVis = pTrack.visible !== false;
-        const row = document.createElement('div');
-        row.className = 'track-row pip-track' + (isVis ? '' : ' track-hidden');
-        row.dataset.trackKind = 'pip';
-        row.dataset.trackId = pTrack.id;
-
-        row.appendChild(createTrackHeaderControl(`頂層${tIdx + 1}`, '#d8b4fe', isVis, () => {
+        sidebar.appendChild(createTrackHeaderControl(`頂層${tIdx + 1}`, '#d8b4fe', isVis, () => {
           pTrack.visible = !isVis;
           renderTimeline();
           syncVideoElements(true);
           renderFrame();
           showToast(pTrack.visible ? `已顯示「頂層${tIdx + 1}」👁️` : `已暫時隱藏「頂層${tIdx + 1}」🙈`);
         }));
+
+        const row = document.createElement('div');
+        row.className = 'track-row pip-track' + (isVis ? '' : ' track-hidden');
+        row.dataset.trackKind = 'pip';
+        row.dataset.trackId = pTrack.id;
 
         if (pTrack.clips.length === 0) {
           const hint = document.createElement('div');
@@ -3161,18 +3171,18 @@
 
       // 2. 主影片軌道
       const isMainVis = state.trackVisibility.main !== false;
-      const vTrack = document.createElement('div');
-      vTrack.id = 'mainVideoTrack';
-      vTrack.className = 'track-row main-track' + (isMainVis ? '' : ' track-hidden');
-      vTrack.dataset.trackKind = 'main';
-
-      vTrack.appendChild(createTrackHeaderControl('主軌', '#93c5fd', isMainVis, () => {
+      sidebar.appendChild(createTrackHeaderControl('主軌', '#93c5fd', isMainVis, () => {
         state.trackVisibility.main = !isMainVis;
         renderTimeline();
         syncVideoElements(true);
         renderFrame();
         showToast(state.trackVisibility.main ? '已顯示主軌畫面 👁️' : '已暫時隱藏主軌畫面 🙈');
       }));
+
+      const vTrack = document.createElement('div');
+      vTrack.id = 'mainVideoTrack';
+      vTrack.className = 'track-row main-track' + (isMainVis ? '' : ' track-hidden');
+      vTrack.dataset.trackKind = 'main';
 
       if (state.clips.length === 0) {
         const emptyBtn = document.createElement('div');
@@ -3225,8 +3235,6 @@
             el.appendChild(d);
           });
 
-          vTrack.appendChild(el);
-
           if (idx < state.clips.length - 1) {
             const trBtn = document.createElement('div');
             trBtn.className = 'trans-node';
@@ -3244,23 +3252,25 @@
               renderTimeline();
               renderFrame();
             };
-            vTrack.appendChild(trBtn);
+            el.appendChild(trBtn);
           }
+
+          vTrack.appendChild(el);
         });
       }
       container.appendChild(vTrack);
 
       // 3. 獨立音訊軌道
       const isAudVis = state.trackVisibility.audio !== false;
-      const aTrack = document.createElement('div');
-      aTrack.className = 'track-row audio-track' + (isAudVis ? '' : ' track-hidden');
-
-      aTrack.appendChild(createTrackHeaderControl('音軌', '#6ee7b7', isAudVis, () => {
+      sidebar.appendChild(createTrackHeaderControl('音軌', '#6ee7b7', isAudVis, () => {
         state.trackVisibility.audio = !isAudVis;
         renderTimeline();
         syncVideoElements(true);
         showToast(state.trackVisibility.audio ? '已開啟獨立音軌聲音 👁️' : '已暫時關閉獨立音軌聲音 🙈');
       }));
+
+      const aTrack = document.createElement('div');
+      aTrack.className = 'track-row audio-track' + (isAudVis ? '' : ' track-hidden');
 
       if (state.audioClips.length === 0) {
         const emptyAudio = document.createElement('div');
@@ -3320,15 +3330,15 @@
 
       // 4. 字幕軌道
       const isSubVis = state.trackVisibility.sub !== false;
-      const sTrack = document.createElement('div');
-      sTrack.className = 'track-row' + (isSubVis ? '' : ' track-hidden');
-
-      sTrack.appendChild(createTrackHeaderControl('字幕', '#f9a8d4', isSubVis, () => {
+      sidebar.appendChild(createTrackHeaderControl('字幕', '#f9a8d4', isSubVis, () => {
         state.trackVisibility.sub = !isSubVis;
         renderTimeline();
         renderFrame();
         showToast(state.trackVisibility.sub ? '已顯示字幕軌道 👁️' : '已暫時隱藏字幕軌道 🙈');
       }));
+
+      const sTrack = document.createElement('div');
+      sTrack.className = 'track-row' + (isSubVis ? '' : ' track-hidden');
 
       if (state.subtitles.length === 0) {
         const emptySub = document.createElement('div');
@@ -3377,6 +3387,14 @@
       }
       container.appendChild(sTrack);
     }
+
+    // 同步左側懸浮標籤欄的垂直捲動位置
+    timelineScroll.addEventListener('scroll', () => {
+      const sidebar = document.getElementById('trackSidebarOverlay');
+      if (sidebar) {
+        sidebar.style.transform = `translateY(${-timelineScroll.scrollTop}px)`;
+      }
+    }, { passive: true });
 
     // ====== 按住時間軸軌道直接左右拖曳 ======
     let isDraggingTimeline = false;
@@ -3936,7 +3954,7 @@
             </div>
           ` : `
             <div style="text-align:center; padding:10px 0; color:var(--text-muted);">
-              上方「🧲 磁吸」可隨時開關或拉動滑桿調整吸附強弱；點「🎙️ AI配音」可讓 AI 朗讀字幕或講稿！
+              時間軸 0 秒基準已與白色播放線完全對齊，停在 35 秒按分割就會精準切在 35 秒！
             </div>
           `}
         `;
@@ -4794,20 +4812,35 @@
       };
     });
 
-    // ====== 精準無偏移分割片段 ======
-    function splitAtPlayhead() {
-      if (state.isPlaying) togglePlay(false);
-      const exactPlayheadSec = roundSec(state.currentTime);
+    // ====== 所見即所得零偏移分割（直接讀取白色播放線在畫面上的真實相對座標） ======
+    let lastSplitTimestamp = 0;
 
+    function splitAtPlayhead() {
+      const now = Date.now();
+      if (now - lastSplitTimestamp < 320) return;
+      lastSplitTimestamp = now;
+
+      if (state.isPlaying) togglePlay(false);
+
+      // 取得白色播放線正中央在螢幕上的真實 X 座標
+      const playheadRect = document.getElementById('playheadLine').getBoundingClientRect();
+      const playheadCenterX = playheadRect.left + playheadRect.width / 2;
+
+      // 1. 獨立音訊軌分割（僅當目前選取音訊軌時）
       if (state.lastSelectedType === 'audio' && state.selectedAudioId) {
         const idx = state.audioClips.findIndex(a => a.id === state.selectedAudioId);
         if (idx !== -1) {
           const a = state.audioClips[idx];
-          const aStart = roundSec(a.start || 0);
-          if (exactPlayheadSec > aStart + 0.1 && exactPlayheadSec < aStart + a.duration - 0.1) {
+          const blockEl = document.querySelector(`.audio-clip-block[data-audio-id="${a.id}"]`);
+          const blockRect = blockEl ? blockEl.getBoundingClientRect() : null;
+          const leftDur = blockRect
+            ? roundSec((playheadCenterX - blockRect.left) / state.pxPerSec)
+            : roundSec(state.currentTime - (a.start || 0));
+
+          if (leftDur > 0.1 && leftDur < a.duration - 0.1) {
             pushUndo();
-            const leftDur = roundSec(exactPlayheadSec - aStart);
             const rightDur = roundSec(a.duration - leftDur);
+            const exactCutGlobalSec = roundSec((a.start || 0) + leftDur);
             const exactRightTrimStart = roundSec((a.trimStart || 0) + leftDur);
             a.duration = leftDur;
 
@@ -4827,7 +4860,7 @@
               ...a,
               id: 'aud-' + Date.now(),
               name: a.name + '(切)',
-              start: exactPlayheadSec,
+              start: exactCutGlobalSec,
               trimStart: exactRightTrimStart,
               duration: rightDur,
               mediaEl: newEl
@@ -4835,87 +4868,107 @@
             state.audioClips.splice(idx + 1, 0, clone);
             state.selectedAudioId = clone.id;
             renderTimeline(); renderDrawer();
-            seekTo(exactPlayheadSec);
-            showToast(`已精準在 ${exactPlayheadSec.toFixed(2)}s 分割音軌 ✂️`);
+            seekTo(exactCutGlobalSec);
+            showToast(`已精準在 ${exactCutGlobalSec.toFixed(2)}s 分割音軌 ✂️`);
             return;
           }
         }
       }
 
+      // 2. 畫中畫軌道分割（僅當目前選取畫中畫片段時）
+      if (state.lastSelectedType === 'pip' && state.selectedClipId) {
+        for (const tr of state.pipTracks) {
+          const idx = tr.clips.findIndex(p => p.id === state.selectedClipId);
+          if (idx !== -1) {
+            const p = tr.clips[idx];
+            const blockEl = document.querySelector(`.clip-block[data-clip-id="${p.id}"]`);
+            const blockRect = blockEl ? blockEl.getBoundingClientRect() : null;
+            const leftDur = blockRect
+              ? roundSec((playheadCenterX - blockRect.left) / state.pxPerSec)
+              : roundSec(state.currentTime - (p.start || 0));
+
+            if (leftDur > 0.1 && leftDur < p.duration - 0.1) {
+              pushUndo();
+              const rightDur = roundSec(p.duration - leftDur);
+              const exactCutGlobalSec = roundSec((p.start || 0) + leftDur);
+              const exactRightTrimStart = roundSec((p.trimStart || 0) + leftDur * (p.speed || 1.0));
+              p.duration = leftDur;
+
+              let rightMediaEl = p.mediaEl;
+              if (p.mediaEl?.tagName === 'VIDEO') {
+                rightMediaEl = createClonedVideoElement(p.mediaEl.src, exactRightTrimStart);
+              }
+
+              const clone = {
+                ...cloneClipData(p),
+                id: 'pip-' + Date.now(),
+                name: p.name + '(切)',
+                start: exactCutGlobalSec,
+                trimStart: exactRightTrimStart,
+                duration: rightDur,
+                mediaEl: rightMediaEl
+              };
+              tr.clips.splice(idx + 1, 0, clone);
+              state.selectedClipId = clone.id;
+              updateDeleteButtonLabel();
+              renderTimeline(); renderDrawer();
+              seekTo(exactCutGlobalSec);
+              showToast(`已精準在 ${exactCutGlobalSec.toFixed(2)}s 分割畫中畫 ✂️`);
+              return;
+            }
+          }
+        }
+      }
+
+      // 3. 主影片軌道分割（直接以白色播放線在畫面上的真實落點計算 leftDur，絕不偏移）
       let acc = 0;
       for (let i = 0; i < state.clips.length; i++) {
         const c = state.clips[i];
-        const segStart = roundSec(acc);
-        const segEnd = roundSec(acc + c.duration);
-        if (exactPlayheadSec > segStart + 0.1 && exactPlayheadSec < segEnd - 0.1) {
-          pushUndo();
-          const leftDur = roundSec(exactPlayheadSec - segStart);
-          const rightDur = roundSec(c.duration - leftDur);
-          const origTrimStart = c.trimStart || 0;
-          const exactRightTrimStart = roundSec(origTrimStart + leftDur * (c.speed || 1.0));
-          c.duration = leftDur;
+        const blockEl = document.querySelector(`#mainVideoTrack .clip-block[data-clip-id="${c.id}"]`);
+        const blockRect = blockEl ? blockEl.getBoundingClientRect() : null;
 
-          let rightMediaEl = c.mediaEl;
-          if (c.mediaEl?.tagName === 'VIDEO') {
-            rightMediaEl = createClonedVideoElement(c.mediaEl.src, exactRightTrimStart);
-          }
+        // 優先判斷白色播放線是否直接壓在這個主軌方塊上
+        const isVisuallyInside = blockRect
+          ? (playheadCenterX > blockRect.left + 4 && playheadCenterX < blockRect.right - 4)
+          : (state.currentTime > acc + 0.1 && state.currentTime < acc + c.duration - 0.1);
 
-          const clone = {
-            ...cloneClipData(c),
-            id: 'clip-' + Date.now(),
-            name: c.name + '(切)',
-            trimStart: exactRightTrimStart,
-            duration: rightDur,
-            mediaEl: rightMediaEl
-          };
-          state.clips.splice(i + 1, 0, clone);
-          state.selectedClipId = clone.id;
-          state.lastSelectedType = 'clip';
-          updateDeleteButtonLabel();
-          renderTimeline(); renderDrawer();
-          seekTo(exactPlayheadSec);
-          showToast(`已精準在 ${exactPlayheadSec.toFixed(2)}s 分割（無偏移）✂️`);
-          return;
-        }
-        acc += c.duration;
-      }
+        if (isVisuallyInside) {
+          const leftDur = blockRect
+            ? roundSec((playheadCenterX - blockRect.left) / state.pxPerSec)
+            : roundSec(state.currentTime - acc);
 
-      for (const tr of state.pipTracks) {
-        for (let i = 0; i < tr.clips.length; i++) {
-          const p = tr.clips[i];
-          const pStart = roundSec(p.start || 0);
-          const pEnd = roundSec(pStart + p.duration);
-          if (exactPlayheadSec > pStart + 0.1 && exactPlayheadSec < pEnd - 0.1) {
+          if (leftDur > 0.1 && leftDur < c.duration - 0.1) {
             pushUndo();
-            const leftDur = roundSec(exactPlayheadSec - pStart);
-            const rightDur = roundSec(p.duration - leftDur);
-            const exactRightTrimStart = roundSec((p.trimStart || 0) + leftDur * (p.speed || 1.0));
-            p.duration = leftDur;
+            const rightDur = roundSec(c.duration - leftDur);
+            const origTrimStart = c.trimStart || 0;
+            const exactRightTrimStart = roundSec(origTrimStart + leftDur * (c.speed || 1.0));
+            const exactCutGlobalSec = roundSec(acc + leftDur);
+            c.duration = leftDur;
 
-            let rightMediaEl = p.mediaEl;
-            if (p.mediaEl?.tagName === 'VIDEO') {
-              rightMediaEl = createClonedVideoElement(p.mediaEl.src, exactRightTrimStart);
+            let rightMediaEl = c.mediaEl;
+            if (c.mediaEl?.tagName === 'VIDEO') {
+              rightMediaEl = createClonedVideoElement(c.mediaEl.src, exactRightTrimStart);
             }
 
             const clone = {
-              ...cloneClipData(p),
-              id: 'pip-' + Date.now(),
-              name: p.name + '(切)',
-              start: exactPlayheadSec,
+              ...cloneClipData(c),
+              id: 'clip-' + Date.now(),
+              name: c.name + '(切)',
               trimStart: exactRightTrimStart,
               duration: rightDur,
               mediaEl: rightMediaEl
             };
-            tr.clips.splice(i + 1, 0, clone);
+            state.clips.splice(i + 1, 0, clone);
             state.selectedClipId = clone.id;
-            state.lastSelectedType = 'pip';
+            state.lastSelectedType = 'clip';
             updateDeleteButtonLabel();
             renderTimeline(); renderDrawer();
-            seekTo(exactPlayheadSec);
-            showToast(`已精準在 ${exactPlayheadSec.toFixed(2)}s 分割畫中畫 ✂️`);
+            seekTo(exactCutGlobalSec);
+            showToast(`已精準在 ${exactCutGlobalSec.toFixed(2)}s 分割（無偏移）✂️`);
             return;
           }
         }
+        acc += c.duration;
       }
 
       showToast('請將白色播放線停在片段或音軌中間再按下分割');
