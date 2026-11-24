@@ -50,6 +50,7 @@
       --text-main: #f3f4f6;
       --text-muted: #9ca3af;
       --border: #2b2f3b;
+      --stage-height: 230px; /* 可手動拖曳或一鍵調整顯示窗高度 */
     }
 
     * {
@@ -145,25 +146,31 @@
       cursor: pointer;
     }
 
-    /* Stage / Preview Area */
+    /* Stage / Preview Area - 支援手動調整顯示窗大小與嚴格比例鎖定 */
     .stage-wrap {
-      flex: 1;
-      min-height: 135px;
+      height: var(--stage-height);
+      min-height: 120px;
+      max-height: 62dvh;
       display: flex;
       align-items: center;
       justify-content: center;
       background: #08090c;
       position: relative;
-      padding: 6px;
+      padding: 10px;
       overflow: hidden;
+      flex-shrink: 0;
     }
 
     canvas#previewCanvas {
       background: #000;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.85);
       border-radius: 6px;
+      border: 1px solid #2b2f3b;
+      height: 100%;
+      width: auto;
       max-width: 100%;
       max-height: 100%;
+      object-fit: contain;
       touch-action: none;
       cursor: grab;
     }
@@ -182,17 +189,76 @@
       padding: 3px 9px;
       border-radius: 99px;
       pointer-events: none;
-      max-width: 92%;
+      max-width: 65%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
+    /* 顯示窗大小快速切換膠囊 */
+    .stage-size-controls {
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      display: flex;
+      gap: 3px;
+      background: rgba(23, 25, 32, 0.88);
+      border: 1px solid var(--border);
+      padding: 2px;
+      border-radius: 8px;
+      z-index: 15;
+    }
+
+    .stage-size-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 6px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .stage-size-btn.active {
+      background: var(--accent-soft);
+      color: #fff;
+    }
+
+    /* 可上下拖曳調整顯示窗高度的分隔手把 */
+    .stage-resizer {
+      height: 12px;
+      background: #14161d;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: ns-resize;
+      touch-action: none;
+      flex-shrink: 0;
+    }
+
+    .stage-resizer:hover, .stage-resizer.active {
+      background: var(--accent-soft);
+    }
+
+    .stage-resizer::after {
+      content: '';
+      width: 36px;
+      height: 3px;
+      border-radius: 99px;
+      background: #4b5563;
+    }
+
+    .stage-resizer.active::after {
+      background: var(--accent);
+    }
+
     /* Transport & Timeline Zoom Bar */
     .transport {
-      height: 42px;
+      height: 40px;
       background: var(--bg-panel);
-      border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -214,8 +280,8 @@
     }
 
     .play-btn {
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       border: none;
       background: var(--text-main);
@@ -289,7 +355,7 @@
     }
 
     .zoom-box input[type="range"] {
-      width: 58px;
+      width: 55px;
       height: 14px;
       accent-color: var(--cyan);
     }
@@ -298,18 +364,18 @@
       .zoom-box input[type="range"] { width: 95px; }
     }
 
-    /* Multi-Layer Timeline */
+    /* Multi-Layer Timeline - 空間不足時自動上下＋左右滾動 */
     .timeline-area {
-      height: 164px;
+      flex: 1;
+      min-height: 95px;
       background: #121419;
       position: relative;
       overflow-x: auto;
       overflow-y: auto;
-      flex-shrink: 0;
       border-bottom: 1px solid var(--border);
       scroll-behavior: auto;
       cursor: grab;
-      touch-action: none;
+      touch-action: pan-y;
     }
 
     .timeline-area.grabbing {
@@ -320,29 +386,43 @@
       position: relative;
       min-height: 100%;
       min-width: 100%;
-      padding: 24px 50vw 12px 50vw;
+      padding: 24px 50vw 18px 50vw;
     }
 
     .ruler {
-      position: absolute;
+      position: sticky;
       top: 0;
       left: 50vw;
       height: 20px;
+      background: rgba(18, 20, 25, 0.95);
       border-bottom: 1px solid #2a2e3b;
       display: flex;
       font-size: 10px;
       color: var(--text-muted);
+      z-index: 18;
+      margin-top: -24px;
+      margin-bottom: 4px;
     }
 
     .playhead {
-      position: fixed;
+      position: absolute;
+      top: 0;
+      bottom: 0;
       left: 50%;
       width: 2px;
-      height: 164px;
       background: #fff;
       z-index: 25;
       pointer-events: none;
       box-shadow: 0 0 6px rgba(255,255,255,0.85);
+    }
+
+    .timeline-shell {
+      position: relative;
+      flex: 1;
+      min-height: 95px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     .playhead::before {
@@ -549,7 +629,6 @@
       box-shadow: 0 0 0 1.5px #fff;
     }
 
-    /* 獨立音訊片段方塊（支援頭尾白條裁切、長按左右拖移、分割與增益） */
     .audio-clip-block {
       position: absolute;
       height: 28px;
@@ -578,7 +657,7 @@
     /* Tool Drawer */
     .drawer {
       background: var(--bg-panel);
-      height: 232px;
+      height: 215px;
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
@@ -592,7 +671,7 @@
     }
 
     .nav-tabs {
-      height: 50px;
+      height: 48px;
       background: #121318;
       border-top: 1px solid var(--border);
       display: flex;
@@ -799,7 +878,7 @@
   <div class="topbar">
     <div class="brand">
       🎬 <span>CutVideo</span>
-      <span class="shortcut-badge">匯出自動混音背景音樂與影片原聲 · 支援影片轉音軌 · 音軌可拉頭尾裁切與增益</span>
+      <span class="shortcut-badge">拖曳分隔線可調整顯示窗大小 · 軌道區支援上下滾動</span>
     </div>
     <div class="ratio-group">
       <button class="ratio-btn active" data-ratio="9:16">9:16</button>
@@ -809,11 +888,19 @@
     <button class="btn-export" id="exportBtn">匯出影片</button>
   </div>
 
-  <!-- Stage -->
-  <div class="stage-wrap">
-    <div class="stage-hint" id="stageHint">支援匯入影片轉獨立音軌 · 音軌可拉頭尾裁切、靜音與增益</div>
-    <canvas id="previewCanvas" width="360" height="640"></canvas>
+  <!-- Stage (預設 9:16 直屏比例，支援右上角快捷高度與下方拖曳調整大小) -->
+  <div class="stage-wrap" id="stageWrap">
+    <div class="stage-hint" id="stageHint">9:16 直屏 · 拖曳下方橫槓可放大/縮小顯示窗</div>
+    <div class="stage-size-controls">
+      <button class="stage-size-btn" data-h="160">小窗</button>
+      <button class="stage-size-btn active" data-h="230">中窗</button>
+      <button class="stage-size-btn" data-h="330">大窗</button>
+    </div>
+    <canvas id="previewCanvas" width="360" height="640" style="aspect-ratio: 9 / 16;"></canvas>
   </div>
+
+  <!-- 手動上下拖曳調整顯示窗大小的分隔手把 -->
+  <div class="stage-resizer" id="stageResizer" title="按住上下拖曳調整顯示窗高度"></div>
 
   <!-- Transport & Timeline Zoom Control -->
   <div class="transport">
@@ -831,12 +918,14 @@
     </div>
   </div>
 
-  <!-- Multi-Layer Timeline -->
-  <div class="timeline-area" id="timelineScroll">
+  <!-- Multi-Layer Timeline (空間不足時自動上下＋左右滾動) -->
+  <div class="timeline-shell">
     <div class="playhead"></div>
-    <div class="timeline-inner" id="timelineInner">
-      <div class="ruler" id="ruler"></div>
-      <div id="tracksContainer"></div>
+    <div class="timeline-area" id="timelineScroll">
+      <div class="timeline-inner" id="timelineInner">
+        <div class="ruler" id="ruler"></div>
+        <div id="tracksContainer"></div>
+      </div>
     </div>
   </div>
 
@@ -940,7 +1029,7 @@
       currentTime: 0,
       isPlaying: false,
       activeTab: 'media',
-      lastSelectedType: 'clip', // 'clip' | 'pip' | 'sub' | 'audio'
+      lastSelectedType: 'clip',
       selectedClipId: null,
       selectedSubId: null,
       selectedAudioId: null,
@@ -976,14 +1065,59 @@
       ],
       clips: [],
       subtitles: [],
-      audioClips: [] // 多段獨立音軌（支援音樂、音效、以及「影片轉音軌」抽離的聲音）
+      audioClips: []
     };
 
     const canvas = document.getElementById('previewCanvas');
     const ctx = canvas.getContext('2d');
     const timelineScroll = document.getElementById('timelineScroll');
+    const stageWrap = document.getElementById('stageWrap');
+    const stageResizer = document.getElementById('stageResizer');
 
-    // ====== Web Audio API 混音增益與匯出音訊引擎（支援 0%~300% 增益 ＋ 雙軌即時混音匯出） ======
+    // ====== 手動拖曳與快捷按鈕調整顯示窗高度 ======
+    function setStageHeight(px) {
+      const maxH = Math.round(window.innerHeight * 0.62);
+      const clamped = Math.max(120, Math.min(maxH, px));
+      document.documentElement.style.setProperty('--stage-height', clamped + 'px');
+      document.querySelectorAll('.stage-size-btn').forEach(b => {
+        b.classList.toggle('active', Math.abs(parseInt(b.dataset.h, 10) - clamped) < 15);
+      });
+    }
+
+    document.querySelectorAll('.stage-size-btn').forEach(btn => {
+      btn.onclick = () => {
+        setStageHeight(parseInt(btn.dataset.h, 10));
+      };
+    });
+
+    let resizingStage = false;
+    let resizeStartY = 0;
+    let resizeStartH = 230;
+
+    stageResizer.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      resizingStage = true;
+      resizeStartY = e.clientY;
+      resizeStartH = stageWrap.getBoundingClientRect().height;
+      stageResizer.classList.add('active');
+      stageResizer.setPointerCapture(e.pointerId);
+    });
+
+    stageResizer.addEventListener('pointermove', (e) => {
+      if (!resizingStage) return;
+      const dy = e.clientY - resizeStartY;
+      setStageHeight(resizeStartH + dy);
+    });
+
+    const endStageResize = () => {
+      if (!resizingStage) return;
+      resizingStage = false;
+      stageResizer.classList.remove('active');
+    };
+    stageResizer.addEventListener('pointerup', endStageResize);
+    stageResizer.addEventListener('pointercancel', endStageResize);
+
+    // ====== Web Audio API 混音增益與匯出音訊引擎 ======
     let sharedAudioCtx = null;
     let exportMixDest = null;
 
@@ -1001,7 +1135,6 @@
       return sharedAudioCtx;
     }
 
-    // 將任何 HTMLVideoElement 或 HTMLAudioElement 接入 Web Audio GainNode（支援超過 100% 的增益放大，同時分流到喇叭與匯出錄製端）
     function ensureAudioNode(mediaEl) {
       if (!mediaEl || mediaEl._gainNode) return mediaEl?._gainNode;
       const actx = getAudioCtx();
@@ -1026,7 +1159,7 @@
       const gNode = ensureAudioNode(mediaEl);
       if (gNode && sharedAudioCtx) {
         gNode.gain.setValueAtTime(effectiveGain, sharedAudioCtx.currentTime);
-        mediaEl.volume = 1.0; // 由 GainNode 控制 0~300% 精準增益
+        mediaEl.volume = 1.0;
       } else {
         mediaEl.volume = Math.min(1.0, effectiveGain);
       }
@@ -1114,8 +1247,8 @@
         duration: 5,
         maxDuration: 60,
         speed: 1.0,
-        muted: false,      // 影片原聲靜音開關
-        audioGain: 1.0,    // 影片原聲增益 (0.0 ~ 3.0，預設 1.0 = 100%)
+        muted: false,
+        audioGain: 1.0,
         transitionAfter: 'none',
         fadeIn: { type: 'none', dur: 0.8 },
         fadeOut: { type: 'none', dur: 0.8 },
@@ -1697,9 +1830,9 @@
         ctx.fillStyle = '#9ca3af';
         ctx.font = "600 13px 'Noto Sans TC', sans-serif";
         ctx.textAlign = 'center';
-        ctx.fillText('空白底板（上方軌道覆蓋下方軌道）', W / 2, H / 2 - 10);
+        ctx.fillText(`空白底板（${state.ratio}）`, W / 2, H / 2 - 10);
         ctx.font = "400 11px 'Noto Sans TC', sans-serif";
-        ctx.fillText('請點下方「＋ 匯入主影片」或「＋ 匯入畫中畫」', W / 2, H / 2 + 12);
+        ctx.fillText('上方軌道覆蓋下方軌道 · 可拖曳上方橫槓調視窗大小', W / 2, H / 2 + 12);
       }
 
       state.subtitles.forEach(sub => {
@@ -1802,7 +1935,7 @@
       document.getElementById('totTimeLabel').textContent = formatTime(getTotalDuration());
     }
 
-    // ====== 雙向即時裁切（主軌、畫中畫、獨立音軌通用） ======
+    // ====== 雙向即時裁切 ======
     let activeTrim = null;
 
     function formatClipLabel(clip, prefix = '') {
@@ -1898,7 +2031,6 @@
         } else if (activeTrim.type === 'audio') {
           const maxTotal = item.maxDuration || 300;
           if (edge === 'left') {
-            // 往右拉裁切音訊開頭並順移起點，往左拉還原
             const minDelta = -Math.min(activeTrim.origStart, activeTrim.origTrimStart);
             const maxDelta = activeTrim.origDur - 0.3;
             const clampedDelta = Math.max(minDelta, Math.min(maxDelta, deltaSec));
@@ -1950,7 +2082,7 @@
       handleEl.addEventListener('pointercancel', finishTrim);
     }
 
-    // ====== 長按片段拖曳（主軌 <-> 畫中畫軌，或音訊軌左右移動出現位置） ======
+    // ====== 長按片段拖曳 ======
     let longPressTimer = null;
     let reorderState = null;
 
@@ -1975,7 +2107,7 @@
         pushUndo();
         reorderState = {
           clipId: clip.id,
-          sourceType, // 'main' | 'pip' | 'audio'
+          sourceType,
           sourceTrackId,
           startX,
           startY,
@@ -2007,7 +2139,6 @@
       if (!reorderState) return;
       e.preventDefault();
 
-      // 若是獨立音訊條，左右拖動自由改變出現秒數 start
       if (reorderState.sourceType === 'audio') {
         const aClip = state.audioClips.find(a => a.id === reorderState.clipId);
         if (aClip) {
@@ -2323,7 +2454,7 @@
       }
       container.appendChild(vTrack);
 
-      // 3. 獨立音訊軌道（多段獨立音軌：支援頭尾裁切、左右移動對齊、增益放大與影片轉音軌）
+      // 3. 獨立音訊軌道
       const aTrack = document.createElement('div');
       aTrack.className = 'track-row audio-track';
       const audBadge = document.createElement('span');
@@ -2443,7 +2574,7 @@
       container.appendChild(sTrack);
     }
 
-    // ====== 按住時間軸軌道直接左右拖曳 ======
+    // ====== 按住時間軸軌道直接左右拖曳（同時保留垂直滾動多層軌道） ======
     let isDraggingTimeline = false;
     let timelineWasDragged = false;
     let dragStartX = 0;
@@ -2494,17 +2625,16 @@
 
     timelineScroll.addEventListener('wheel', (e) => {
       if (reorderState) return;
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      // 只有按住 Shift 滾輪或純水平滾動時才轉橫向，一般垂直滾輪可上下捲動多層軌道
+      if (e.shiftKey) {
         e.preventDefault();
         timelineScroll.scrollLeft += e.deltaY;
       }
     }, { passive: false });
 
-    // ====== 即時同步所有圖層的影像與音訊（含原聲靜音/增益與獨立音軌） ======
     function syncVideoElements(immediate = false) {
       if (activeTrim) return;
 
-      // 1. 主影片軌道（影像 + 原聲增益控制）
       let acc = 0;
       state.clips.forEach(c => {
         if (c.mediaEl && c.mediaEl.tagName === 'VIDEO') {
@@ -2522,7 +2652,6 @@
         acc += c.duration;
       });
 
-      // 2. 所有畫中畫軌道
       state.pipTracks.forEach(tr => {
         tr.clips.forEach(pClip => {
           if (pClip.mediaEl && pClip.mediaEl.tagName === 'VIDEO') {
@@ -2541,7 +2670,6 @@
         });
       });
 
-      // 3. 獨立音訊軌道（支援多段音訊與「影片轉音軌」片段同步）
       state.audioClips.forEach(aClip => {
         if (!aClip.mediaEl) return;
         applyMediaAudioGain(aClip.mediaEl, aClip.muted, aClip.gain ?? 1.0);
@@ -2560,7 +2688,6 @@
         }
       });
 
-      // 4. 自訂背景影片（固定靜音）
       if (state.background.mode === 'custom' && state.background.mediaEl?.tagName === 'VIDEO') {
         const bgVid = state.background.mediaEl;
         bgVid.muted = true;
@@ -2847,20 +2974,17 @@
       renderTimeline(); renderDrawer(); renderFrame();
     }
 
-    // 從目前選取的影片分離出獨立音軌
     function extractAudioFromClip(clip, isPip) {
       if (!clip || !clip.mediaEl || clip.mediaEl.tagName !== 'VIDEO') {
         return showToast('請先選取一段影片再分離音軌');
       }
       pushUndo();
-      // 建立一個獨立的音訊播放器共用同一份影片來源 URL
       const audEl = document.createElement('video');
       audEl.src = clip.mediaEl.src;
       audEl.preload = 'auto';
       audEl.playsInline = true;
       ensureAudioNode(audEl);
 
-      // 計算該影片在時間軸上的起始位置
       let startSec = clip.start || 0;
       if (!isPip) {
         startSec = 0;
@@ -2884,7 +3008,6 @@
         mediaEl: audEl
       });
 
-      // 將原影片設為靜音避免聲音重疊
       clip.muted = true;
       state.selectedAudioId = id;
       state.lastSelectedType = 'audio';
@@ -3630,22 +3753,34 @@
       };
     });
 
-    // ====== 畫面比例切換 ======
+    // ====== 畫面比例切換（嚴格鎖定 9:16 直屏、16:9 橫屏、1:1 正方形） ======
     document.querySelectorAll('.ratio-btn').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.ratio = btn.dataset.ratio;
-        if (state.ratio === '9:16') { canvas.width = 360; canvas.height = 640; }
-        if (state.ratio === '16:9') { canvas.width = 640; canvas.height = 360; }
-        if (state.ratio === '1:1')  { canvas.width = 480; canvas.height = 480; }
+        const hintEl = document.getElementById('stageHint');
+        if (state.ratio === '9:16') {
+          canvas.width = 360; canvas.height = 640;
+          canvas.style.aspectRatio = '9 / 16';
+          if (hintEl) hintEl.textContent = '9:16 直屏 · 拖曳下方橫槓可放大/縮小顯示窗';
+        }
+        if (state.ratio === '16:9') {
+          canvas.width = 640; canvas.height = 360;
+          canvas.style.aspectRatio = '16 / 9';
+          if (hintEl) hintEl.textContent = '16:9 橫屏 · 拖曳下方橫槓可放大/縮小顯示窗';
+        }
+        if (state.ratio === '1:1')  {
+          canvas.width = 480; canvas.height = 480;
+          canvas.style.aspectRatio = '1 / 1';
+          if (hintEl) hintEl.textContent = '1:1 正方形 · 拖曳下方橫槓可放大/縮小顯示窗';
+        }
         renderFrame();
       };
     });
 
-    // ====== 分割片段（支援主軌、畫中畫、以及獨立音訊軌） ======
+    // ====== 分割片段 ======
     function splitAtPlayhead() {
-      // 1. 若目前選取的是音訊軌且播放頭在音訊中間，優先分割音訊
       if (state.lastSelectedType === 'audio' && state.selectedAudioId) {
         const idx = state.audioClips.findIndex(a => a.id === state.selectedAudioId);
         if (idx !== -1) {
@@ -3680,7 +3815,6 @@
         }
       }
 
-      // 2. 主影片軌道
       let acc = 0;
       for (let i = 0; i < state.clips.length; i++) {
         const c = state.clips[i];
@@ -3719,7 +3853,6 @@
         acc += c.duration;
       }
 
-      // 3. 畫中畫軌道
       for (const tr of state.pipTracks) {
         for (let i = 0; i < tr.clips.length; i++) {
           const p = tr.clips[i];
@@ -3875,7 +4008,6 @@
       e.target.value = '';
     };
 
-    // 匯入純音訊檔（MP3 / M4A / WAV）
     document.getElementById('audioFileInput').onchange = (e) => {
       const files = Array.from(e.target.files);
       if (files.length > 0) pushUndo();
@@ -3910,7 +4042,6 @@
       e.target.value = '';
     };
 
-    // 匯入影片檔直接轉成獨立音軌（抽離畫面只留聲音，與影片軌同步）
     document.getElementById('videoToAudioInput').onchange = (e) => {
       const files = Array.from(e.target.files);
       if (files.length > 0) pushUndo();
@@ -4042,7 +4173,7 @@
 
     document.getElementById('playBtn').onclick = () => togglePlay();
 
-    // ====== 匯出錄製成影片檔（同步混音錄入所有背景音樂＋影片原聲） ======
+    // ====== 匯出錄製成影片檔 ======
     document.getElementById('exportBtn').onclick = () => {
       const hasAnyPip = state.pipTracks.some(t => t.clips.length > 0);
       if (state.clips.length === 0 && !hasAnyPip && state.audioClips.length === 0) {
@@ -4055,7 +4186,6 @@
       getAudioCtx();
       showToast('正在高速渲染並混音匯出（包含音樂與影片原聲），請稍候...');
 
-      // 合併畫布視訊軌道 ＋ Web Audio API 混音音訊軌道
       const videoStream = canvas.captureStream(30);
       const combinedStream = new MediaStream();
       videoStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
