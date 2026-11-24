@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Chiron+Hei+HK:wght@400;700&family=Chiron+Sung+HK:wght@400;700&family=Iansui&family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;700;900&family=Noto+Serif+TC:wght@400;700&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+  <!-- MediaPipe Selfie Segmentation -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
   <style>
     @import url('https://cdn.jsdelivr.net/npm/open-huninn-font@1.1.0/font.css');
     @import url('https://cdn.jsdelivr.net/npm/cubic-11@1.0.1/fonts/web/cubic-11.css');
@@ -35,18 +37,19 @@
     }
 
     :root {
-      --bg-dark: #0f1014;
-      --bg-panel: #181a20;
-      --bg-card: #22252e;
+      --bg-dark: #0e0f13;
+      --bg-panel: #171920;
+      --bg-card: #21242e;
       --accent: #ff3b7f;
       --accent-soft: rgba(255, 59, 127, 0.2);
       --danger: #ef4444;
       --danger-soft: rgba(239, 68, 68, 0.18);
       --gold: #ffcc33;
       --cyan: #2ce6c3;
+      --purple: #a855f7;
       --text-main: #f3f4f6;
       --text-muted: #9ca3af;
-      --border: #2c303c;
+      --border: #2b2f3b;
     }
 
     * {
@@ -68,7 +71,7 @@
 
     /* Top Bar */
     .topbar {
-      height: 46px;
+      height: 44px;
       padding: 0 12px;
       background: var(--bg-panel);
       border-bottom: 1px solid var(--border);
@@ -95,7 +98,7 @@
 
     .shortcut-badge {
       display: none;
-      font-size: 11px;
+      font-size: 10px;
       color: var(--text-muted);
       background: var(--bg-card);
       padding: 3px 8px;
@@ -103,7 +106,7 @@
       border: 1px solid var(--border);
     }
 
-    @media (min-width: 768px) {
+    @media (min-width: 820px) {
       .shortcut-badge { display: inline-block; }
     }
 
@@ -145,19 +148,19 @@
     /* Stage / Preview Area */
     .stage-wrap {
       flex: 1;
-      min-height: 150px;
+      min-height: 135px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #090a0d;
+      background: #08090c;
       position: relative;
-      padding: 8px;
+      padding: 6px;
       overflow: hidden;
     }
 
     canvas#previewCanvas {
       background: #000;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
       border-radius: 6px;
       max-width: 100%;
       max-height: 100%;
@@ -171,26 +174,30 @@
 
     .stage-hint {
       position: absolute;
-      top: 8px;
+      top: 6px;
       left: 10px;
-      background: rgba(0, 0, 0, 0.65);
+      background: rgba(0, 0, 0, 0.68);
       color: #d1d5db;
       font-size: 10px;
       padding: 3px 9px;
       border-radius: 99px;
       pointer-events: none;
+      max-width: 92%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    /* Transport & Direct Touch Action Bar */
+    /* Transport & Timeline Zoom Bar */
     .transport {
-      height: 44px;
+      height: 42px;
       background: var(--bg-panel);
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 10px;
+      padding: 0 8px;
       gap: 6px;
       flex-shrink: 0;
     }
@@ -207,13 +214,13 @@
     }
 
     .play-btn {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       border: none;
       background: var(--text-main);
       color: var(--bg-dark);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: bold;
       display: flex;
       align-items: center;
@@ -225,7 +232,7 @@
     .quick-actions {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       overflow-x: auto;
       padding: 2px 0;
     }
@@ -240,14 +247,14 @@
       color: var(--text-main);
       font-size: 11px;
       font-weight: 600;
-      padding: 5px 8px;
+      padding: 4px 7px;
       border-radius: 6px;
       cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
       display: inline-flex;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
     }
 
     .chip-btn:active {
@@ -265,13 +272,39 @@
       color: #fff;
     }
 
-    /* Timeline */
+    .zoom-box {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .zoom-box span {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .zoom-box input[type="range"] {
+      width: 58px;
+      height: 14px;
+      accent-color: var(--cyan);
+    }
+
+    @media (min-width: 768px) {
+      .zoom-box input[type="range"] { width: 95px; }
+    }
+
+    /* Multi-Layer Timeline */
     .timeline-area {
-      height: 155px;
-      background: #13151a;
+      height: 164px;
+      background: #121419;
       position: relative;
       overflow-x: auto;
-      overflow-y: hidden;
+      overflow-y: auto;
       flex-shrink: 0;
       border-bottom: 1px solid var(--border);
       scroll-behavior: auto;
@@ -283,49 +316,18 @@
       cursor: grabbing;
     }
 
-    /* 排序模式下的全局縮略視圖樣式 */
-    .timeline-area.reorder-mode {
-      background: #161822;
-      overflow-x: hidden;
-    }
-
-    .timeline-area.reorder-mode .playhead,
-    .timeline-area.reorder-mode .ruler {
-      opacity: 0.15;
-    }
-
-    .timeline-area.reorder-mode .timeline-inner {
-      padding: 24px 16px 10px 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .timeline-area.reorder-mode #videoTrack {
-      height: 54px;
-      justify-content: center;
-      gap: 6px;
-      width: 100%;
-    }
-
-    .timeline-area.reorder-mode #subTrack,
-    .timeline-area.reorder-mode #audioTrack {
-      opacity: 0.2;
-      pointer-events: none;
-    }
-
     .timeline-inner {
       position: relative;
-      height: 100%;
+      min-height: 100%;
       min-width: 100%;
-      padding: 24px 50vw 10px 50vw;
+      padding: 24px 50vw 12px 50vw;
     }
 
     .ruler {
       position: absolute;
       top: 0;
       left: 50vw;
-      height: 22px;
+      height: 20px;
       border-bottom: 1px solid #2a2e3b;
       display: flex;
       font-size: 10px;
@@ -336,9 +338,9 @@
       position: fixed;
       left: 50%;
       width: 2px;
-      height: 155px;
+      height: 164px;
       background: #fff;
-      z-index: 20;
+      z-index: 25;
       pointer-events: none;
       box-shadow: 0 0 6px rgba(255,255,255,0.85);
     }
@@ -354,11 +356,48 @@
     }
 
     .track-row {
-      height: 36px;
-      margin-bottom: 6px;
+      height: 34px;
+      margin-bottom: 5px;
       display: flex;
       align-items: center;
       position: relative;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+
+    .track-row.pip-track {
+      background: rgba(168, 85, 247, 0.06);
+      border-left: 2px solid var(--purple);
+    }
+
+    .track-row.main-track {
+      background: rgba(59, 130, 246, 0.05);
+      border-left: 2px solid #3b82f6;
+    }
+
+    .track-row.audio-track {
+      background: rgba(44, 230, 195, 0.04);
+      border-left: 2px solid var(--cyan);
+    }
+
+    .track-row.drop-target {
+      background: rgba(255, 204, 51, 0.18) !important;
+      outline: 1.5px dashed var(--gold);
+    }
+
+    .track-badge {
+      position: sticky;
+      left: 4px;
+      z-index: 12;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: rgba(15, 16, 20, 0.85);
+      color: var(--text-muted);
+      margin-right: 6px;
+      pointer-events: none;
+      flex-shrink: 0;
     }
 
     .empty-track-hint {
@@ -366,7 +405,7 @@
       color: #9ca3af;
       border: 1px dashed #4b5563;
       border-radius: 6px;
-      padding: 6px 12px;
+      padding: 5px 10px;
       cursor: pointer;
       white-space: nowrap;
       background: rgba(255,255,255,0.02);
@@ -379,9 +418,9 @@
 
     /* Clip Block & Trim Handles */
     .clip-block {
-      height: 34px;
-      background: linear-gradient(90deg, #2d3446, #394258);
-      border: 1.5px solid #4b556e;
+      height: 32px;
+      background: linear-gradient(90deg, #2b3244, #384158);
+      border: 1.5px solid #4c5670;
       border-radius: 6px;
       display: flex;
       align-items: center;
@@ -392,10 +431,16 @@
       position: relative;
       overflow: visible;
       white-space: nowrap;
-      padding: 0 18px;
+      padding: 0 16px;
       flex-shrink: 0;
       touch-action: none;
-      transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .clip-block.pip-clip {
+      position: absolute;
+      background: linear-gradient(90deg, #3b2654, #523475);
+      border-color: #8b5cf6;
     }
 
     .clip-block.selected {
@@ -403,28 +448,13 @@
       box-shadow: 0 0 0 1.5px var(--accent);
     }
 
-    .clip-block.compact-card {
-      height: 48px !important;
-      padding: 4px 8px !important;
-      flex-direction: column;
-      justify-content: center;
-      border-radius: 10px;
-      background: #262b38;
-      border-color: #5b6682;
-    }
-
-    .clip-block.compact-card .trim-handle,
-    .clip-block.compact-card .kf-diamond {
-      display: none !important;
-    }
-
     .clip-block.reordering {
       border-color: var(--gold) !important;
       background: linear-gradient(135deg, #5c481d, #826526) !important;
       box-shadow: 0 8px 20px rgba(255, 204, 51, 0.55), 0 0 0 2px var(--gold) !important;
-      transform: translateY(-6px) scale(1.06);
+      transform: translateY(-4px) scale(1.04);
       z-index: 40;
-      cursor: ew-resize;
+      cursor: move;
     }
 
     .clip-label {
@@ -433,26 +463,11 @@
       pointer-events: none;
     }
 
-    .compact-num {
-      font-size: 13px;
-      font-weight: 900;
-      color: var(--gold);
-      line-height: 1.1;
-    }
-
-    .compact-sub {
-      font-size: 10px;
-      color: #e5e7eb;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
     .trim-handle {
       position: absolute;
       top: -1px;
       bottom: -1px;
-      width: 16px;
+      width: 15px;
       background: rgba(255, 255, 255, 0.28);
       display: flex;
       align-items: center;
@@ -480,20 +495,20 @@
 
     .trim-handle::after {
       content: '⋮';
-      font-size: 12px;
+      font-size: 11px;
       color: #fff;
       font-weight: bold;
     }
 
     .trans-node {
-      width: 22px;
-      height: 22px;
+      width: 20px;
+      height: 20px;
       margin: 0 2px;
       z-index: 5;
       background: var(--bg-panel);
       border: 1.5px solid var(--cyan);
       color: var(--cyan);
-      border-radius: 6px;
+      border-radius: 5px;
       font-size: 10px;
       display: flex;
       align-items: center;
@@ -504,11 +519,11 @@
 
     .kf-diamond {
       position: absolute;
-      width: 9px;
-      height: 9px;
+      width: 8px;
+      height: 8px;
       background: var(--gold);
       transform: translateX(-50%) rotate(45deg);
-      top: 3px;
+      top: 2px;
       border: 1px solid #000;
       pointer-events: none;
     }
@@ -534,30 +549,36 @@
       box-shadow: 0 0 0 1.5px #fff;
     }
 
-    .audio-block {
+    /* 獨立音訊片段方塊（支援頭尾白條裁切、長按左右拖移、分割與增益） */
+    .audio-clip-block {
       position: absolute;
-      height: 26px;
-      background: rgba(44, 230, 195, 0.2);
-      border: 1px solid var(--cyan);
-      border-radius: 5px;
+      height: 28px;
+      background: linear-gradient(90deg, rgba(20, 184, 166, 0.35), rgba(44, 230, 195, 0.25));
+      border: 1.5px solid var(--cyan);
+      border-radius: 6px;
       font-size: 10px;
-      padding: 0 10px;
+      font-weight: 600;
+      padding: 0 16px;
       display: flex;
       align-items: center;
-      color: #a7f3d0;
+      justify-content: center;
+      color: #ccfbf1;
       white-space: nowrap;
+      touch-action: none;
+      cursor: pointer;
     }
 
-    .audio-block.selected {
-      background: rgba(44, 230, 195, 0.42);
+    .audio-clip-block.selected {
+      background: rgba(44, 230, 195, 0.5);
       color: #fff;
-      box-shadow: 0 0 0 1.5px #fff;
+      border-color: #fff;
+      box-shadow: 0 0 0 1.5px var(--cyan);
     }
 
     /* Tool Drawer */
     .drawer {
       background: var(--bg-panel);
-      height: 215px;
+      height: 232px;
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
@@ -565,19 +586,20 @@
 
     .drawer-content {
       flex: 1;
-      padding: 10px 12px;
+      padding: 9px 12px;
       overflow-y: auto;
       font-size: 12px;
     }
 
     .nav-tabs {
-      height: 52px;
+      height: 50px;
       background: #121318;
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: space-around;
       align-items: center;
       flex-shrink: 0;
+      overflow-x: auto;
     }
 
     .nav-tab {
@@ -587,10 +609,11 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       font-size: 10px;
       cursor: pointer;
-      padding: 4px 10px;
+      padding: 4px 5px;
+      white-space: nowrap;
     }
 
     .nav-tab.active {
@@ -599,7 +622,7 @@
     }
 
     .nav-tab span.icon {
-      font-size: 16px;
+      font-size: 15px;
     }
 
     /* Controls inside Drawer */
@@ -607,14 +630,14 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       gap: 8px;
     }
 
     .control-row label {
       color: var(--text-muted);
       font-size: 11px;
-      min-width: 60px;
+      min-width: 62px;
     }
 
     input[type="range"] {
@@ -636,19 +659,24 @@
 
     .pill-group {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       overflow-x: auto;
-      padding-bottom: 6px;
+      padding-bottom: 4px;
       margin-bottom: 8px;
+    }
+
+    .pill-group::-webkit-scrollbar {
+      display: none;
     }
 
     .pill {
       background: var(--bg-card);
       border: 1px solid var(--border);
       color: var(--text-muted);
-      padding: 4px 10px;
+      padding: 4px 9px;
       border-radius: 99px;
       font-size: 11px;
+      font-weight: 600;
       white-space: nowrap;
       cursor: pointer;
     }
@@ -674,7 +702,7 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 8px;
+      padding: 7px;
       text-align: left;
       color: var(--text-main);
       cursor: pointer;
@@ -702,14 +730,14 @@
     .action-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      gap: 6px;
     }
 
     .box-btn {
       background: var(--bg-card);
       border: 1px solid var(--border);
       color: var(--text-main);
-      padding: 10px 6px;
+      padding: 8px 6px;
       border-radius: 8px;
       font-size: 11px;
       font-weight: 600;
@@ -720,6 +748,18 @@
     .box-btn.primary {
       border-color: var(--accent);
       background: var(--accent-soft);
+    }
+
+    .box-btn.purple {
+      border-color: var(--purple);
+      background: rgba(168, 85, 247, 0.18);
+      color: #e9d5ff;
+    }
+
+    .box-btn.cyan {
+      border-color: var(--cyan);
+      background: rgba(44, 230, 195, 0.16);
+      color: #99f6e4;
     }
 
     .box-btn.danger {
@@ -734,7 +774,7 @@
 
     #toast {
       position: fixed;
-      top: 54px;
+      top: 52px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(24, 26, 32, 0.96);
@@ -759,7 +799,7 @@
   <div class="topbar">
     <div class="brand">
       🎬 <span>CutVideo</span>
-      <span class="shortcut-badge">快捷鍵：Space 播放 · S / Ctrl+B 分割 · Del 刪除 · Ctrl+Z 復原</span>
+      <span class="shortcut-badge">匯出自動混音背景音樂與影片原聲 · 支援影片轉音軌 · 音軌可拉頭尾裁切與增益</span>
     </div>
     <div class="ratio-group">
       <button class="ratio-btn active" data-ratio="9:16">9:16</button>
@@ -771,30 +811,32 @@
 
   <!-- Stage -->
   <div class="stage-wrap">
-    <div class="stage-hint">拖拉前後白條 ⋮ 畫面即時跟著動 · 長按片段縮略調換順序</div>
+    <div class="stage-hint" id="stageHint">支援匯入影片轉獨立音軌 · 音軌可拉頭尾裁切、靜音與增益</div>
     <canvas id="previewCanvas" width="360" height="640"></canvas>
   </div>
 
-  <!-- Transport & Mobile/Desktop Direct Buttons -->
+  <!-- Transport & Timeline Zoom Control -->
   <div class="transport">
     <div class="time-readout"><strong id="curTimeLabel">00:00.0</strong>/<span id="totTimeLabel">00:01.0</span></div>
     <button class="play-btn" id="playBtn" title="播放/暫停 (Space)">▶</button>
     <div class="quick-actions">
-      <button class="chip-btn" id="splitBtn" title="分割片段 (S)">✂️ 分割</button>
+      <button class="chip-btn" id="splitBtn" title="分割片段/音軌 (S)">✂️ 分割</button>
       <button class="chip-btn danger" id="deleteSelectedBtn" title="刪除選取項目 (Delete)">🗑️ 刪除</button>
       <button class="chip-btn" id="undoBtn" title="復原上一步 (Ctrl+Z)">↩️ 復原</button>
-      <button class="chip-btn" id="clearAllBtn" title="清空全部軌道">🧹 全部清空</button>
+      <button class="chip-btn" id="clearAllBtn" title="清空全部軌道">🧹 清空</button>
+    </div>
+    <div class="zoom-box" title="調整時間軸顯示間距">
+      <span>🔍</span>
+      <input type="range" id="timelineZoomRange" min="15" max="180" step="5" value="55">
     </div>
   </div>
 
-  <!-- Timeline -->
+  <!-- Multi-Layer Timeline -->
   <div class="timeline-area" id="timelineScroll">
     <div class="playhead"></div>
     <div class="timeline-inner" id="timelineInner">
       <div class="ruler" id="ruler"></div>
-      <div class="track-row" id="videoTrack"></div>
-      <div class="track-row" id="subTrack"></div>
-      <div class="track-row" id="audioTrack"></div>
+      <div id="tracksContainer"></div>
     </div>
   </div>
 
@@ -802,16 +844,22 @@
   <div class="drawer">
     <div class="drawer-content" id="drawerContent"></div>
     <div class="nav-tabs">
-      <button class="nav-tab active" data-tab="media"><span class="icon">🎞️</span>剪輯</button>
+      <button class="nav-tab active" data-tab="media"><span class="icon">🎞️</span>剪輯/變速</button>
+      <button class="nav-tab" data-tab="fx"><span class="icon">✨</span>動畫/特效</button>
       <button class="nav-tab" data-tab="keyframe"><span class="icon">◆</span>關鍵幀</button>
-      <button class="nav-tab" data-tab="text"><span class="icon">T</span>文字字庫</button>
-      <button class="nav-tab" data-tab="color"><span class="icon">🎨</span>調色濾鏡</button>
-      <button class="nav-tab" data-tab="audio"><span class="icon">🎵</span>音訊</button>
+      <button class="nav-tab" data-tab="cutout"><span class="icon">🪄</span>去背/融合</button>
+      <button class="nav-tab" data-tab="canvasbg"><span class="icon">🖼️</span>底板</button>
+      <button class="nav-tab" data-tab="text"><span class="icon">T</span>文字直橫</button>
+      <button class="nav-tab" data-tab="color"><span class="icon">🎨</span>調色</button>
+      <button class="nav-tab" data-tab="audio"><span class="icon">🎵</span>音訊/原聲</button>
     </div>
   </div>
 
-  <input type="file" id="videoFileInput" class="hidden-input" accept="video/*" multiple />
-  <input type="file" id="audioFileInput" class="hidden-input" accept="audio/*" />
+  <input type="file" id="videoFileInput" class="hidden-input" accept="video/*,image/*" multiple />
+  <input type="file" id="pipFileInput" class="hidden-input" accept="video/*,image/*" multiple />
+  <input type="file" id="bgFileInput" class="hidden-input" accept="video/*,image/*" />
+  <input type="file" id="audioFileInput" class="hidden-input" accept="audio/*" multiple />
+  <input type="file" id="videoToAudioInput" class="hidden-input" accept="video/*" multiple />
   <input type="file" id="fontFileInput" class="hidden-input" accept=".ttf,.otf,.woff,.woff2" />
 
   <script>
@@ -850,35 +898,251 @@
       { id: 'slide', name: '向左滑動', icon: '⇄' }
     ];
 
+    const SPEED_PRESETS = [
+      { val: 0.25, label: '0.25x 極慢' },
+      { val: 0.5,  label: '0.5x 慢動作' },
+      { val: 0.75, label: '0.75x' },
+      { val: 1.0,  label: '1.0x 原速' },
+      { val: 1.5,  label: '1.5x' },
+      { val: 2.0,  label: '2.0x 快轉' },
+      { val: 3.0,  label: '3.0x 縮時' }
+    ];
+
+    const BLEND_MODES = [
+      { id: 'source-over', name: '正常覆蓋' },
+      { id: 'screen', name: '濾色 (去黑底)' },
+      { id: 'multiply', name: '正片疊底 (去白底)' },
+      { id: 'overlay', name: '疊加融合' },
+      { id: 'soft-light', name: '柔光融合' }
+    ];
+
+    const MASK_TYPES = [
+      { id: 'none', name: '無遮罩' },
+      { id: 'circle', name: '圓形' },
+      { id: 'roundrect', name: '圓角矩形' },
+      { id: 'feather', name: '四周羽化融合' },
+      { id: 'pen', name: '✒️ 鋼筆自訂形狀' }
+    ];
+
+    const PETAL_COLORS = [
+      { hex: '#ffb7c5', name: '櫻花粉' },
+      { hex: '#e11d48', name: '玫瑰紅' },
+      { hex: '#fff5f7', name: '純白花瓣' },
+      { hex: '#fbbf24', name: '金箔感' }
+    ];
+
     // ====== 核心狀態 ======
-    const PX_PER_SEC = 55;
     let undoStack = [];
 
     let state = {
+      pxPerSec: 55,
       ratio: '9:16',
       currentTime: 0,
       isPlaying: false,
       activeTab: 'media',
-      lastSelectedType: 'clip',
+      lastSelectedType: 'clip', // 'clip' | 'pip' | 'sub' | 'audio'
       selectedClipId: null,
       selectedSubId: null,
+      selectedAudioId: null,
       fontFilter: '全部',
+      penEditMode: false,
+      eyedropperMode: false,
+      background: {
+        mode: 'solid',
+        color1: '#000000',
+        color2: '#2d1b4e',
+        mediaEl: null,
+        mediaType: null,
+        mediaName: ''
+      },
+      effects: {
+        particleType: 'none',
+        particleSize: 6,
+        particleDensity: 45,
+        particleSpeed: 1.0,
+        petalColor: '#ffb7c5',
+        spotlight: {
+          enabled: false,
+          angle: 0,
+          focusX: 0.5,
+          focusY: 0.55,
+          spread: 0.34,
+          darkness: 0.72,
+          color: '#fff8e7'
+        }
+      },
+      pipTracks: [
+        { id: 'pip-track-1', name: '畫中畫 L1 (頂層)', clips: [] }
+      ],
       clips: [],
       subtitles: [],
-      audio: null
+      audioClips: [] // 多段獨立音軌（支援音樂、音效、以及「影片轉音軌」抽離的聲音）
     };
 
     const canvas = document.getElementById('previewCanvas');
     const ctx = canvas.getContext('2d');
     const timelineScroll = document.getElementById('timelineScroll');
 
-    // ====== 抗塞車即時影格排程器（解決連續拖曳時 <video> 卡頓不刷新的問題） ======
+    // ====== Web Audio API 混音增益與匯出音訊引擎（支援 0%~300% 增益 ＋ 雙軌即時混音匯出） ======
+    let sharedAudioCtx = null;
+    let exportMixDest = null;
+
+    function getAudioCtx() {
+      if (!sharedAudioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          sharedAudioCtx = new AudioCtx();
+          exportMixDest = sharedAudioCtx.createMediaStreamDestination();
+        }
+      }
+      if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+        sharedAudioCtx.resume().catch(() => {});
+      }
+      return sharedAudioCtx;
+    }
+
+    // 將任何 HTMLVideoElement 或 HTMLAudioElement 接入 Web Audio GainNode（支援超過 100% 的增益放大，同時分流到喇叭與匯出錄製端）
+    function ensureAudioNode(mediaEl) {
+      if (!mediaEl || mediaEl._gainNode) return mediaEl?._gainNode;
+      const actx = getAudioCtx();
+      if (!actx) return null;
+      try {
+        const src = actx.createMediaElementSource(mediaEl);
+        const gainNode = actx.createGain();
+        src.connect(gainNode);
+        gainNode.connect(actx.destination);
+        if (exportMixDest) gainNode.connect(exportMixDest);
+        mediaEl._gainNode = gainNode;
+        return gainNode;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function applyMediaAudioGain(mediaEl, muted, gainValue) {
+      if (!mediaEl) return;
+      mediaEl.muted = Boolean(muted);
+      const effectiveGain = muted ? 0 : Math.max(0, Math.min(3.0, gainValue ?? 1.0));
+      const gNode = ensureAudioNode(mediaEl);
+      if (gNode && sharedAudioCtx) {
+        gNode.gain.setValueAtTime(effectiveGain, sharedAudioCtx.currentTime);
+        mediaEl.volume = 1.0; // 由 GainNode 控制 0~300% 精準增益
+      } else {
+        mediaEl.volume = Math.min(1.0, effectiveGain);
+      }
+    }
+
+    // ====== 確定性粒子種子 ======
+    const PARTICLE_SEEDS = Array.from({ length: 150 }, (_, i) => ({
+      x0: ((i * 73) % 100) / 100,
+      y0: ((i * 37) % 100) / 100,
+      speedMul: 0.65 + ((i * 19) % 70) / 100,
+      sizeMul: 0.6 + ((i * 29) % 80) / 100,
+      phase: (i * 1.7) % (Math.PI * 2),
+      swayAmp: 0.02 + ((i * 13) % 40) / 1000,
+      rotSpeed: ((i % 2 === 0 ? 1 : -1) * (1.2 + (i % 5) * 0.4))
+    }));
+
+    const offCanvas = document.createElement('canvas');
+    const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+    const maskCanvas = document.createElement('canvas');
+    const maskCtx = maskCanvas.getContext('2d');
+
+    // ====== MediaPipe AI 人像去背 ======
+    let selfieSeg = null;
+    let latestSegMask = null;
+    let segBusy = false;
+
+    function initAISegmentation() {
+      if (selfieSeg || typeof SelfieSegmentation === 'undefined') return;
+      try {
+        selfieSeg = new SelfieSegmentation({
+          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
+        });
+        selfieSeg.setOptions({ modelSelection: 1, selfieMode: false });
+        selfieSeg.onResults((results) => {
+          latestSegMask = results.segmentationMask;
+          segBusy = false;
+          renderFrame();
+        });
+      } catch (err) {}
+    }
+
+    function runAISegmentation(sourceEl) {
+      initAISegmentation();
+      if (!selfieSeg || segBusy || !sourceEl) return;
+      if (sourceEl.tagName === 'VIDEO' && sourceEl.readyState < 2) return;
+      segBusy = true;
+      selfieSeg.send({ image: sourceEl }).catch(() => { segBusy = false; });
+    }
+
+    // ====== 時間軸縮放滑桿 ======
+    const zoomRange = document.getElementById('timelineZoomRange');
+    zoomRange.addEventListener('input', (e) => {
+      const anchorTime = state.currentTime;
+      state.pxPerSec = parseInt(e.target.value, 10);
+      renderTimeline();
+      timelineScroll.scrollLeft = anchorTime * state.pxPerSec;
+    });
+
+    function getSelectedVisualClip() {
+      if (state.lastSelectedType === 'pip' && state.selectedClipId) {
+        for (const tr of state.pipTracks) {
+          const found = tr.clips.find(c => c.id === state.selectedClipId);
+          if (found) return { clip: found, isPip: true, track: tr };
+        }
+      }
+      if (state.selectedClipId) {
+        const mainFound = state.clips.find(c => c.id === state.selectedClipId);
+        if (mainFound) return { clip: mainFound, isPip: false, track: null };
+        for (const tr of state.pipTracks) {
+          const found = tr.clips.find(c => c.id === state.selectedClipId);
+          if (found) return { clip: found, isPip: true, track: tr };
+        }
+      }
+      if (state.clips.length > 0) return { clip: state.clips[0], isPip: false, track: null };
+      for (const tr of state.pipTracks) {
+        if (tr.clips.length > 0) return { clip: tr.clips[0], isPip: true, track: tr };
+      }
+      return null;
+    }
+
+    function createDefaultClipProps(overrides = {}) {
+      return {
+        trimStart: 0,
+        start: 0,
+        duration: 5,
+        maxDuration: 60,
+        speed: 1.0,
+        muted: false,      // 影片原聲靜音開關
+        audioGain: 1.0,    // 影片原聲增益 (0.0 ~ 3.0，預設 1.0 = 100%)
+        transitionAfter: 'none',
+        fadeIn: { type: 'none', dur: 0.8 },
+        fadeOut: { type: 'none', dur: 0.8 },
+        opacity: 1.0,
+        blendMode: 'source-over',
+        color: { b: 100, c: 100, s: 100, warm: 0 },
+        cutout: {
+          mode: 'none',
+          keyColor: '#00ff00',
+          tolerance: 65,
+          smoothness: 15
+        },
+        mask: {
+          type: 'none',
+          feather: 12,
+          penPoints: []
+        },
+        keyframes: [{ t: 0, scale: 1.0, x: 0, y: 0, rot: 0 }],
+        ...overrides
+      };
+    }
+
     function requestVideoSeek(vid, targetTime) {
-      if (!vid) return;
+      if (!vid || vid.tagName !== 'VIDEO') return;
       const dur = (vid.duration && isFinite(vid.duration)) ? vid.duration : 999;
       const clamped = Math.max(0.01, Math.min(dur - 0.01, targetTime));
 
-      // 如果解碼器目前正在解碼上一幀，先排隊最新位置，等上一幀完成立刻無縫接力
       if (vid.seeking) {
         vid._pendingSeekTime = clamped;
         return;
@@ -893,13 +1157,50 @@
       vid.currentTime = clamped;
     }
 
+    function applyClipSpeed(clip, newSpeed, saveUndo = true) {
+      if (!clip) return;
+      const clampedSpeed = Math.max(0.25, Math.min(4.0, Math.round(newSpeed * 100) / 100));
+      if (Math.abs(clip.speed - clampedSpeed) < 0.001) return;
+
+      if (saveUndo) pushUndo();
+      const sourceSpan = clip.duration * clip.speed;
+      clip.speed = clampedSpeed;
+      clip.duration = Math.max(0.25, sourceSpan / clampedSpeed);
+
+      if (clip.mediaEl && clip.mediaEl.tagName === 'VIDEO') {
+        clip.mediaEl.playbackRate = clampedSpeed;
+      }
+
+      renderTimeline();
+      renderDrawer();
+      syncVideoElements(true);
+      renderFrame();
+    }
+
+    function cloneClipData(c) {
+      return {
+        ...c,
+        fadeIn: { ...(c.fadeIn || { type: 'none', dur: 0.8 }) },
+        fadeOut: { ...(c.fadeOut || { type: 'none', dur: 0.8 }) },
+        keyframes: JSON.parse(JSON.stringify(c.keyframes)),
+        color: { ...c.color },
+        cutout: { ...c.cutout },
+        mask: { ...c.mask, penPoints: JSON.parse(JSON.stringify(c.mask.penPoints || [])) }
+      };
+    }
+
     function pushUndo() {
       const snapshot = {
-        clips: state.clips.map(c => ({ ...c, keyframes: JSON.parse(JSON.stringify(c.keyframes)), color: { ...c.color } })),
+        clips: state.clips.map(cloneClipData),
+        pipTracks: state.pipTracks.map(tr => ({
+          ...tr,
+          clips: tr.clips.map(cloneClipData)
+        })),
         subtitles: JSON.parse(JSON.stringify(state.subtitles)),
-        audio: state.audio ? { ...state.audio } : null,
+        audioClips: state.audioClips.map(a => ({ ...a })),
         selectedClipId: state.selectedClipId,
         selectedSubId: state.selectedSubId,
+        selectedAudioId: state.selectedAudioId,
         lastSelectedType: state.lastSelectedType
       };
       undoStack.push(snapshot);
@@ -910,10 +1211,12 @@
       if (undoStack.length === 0) return showToast('目前沒有可復原的操作');
       const prev = undoStack.pop();
       state.clips = prev.clips;
+      state.pipTracks = prev.pipTracks;
       state.subtitles = prev.subtitles;
-      state.audio = prev.audio;
+      state.audioClips = prev.audioClips;
       state.selectedClipId = prev.selectedClipId;
       state.selectedSubId = prev.selectedSubId;
+      state.selectedAudioId = prev.selectedAudioId;
       state.lastSelectedType = prev.lastSelectedType;
       updateDeleteButtonLabel();
       renderTimeline();
@@ -930,13 +1233,20 @@
       t.textContent = msg;
       t.style.opacity = '1';
       clearTimeout(t._timer);
-      t._timer = setTimeout(() => t.style.opacity = '0', 2200);
+      t._timer = setTimeout(() => t.style.opacity = '0', 2300);
     }
 
     function getTotalDuration() {
-      const clipDur = state.clips.reduce((acc, c) => acc + c.duration, 0);
+      const mainDur = state.clips.reduce((acc, c) => acc + c.duration, 0);
+      let pipEnd = 0;
+      state.pipTracks.forEach(tr => {
+        tr.clips.forEach(c => {
+          pipEnd = Math.max(pipEnd, (c.start || 0) + c.duration);
+        });
+      });
       const subEnd = state.subtitles.reduce((max, s) => Math.max(max, s.start + s.duration), 0);
-      return Math.max(clipDur, subEnd, 1);
+      const audEnd = state.audioClips.reduce((max, a) => Math.max(max, (a.start || 0) + a.duration), 0);
+      return Math.max(mainDur, pipEnd, subEnd, audEnd, 1);
     }
 
     function formatTime(sec) {
@@ -947,7 +1257,7 @@
 
     function seekTo(sec) {
       state.currentTime = Math.max(0, Math.min(getTotalDuration(), sec));
-      timelineScroll.scrollLeft = state.currentTime * PX_PER_SEC;
+      timelineScroll.scrollLeft = state.currentTime * state.pxPerSec;
       syncVideoElements(true);
       renderFrame();
     }
@@ -956,8 +1266,10 @@
       const btn = document.getElementById('deleteSelectedBtn');
       if (state.lastSelectedType === 'sub' && state.selectedSubId) {
         btn.innerHTML = '🗑️ 刪字幕';
-      } else if (state.lastSelectedType === 'audio' && state.audio) {
-        btn.innerHTML = '🗑️ 刪音訊';
+      } else if (state.lastSelectedType === 'audio' && state.selectedAudioId) {
+        btn.innerHTML = '🗑️ 刪音軌';
+      } else if (state.lastSelectedType === 'pip') {
+        btn.innerHTML = '🗑️ 刪畫中畫';
       } else {
         btn.innerHTML = '🗑️ 刪片段';
       }
@@ -986,147 +1298,410 @@
       return { scale: 1, x: 0, y: 0, rot: 0 };
     }
 
-    // ====== 渲染畫布 ======
+    // ====== 單一圖層視覺繪製器 ======
+    function hexToRgb(hex) {
+      const clean = hex.replace('#', '');
+      const num = parseInt(clean, 16);
+      return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+    }
+
+    function drawVisualClip(targetCtx, clip, localT, W, H, isPipLayer) {
+      const el = clip.mediaEl;
+      if (!el) return;
+      const isVideo = el.tagName === 'VIDEO';
+      if (isVideo && (el.error || el.readyState < 1 || el.videoWidth === 0)) return;
+      if (!isVideo && (!el.complete || el.naturalWidth === 0)) return;
+
+      const srcW = isVideo ? el.videoWidth : el.naturalWidth;
+      const srcH = isVideo ? el.videoHeight : el.naturalHeight;
+
+      let drawSource = el;
+      if (clip.cutout && clip.cutout.mode !== 'none') {
+        const procW = Math.min(480, srcW);
+        const procH = Math.round(procW * (srcH / srcW));
+        offCanvas.width = procW;
+        offCanvas.height = procH;
+        offCtx.clearRect(0, 0, procW, procH);
+        offCtx.drawImage(el, 0, 0, procW, procH);
+
+        if (clip.cutout.mode === 'chroma') {
+          const imgData = offCtx.getImageData(0, 0, procW, procH);
+          const data = imgData.data;
+          const targetRgb = hexToRgb(clip.cutout.keyColor || '#00ff00');
+          const tol = clip.cutout.tolerance || 65;
+          const smooth = Math.max(1, clip.cutout.smoothness || 15);
+
+          for (let i = 0; i < data.length; i += 4) {
+            const dr = data[i] - targetRgb.r;
+            const dg = data[i + 1] - targetRgb.g;
+            const db = data[i + 2] - targetRgb.b;
+            const dist = Math.sqrt(dr * dr + dg * dg + db * db);
+            if (dist < tol) {
+              data[i + 3] = 0;
+            } else if (dist < tol + smooth) {
+              const alphaRatio = (dist - tol) / smooth;
+              data[i + 3] = Math.round(data[i + 3] * alphaRatio);
+            }
+          }
+          offCtx.putImageData(imgData, 0, 0);
+          drawSource = offCanvas;
+        } else if (clip.cutout.mode === 'ai') {
+          runAISegmentation(el);
+          if (latestSegMask) {
+            offCtx.globalCompositeOperation = 'destination-in';
+            offCtx.drawImage(latestSegMask, 0, 0, procW, procH);
+            offCtx.globalCompositeOperation = 'source-over';
+            drawSource = offCanvas;
+          }
+        }
+      }
+
+      const tr = getInterpolatedTransform(clip, localT);
+      const baseRatio = srcW / srcH;
+      const canvasRatio = W / H;
+      let dw = W, dh = H;
+      if (baseRatio > canvasRatio) {
+        dh = H;
+        dw = H * baseRatio;
+      } else {
+        dw = W;
+        dh = W / baseRatio;
+      }
+      if (isPipLayer) {
+        dw *= 0.58;
+        dh *= 0.58;
+      }
+
+      targetCtx.save();
+      targetCtx.globalAlpha = clip.opacity !== undefined ? clip.opacity : 1.0;
+      targetCtx.globalCompositeOperation = clip.blendMode || 'source-over';
+
+      targetCtx.translate(W / 2 + tr.x, H / 2 + tr.y);
+      targetCtx.rotate((tr.rot * Math.PI) / 180);
+      targetCtx.scale(tr.scale, tr.scale);
+
+      const col = clip.color || { b: 100, c: 100, s: 100, warm: 0 };
+      const sepia = col.warm > 0 ? col.warm * 0.6 : 0;
+      const hue = col.warm < 0 ? col.warm * 0.8 : 0;
+      targetCtx.filter = `brightness(${col.b}%) contrast(${col.c}%) saturate(${col.s}%) sepia(${sepia}%) hue-rotate(${hue}deg)`;
+
+      const mask = clip.mask || { type: 'none', feather: 12, penPoints: [] };
+      if (mask.type !== 'none') {
+        targetCtx.beginPath();
+        if (mask.type === 'circle') {
+          const r = Math.min(dw, dh) * 0.45;
+          targetCtx.arc(0, 0, r, 0, Math.PI * 2);
+          targetCtx.clip();
+        } else if (mask.type === 'roundrect') {
+          const mw = dw * 0.88, mh = dh * 0.88;
+          targetCtx.roundRect(-mw / 2, -mh / 2, mw, mh, 24);
+          targetCtx.clip();
+        } else if (mask.type === 'feather') {
+          maskCanvas.width = Math.max(10, Math.round(dw));
+          maskCanvas.height = Math.max(10, Math.round(dh));
+          maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+          maskCtx.drawImage(drawSource, 0, 0, maskCanvas.width, maskCanvas.height);
+
+          const fPx = Math.min(maskCanvas.width * 0.4, (mask.feather || 20) * 1.8);
+          maskCtx.globalCompositeOperation = 'destination-in';
+          const gradH = maskCtx.createLinearGradient(0, 0, maskCanvas.width, 0);
+          gradH.addColorStop(0, 'rgba(0,0,0,0)');
+          gradH.addColorStop(Math.min(0.49, fPx / maskCanvas.width), 'rgba(0,0,0,1)');
+          gradH.addColorStop(Math.max(0.51, 1 - fPx / maskCanvas.width), 'rgba(0,0,0,1)');
+          gradH.addColorStop(1, 'rgba(0,0,0,0)');
+          maskCtx.fillStyle = gradH;
+          maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
+
+          const gradV = maskCtx.createLinearGradient(0, 0, 0, maskCanvas.height);
+          gradV.addColorStop(0, 'rgba(0,0,0,0)');
+          gradV.addColorStop(Math.min(0.49, fPx / maskCanvas.height), 'rgba(0,0,0,1)');
+          gradV.addColorStop(Math.max(0.51, 1 - fPx / maskCanvas.height), 'rgba(0,0,0,1)');
+          gradV.addColorStop(1, 'rgba(0,0,0,0)');
+          maskCtx.globalCompositeOperation = 'destination-in';
+          maskCtx.fillStyle = gradV;
+          maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
+          maskCtx.globalCompositeOperation = 'source-over';
+          drawSource = maskCanvas;
+        } else if (mask.type === 'pen' && mask.penPoints && mask.penPoints.length >= 3) {
+          mask.penPoints.forEach((pt, idx) => {
+            const px = (pt.x - 0.5) * dw;
+            const py = (pt.y - 0.5) * dh;
+            if (idx === 0) targetCtx.moveTo(px, py);
+            else targetCtx.lineTo(px, py);
+          });
+          targetCtx.closePath();
+          targetCtx.clip();
+        }
+      }
+
+      targetCtx.drawImage(drawSource, -dw / 2, -dh / 2, dw, dh);
+
+      const fadeIn = clip.fadeIn || { type: 'none', dur: 0.8 };
+      if (fadeIn.type !== 'none' && localT < fadeIn.dur) {
+        const alpha = Math.max(0, Math.min(1, 1 - (localT / Math.max(0.05, fadeIn.dur))));
+        targetCtx.filter = 'none';
+        targetCtx.fillStyle = fadeIn.type === 'white' ? `rgba(255,255,255,${alpha})` : `rgba(0,0,0,${alpha})`;
+        targetCtx.fillRect(-dw / 2, -dh / 2, dw, dh);
+      }
+
+      const fadeOut = clip.fadeOut || { type: 'none', dur: 0.8 };
+      const timeRemaining = clip.duration - localT;
+      if (fadeOut.type !== 'none' && timeRemaining < fadeOut.dur) {
+        const alpha = Math.max(0, Math.min(1, 1 - (timeRemaining / Math.max(0.05, fadeOut.dur))));
+        targetCtx.filter = 'none';
+        targetCtx.fillStyle = fadeOut.type === 'white' ? `rgba(255,255,255,${alpha})` : `rgba(0,0,0,${alpha})`;
+        targetCtx.fillRect(-dw / 2, -dh / 2, dw, dh);
+      }
+
+      targetCtx.restore();
+
+      if (state.penEditMode && clip.id === state.selectedClipId && mask.type === 'pen') {
+        targetCtx.save();
+        targetCtx.translate(W / 2 + tr.x, H / 2 + tr.y);
+        targetCtx.rotate((tr.rot * Math.PI) / 180);
+        targetCtx.scale(tr.scale, tr.scale);
+        if (mask.penPoints.length > 0) {
+          targetCtx.strokeStyle = '#ffcc33';
+          targetCtx.lineWidth = 2;
+          targetCtx.beginPath();
+          mask.penPoints.forEach((pt, idx) => {
+            const px = (pt.x - 0.5) * dw;
+            const py = (pt.y - 0.5) * dh;
+            if (idx === 0) targetCtx.moveTo(px, py);
+            else targetCtx.lineTo(px, py);
+          });
+          if (mask.penPoints.length >= 3) targetCtx.closePath();
+          targetCtx.stroke();
+          mask.penPoints.forEach((pt) => {
+            const px = (pt.x - 0.5) * dw;
+            const py = (pt.y - 0.5) * dh;
+            targetCtx.fillStyle = '#ff3b7f';
+            targetCtx.beginPath();
+            targetCtx.arc(px, py, 5, 0, Math.PI * 2);
+            targetCtx.fill();
+            targetCtx.strokeStyle = '#fff';
+            targetCtx.lineWidth = 1.5;
+            targetCtx.stroke();
+          });
+        }
+        targetCtx.restore();
+      }
+    }
+
+    // ====== 氛圍特效渲染器 ======
+    function renderAtmosphereEffects(targetCtx, W, H, t) {
+      const fx = state.effects;
+
+      if (fx.spotlight && fx.spotlight.enabled) {
+        const sp = fx.spotlight;
+        const fxPx = sp.focusX * W;
+        const fyPx = sp.focusY * H;
+        const angleRad = (sp.angle * Math.PI) / 180;
+        const beamTopX = fxPx - Math.tan(angleRad) * fyPx;
+        const spreadHalfW = W * sp.spread;
+
+        targetCtx.save();
+        maskCanvas.width = W;
+        maskCanvas.height = H;
+        maskCtx.clearRect(0, 0, W, H);
+        maskCtx.fillStyle = `rgba(0, 0, 0, ${sp.darkness})`;
+        maskCtx.fillRect(0, 0, W, H);
+
+        maskCtx.globalCompositeOperation = 'destination-out';
+        const beamGrad = maskCtx.createLinearGradient(beamTopX, 0, fxPx, fyPx + spreadHalfW);
+        beamGrad.addColorStop(0, 'rgba(0,0,0,0.95)');
+        beamGrad.addColorStop(0.75, 'rgba(0,0,0,0.9)');
+        beamGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        maskCtx.fillStyle = beamGrad;
+        maskCtx.beginPath();
+        maskCtx.moveTo(beamTopX - spreadHalfW * 0.25, 0);
+        maskCtx.lineTo(beamTopX + spreadHalfW * 0.25, 0);
+        maskCtx.lineTo(fxPx + spreadHalfW * 1.25, fyPx + spreadHalfW * 0.4);
+        maskCtx.lineTo(fxPx - spreadHalfW * 1.25, fyPx + spreadHalfW * 0.4);
+        maskCtx.closePath();
+        maskCtx.fill();
+
+        const spotGrad = maskCtx.createRadialGradient(fxPx, fyPx, spreadHalfW * 0.15, fxPx, fyPx, spreadHalfW * 1.25);
+        spotGrad.addColorStop(0, 'rgba(0,0,0,1)');
+        spotGrad.addColorStop(0.6, 'rgba(0,0,0,0.85)');
+        spotGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        maskCtx.fillStyle = spotGrad;
+        maskCtx.beginPath();
+        maskCtx.arc(fxPx, fyPx, spreadHalfW * 1.25, 0, Math.PI * 2);
+        maskCtx.fill();
+        maskCtx.globalCompositeOperation = 'source-over';
+
+        targetCtx.drawImage(maskCanvas, 0, 0);
+
+        targetCtx.globalCompositeOperation = 'screen';
+        const tintGrad = targetCtx.createRadialGradient(fxPx, fyPx, 5, fxPx, fyPx, spreadHalfW * 1.15);
+        tintGrad.addColorStop(0, sp.color + '44');
+        tintGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        targetCtx.fillStyle = tintGrad;
+        targetCtx.fillRect(0, 0, W, H);
+        targetCtx.restore();
+      }
+
+      if (fx.particleType !== 'none') {
+        const count = Math.min(150, fx.particleDensity || 45);
+        const baseSize = fx.particleSize || 6;
+        const spd = fx.particleSpeed || 1.0;
+
+        targetCtx.save();
+        for (let i = 0; i < count; i++) {
+          const p = PARTICLE_SEEDS[i];
+          const fallProgress = (p.y0 + t * 0.16 * spd * p.speedMul) % 1.15;
+          const py = (fallProgress - 0.08) * H;
+          const sway = Math.sin(t * 2.1 * p.speedMul + p.phase) * p.swayAmp * W;
+          const windDrift = (t * 0.03 * spd * (i % 3 - 1)) * W;
+          const px = (((p.x0 * W + sway + windDrift) % W) + W) % W;
+          const r = baseSize * p.sizeMul;
+
+          if (fx.particleType === 'snow') {
+            const snowGrad = targetCtx.createRadialGradient(px, py, 0, px, py, r);
+            snowGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+            snowGrad.addColorStop(0.6, 'rgba(255, 255, 255, 0.55)');
+            snowGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            targetCtx.fillStyle = snowGrad;
+            targetCtx.beginPath();
+            targetCtx.arc(px, py, r, 0, Math.PI * 2);
+            targetCtx.fill();
+          } else if (fx.particleType === 'petal') {
+            targetCtx.save();
+            targetCtx.translate(px, py);
+            targetCtx.rotate(t * p.rotSpeed + p.phase);
+            const flipScale = 0.45 + 0.55 * Math.abs(Math.cos(t * 2.5 + p.phase));
+            targetCtx.scale(1, flipScale);
+            targetCtx.fillStyle = fx.petalColor || '#ffb7c5';
+            targetCtx.globalAlpha = 0.88;
+            targetCtx.beginPath();
+            targetCtx.moveTo(0, -r);
+            targetCtx.bezierCurveTo(r * 0.9, -r * 0.6, r * 0.9, r * 0.7, 0, r);
+            targetCtx.bezierCurveTo(-r * 0.9, r * 0.7, -r * 0.9, -r * 0.6, 0, -r);
+            targetCtx.fill();
+            targetCtx.restore();
+          }
+        }
+        targetCtx.restore();
+      }
+    }
+
+    // ====== 主畫布渲染管線 ======
     function renderFrame() {
       const W = canvas.width;
       const H = canvas.height;
       ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, W, H);
+
+      const bg = state.background;
+      if (bg.mode === 'solid') {
+        ctx.fillStyle = bg.color1 || '#000000';
+        ctx.fillRect(0, 0, W, H);
+      } else if (bg.mode === 'gradient') {
+        const grad = ctx.createLinearGradient(0, 0, W, H);
+        grad.addColorStop(0, bg.color1 || '#1e1b4b');
+        grad.addColorStop(1, bg.color2 || '#4c1d95');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+      } else if (bg.mode === 'custom' && bg.mediaEl) {
+        const el = bg.mediaEl;
+        const sw = el.tagName === 'VIDEO' ? el.videoWidth : el.naturalWidth;
+        const sh = el.tagName === 'VIDEO' ? el.videoHeight : el.naturalHeight;
+        if (sw > 0 && sh > 0) {
+          const r = Math.max(W / sw, H / sh);
+          ctx.drawImage(el, (W - sw * r) / 2, (H - sh * r) / 2, sw * r, sh * r);
+        } else {
+          ctx.fillStyle = '#000';
+          ctx.fillRect(0, 0, W, H);
+        }
+      } else {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, W, H);
+      }
 
       let acc = 0;
-      let activeClip = null;
-      let localT = 0;
-      let clipIndex = 0;
+      let activeMainClip = null;
+      let mainLocalT = 0;
+      let mainIndex = 0;
 
-      if (activeTrim && activeTrim.type === 'clip') {
-        activeClip = activeTrim.item;
-        localT = activeTrim.edge === 'left' ? 0 : Math.max(0, activeClip.duration - 0.02);
-        clipIndex = state.clips.indexOf(activeClip);
-      } else if (reorderState) {
-        activeClip = state.clips.find(c => c.id === reorderState.clipId) || state.clips[0];
-        localT = 0;
-        clipIndex = state.clips.indexOf(activeClip);
+      if (activeTrim && activeTrim.type === 'clip' && !activeTrim.isPip) {
+        activeMainClip = activeTrim.item;
+        mainLocalT = activeTrim.edge === 'left' ? 0 : Math.max(0, activeMainClip.duration - 0.02);
+        mainIndex = state.clips.indexOf(activeMainClip);
       } else {
         for (let i = 0; i < state.clips.length; i++) {
           const c = state.clips[i];
           if (state.currentTime >= acc && state.currentTime <= acc + c.duration) {
-            activeClip = c;
-            localT = state.currentTime - acc;
-            clipIndex = i;
+            activeMainClip = c;
+            mainLocalT = state.currentTime - acc;
+            mainIndex = i;
             break;
           }
           acc += c.duration;
         }
       }
 
-      if (activeClip) {
-        const tr = getInterpolatedTransform(activeClip, localT);
-        ctx.save();
-        ctx.translate(W / 2 + tr.x, H / 2 + tr.y);
-        ctx.rotate((tr.rot * Math.PI) / 180);
-        ctx.scale(tr.scale, tr.scale);
-
-        const col = activeClip.color;
-        const sepia = col.warm > 0 ? col.warm * 0.6 : 0;
-        const hue = col.warm < 0 ? col.warm * 0.8 : 0;
-        ctx.filter = `brightness(${col.b}%) contrast(${col.c}%) saturate(${col.s}%) sepia(${sepia}%) hue-rotate(${hue}deg)`;
-
-        if (activeClip.videoEl) {
-          const v = activeClip.videoEl;
-          if (v.error) {
-            ctx.restore();
-            ctx.fillStyle = '#fca5a5';
-            ctx.font = "600 13px 'Noto Sans TC', sans-serif";
-            ctx.textAlign = 'center';
-            ctx.fillText('⚠️ 瀏覽器不支援此影片編碼格式', W / 2, H / 2 - 10);
-            ctx.font = "400 11px 'Noto Sans TC', sans-serif";
-            ctx.fillText('建議使用標準 H.264 MP4 檔案', W / 2, H / 2 + 12);
-          } else if (v.readyState >= 1 && v.videoWidth > 0) {
-            const vRatio = v.videoWidth / v.videoHeight;
-            const cRatio = W / H;
-            let dw = W, dh = H;
-            if (vRatio > cRatio) {
-              dh = H;
-              dw = H * vRatio;
-            } else {
-              dw = W;
-              dh = W / vRatio;
-            }
-            ctx.drawImage(v, -dw / 2, -dh / 2, dw, dh);
-            ctx.restore();
-          } else {
-            ctx.restore();
-            ctx.fillStyle = '#9ca3af';
-            ctx.font = "500 13px 'Noto Sans TC', sans-serif";
-            ctx.textAlign = 'center';
-            ctx.fillText('正在解碼影片畫面...', W / 2, H / 2);
-          }
-        } else {
-          ctx.restore();
-        }
-
-        if (activeTrim && activeTrim.type === 'clip') {
+      if (bg.mode === 'blur' && activeMainClip && activeMainClip.mediaEl) {
+        const el = activeMainClip.mediaEl;
+        const sw = el.tagName === 'VIDEO' ? el.videoWidth : el.naturalWidth;
+        const sh = el.tagName === 'VIDEO' ? el.videoHeight : el.naturalHeight;
+        if (sw > 0 && sh > 0) {
           ctx.save();
-          ctx.fillStyle = 'rgba(255, 59, 127, 0.92)';
-          ctx.beginPath();
-          ctx.roundRect(10, H - 38, 195, 26, 6);
-          ctx.fill();
-          ctx.fillStyle = '#fff';
-          ctx.font = "700 11px 'Noto Sans TC', sans-serif";
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'middle';
-          const edgeText = activeTrim.edge === 'left'
-            ? `裁切開頭：${(activeClip.trimStart || 0).toFixed(2)}s（片長 ${activeClip.duration.toFixed(1)}s）`
-            : `裁切結尾：${((activeClip.trimStart || 0) + activeClip.duration).toFixed(2)}s（片長 ${activeClip.duration.toFixed(1)}s）`;
-          ctx.fillText(edgeText, 16, H - 25);
+          ctx.filter = 'blur(18px) brightness(0.65)';
+          const r = Math.max(W / sw, H / sh) * 1.15;
+          ctx.drawImage(el, (W - sw * r) / 2, (H - sh * r) / 2, sw * r, sh * r);
           ctx.restore();
         }
+      }
 
-        if (reorderState) {
-          ctx.save();
-          ctx.fillStyle = 'rgba(255, 204, 51, 0.92)';
-          ctx.beginPath();
-          ctx.roundRect(10, H - 38, 195, 26, 6);
-          ctx.fill();
-          ctx.fillStyle = '#111';
-          ctx.font = "800 11px 'Noto Sans TC', sans-serif";
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(`目前順序：第 ${clipIndex + 1} 段 / 共 ${state.clips.length} 段`, 18, H - 25);
-          ctx.restore();
-        }
+      if (activeMainClip) {
+        drawVisualClip(ctx, activeMainClip, mainLocalT, W, H, false);
 
-        const timeLeft = activeClip.duration - localT;
-        if (!activeTrim && !reorderState && timeLeft <= 0.6 && activeClip.transitionAfter !== 'none' && clipIndex < state.clips.length - 1) {
+        const timeLeft = activeMainClip.duration - mainLocalT;
+        if (!activeTrim && timeLeft <= 0.6 && activeMainClip.transitionAfter !== 'none' && mainIndex < state.clips.length - 1) {
           const p = 1 - (timeLeft / 0.6);
-          if (activeClip.transitionAfter === 'fade') {
+          if (activeMainClip.transitionAfter === 'fade') {
             ctx.fillStyle = `rgba(0, 0, 0, ${p})`;
             ctx.fillRect(0, 0, W, H);
-          } else if (activeClip.transitionAfter === 'flash') {
+          } else if (activeMainClip.transitionAfter === 'flash') {
             ctx.fillStyle = `rgba(255, 255, 255, ${Math.sin(p * Math.PI) * 0.85})`;
             ctx.fillRect(0, 0, W, H);
-          } else if (activeClip.transitionAfter === 'zoom') {
+          } else if (activeMainClip.transitionAfter === 'zoom') {
             ctx.strokeStyle = `rgba(255, 59, 127, ${1 - p})`;
             ctx.lineWidth = 12 * (1 - p);
             ctx.strokeRect(p * 30, p * 30, W - p * 60, H - p * 60);
-          } else if (activeClip.transitionAfter === 'slide') {
+          } else if (activeMainClip.transitionAfter === 'slide') {
             ctx.fillStyle = '#000';
             ctx.fillRect(W * (1 - p), 0, W * p, H);
           }
         }
-      } else if (state.clips.length === 0) {
-        ctx.fillStyle = '#181a20';
-        ctx.fillRect(0, 0, W, H);
-        ctx.fillStyle = '#9ca3af';
-        ctx.font = "600 14px 'Noto Sans TC', sans-serif";
-        ctx.textAlign = 'center';
-        ctx.fillText('空白專案（無影片）', W / 2, H / 2 - 10);
-        ctx.font = "400 12px 'Noto Sans TC', sans-serif";
-        ctx.fillText('請點下方「＋ 匯入影片檔」開始剪輯', W / 2, H / 2 + 14);
       }
 
-      // 繪製字幕層
+      for (let tIdx = state.pipTracks.length - 1; tIdx >= 0; tIdx--) {
+        const track = state.pipTracks[tIdx];
+        track.clips.forEach(pClip => {
+          const pStart = pClip.start || 0;
+          const isBeingTrimmed = activeTrim && activeTrim.item.id === pClip.id;
+          if (isBeingTrimmed || (state.currentTime >= pStart && state.currentTime <= pStart + pClip.duration)) {
+            const localT = isBeingTrimmed
+              ? (activeTrim.edge === 'left' ? 0 : Math.max(0, pClip.duration - 0.02))
+              : (state.currentTime - pStart);
+            drawVisualClip(ctx, pClip, localT, W, H, true);
+          }
+        });
+      }
+
+      renderAtmosphereEffects(ctx, W, H, state.currentTime);
+
+      const hasAnyPip = state.pipTracks.some(t => t.clips.length > 0);
+      if (state.clips.length === 0 && !hasAnyPip && bg.mode === 'solid' && bg.color1 === '#000000') {
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = "600 13px 'Noto Sans TC', sans-serif";
+        ctx.textAlign = 'center';
+        ctx.fillText('空白底板（上方軌道覆蓋下方軌道）', W / 2, H / 2 - 10);
+        ctx.font = "400 11px 'Noto Sans TC', sans-serif";
+        ctx.fillText('請點下方「＋ 匯入主影片」或「＋ 匯入畫中畫」', W / 2, H / 2 + 12);
+      }
+
       state.subtitles.forEach(sub => {
         if (state.currentTime >= sub.start && state.currentTime <= sub.start + sub.duration) {
           ctx.save();
@@ -1136,45 +1711,115 @@
 
           const sx = sub.x * W;
           const sy = sub.y * H;
-          const metrics = ctx.measureText(sub.text);
-          const padX = 14, padY = 8;
-          const boxW = metrics.width + padX * 2;
-          const boxH = sub.size + padY * 2;
+          const isVertical = sub.orientation === 'vertical';
 
-          if (sub.bg && sub.bg !== 'transparent') {
-            ctx.fillStyle = sub.bg;
-            ctx.beginPath();
-            ctx.roundRect(sx - boxW / 2, sy - boxH / 2, boxW, boxH, 8);
-            ctx.fill();
-          }
+          if (!isVertical) {
+            const metrics = ctx.measureText(sub.text);
+            const padX = 14, padY = 8;
+            const boxW = metrics.width + padX * 2;
+            const boxH = sub.size + padY * 2;
 
-          if (sub.stroke) {
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = sub.stroke;
-            ctx.strokeText(sub.text, sx, sy);
-          }
+            if (sub.bg && sub.bg !== 'transparent') {
+              ctx.fillStyle = sub.bg;
+              ctx.beginPath();
+              ctx.roundRect(sx - boxW / 2, sy - boxH / 2, boxW, boxH, 8);
+              ctx.fill();
+            }
+            if (sub.stroke) {
+              ctx.lineWidth = 3;
+              ctx.strokeStyle = sub.stroke;
+              ctx.strokeText(sub.text, sx, sy);
+            }
+            ctx.fillStyle = sub.color;
+            ctx.fillText(sub.text, sx, sy);
 
-          ctx.fillStyle = sub.color;
-          ctx.fillText(sub.text, sx, sy);
+            if (sub.id === state.selectedSubId && state.lastSelectedType === 'sub' && !state.isPlaying) {
+              ctx.strokeStyle = '#ff3b7f';
+              ctx.lineWidth = 1.5;
+              ctx.setLineDash([4, 3]);
+              ctx.strokeRect(sx - boxW / 2 - 4, sy - boxH / 2 - 4, boxW + 8, boxH + 8);
+            }
+          } else {
+            const lines = sub.text.split(/\n|\|/);
+            const charStep = sub.size * 1.12;
+            const colStep = sub.size * 1.3;
+            const maxChars = Math.max(...lines.map(l => Array.from(l).length), 1);
+            const totalW = lines.length * colStep + 18;
+            const totalH = maxChars * charStep + 18;
 
-          if (sub.id === state.selectedSubId && state.lastSelectedType === 'sub' && !state.isPlaying) {
-            ctx.strokeStyle = '#ff3b7f';
-            ctx.lineWidth = 1.5;
-            ctx.setLineDash([4, 3]);
-            ctx.strokeRect(sx - boxW / 2 - 4, sy - boxH / 2 - 4, boxW + 8, boxH + 8);
+            if (sub.bg && sub.bg !== 'transparent') {
+              ctx.fillStyle = sub.bg;
+              ctx.beginPath();
+              ctx.roundRect(sx - totalW / 2, sy - totalH / 2, totalW, totalH, 8);
+              ctx.fill();
+            }
+
+            lines.forEach((lineStr, colIdx) => {
+              const chars = Array.from(lineStr);
+              const colX = sx + ((lines.length - 1) / 2 - colIdx) * colStep;
+              chars.forEach((ch, rowIdx) => {
+                const charY = sy - ((chars.length - 1) / 2 - rowIdx) * charStep;
+                if (sub.stroke) {
+                  ctx.lineWidth = 3;
+                  ctx.strokeStyle = sub.stroke;
+                  ctx.strokeText(ch, colX, charY);
+                }
+                ctx.fillStyle = sub.color;
+                ctx.fillText(ch, colX, charY);
+              });
+            });
+
+            if (sub.id === state.selectedSubId && state.lastSelectedType === 'sub' && !state.isPlaying) {
+              ctx.strokeStyle = '#ff3b7f';
+              ctx.lineWidth = 1.5;
+              ctx.setLineDash([4, 3]);
+              ctx.strokeRect(sx - totalW / 2 - 4, sy - totalH / 2 - 4, totalW + 8, totalH + 8);
+            }
           }
           ctx.restore();
         }
       });
 
+      if (activeTrim && (activeTrim.type === 'clip' || activeTrim.type === 'pip' || activeTrim.type === 'audio')) {
+        const c = activeTrim.item;
+        ctx.save();
+        ctx.fillStyle = activeTrim.type === 'audio' ? 'rgba(20, 184, 166, 0.92)' : 'rgba(255, 59, 127, 0.92)';
+        ctx.beginPath();
+        ctx.roundRect(10, H - 36, 205, 24, 6);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = "700 11px 'Noto Sans TC', sans-serif";
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        const edgeText = activeTrim.edge === 'left'
+          ? `裁切起點：${(c.trimStart || 0).toFixed(2)}s（長 ${c.duration.toFixed(1)}s）`
+          : `裁切終點：${((c.trimStart || 0) + c.duration * (c.speed || 1)).toFixed(2)}s（長 ${c.duration.toFixed(1)}s）`;
+        ctx.fillText(edgeText, 16, H - 24);
+        ctx.restore();
+      }
+
       document.getElementById('curTimeLabel').textContent = formatTime(state.currentTime);
       document.getElementById('totTimeLabel').textContent = formatTime(getTotalDuration());
     }
 
-    // ====== 雙向即時裁切（拖曳過程中畫面連續跟著動） ======
+    // ====== 雙向即時裁切（主軌、畫中畫、獨立音軌通用） ======
     let activeTrim = null;
 
-    function attachTrimEvents(handleEl, type, item, edge, blockEl, labelEl) {
+    function formatClipLabel(clip, prefix = '') {
+      const trimTag = (clip.trimStart || 0) > 0.05 ? ` [裁${(clip.trimStart).toFixed(1)}s]` : '';
+      const speedTag = Math.abs(clip.speed - 1.0) > 0.01 ? ` ${clip.speed > 1 ? '⚡' : '🐢'}${clip.speed}x` : '';
+      const muteTag = clip.muted ? ' 🔇' : (Math.abs((clip.audioGain ?? 1) - 1) > 0.05 ? ` 🔊${Math.round(clip.audioGain * 100)}%` : '');
+      return `${prefix}${clip.name}${muteTag}${speedTag}${trimTag} (${clip.duration.toFixed(1)}s)`;
+    }
+
+    function formatAudioClipLabel(aClip) {
+      const trimTag = (aClip.trimStart || 0) > 0.05 ? ` [裁${(aClip.trimStart).toFixed(1)}s]` : '';
+      const muteTag = aClip.muted ? '🔇' : `🎵 ${Math.round((aClip.gain ?? 1) * 100)}%`;
+      const srcTag = aClip.fromVideo ? '[影轉音] ' : '';
+      return `${muteTag} ${srcTag}${aClip.name}${trimTag} (${aClip.duration.toFixed(1)}s)`;
+    }
+
+    function attachTrimEvents(handleEl, type, item, edge, blockEl, labelEl, isPip = false) {
       handleEl.addEventListener('pointerdown', (e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -1186,6 +1831,7 @@
         handleEl.classList.add('active');
         activeTrim = {
           type,
+          isPip,
           item,
           edge,
           startX: e.clientX,
@@ -1197,11 +1843,11 @@
           labelEl
         };
 
-        if (type === 'clip' && item.videoEl) {
+        if ((type === 'clip' || type === 'pip') && item.mediaEl && item.mediaEl.tagName === 'VIDEO') {
           const target = edge === 'left'
             ? (item.trimStart || 0)
             : (item.trimStart || 0) + item.duration * item.speed - 0.02;
-          requestVideoSeek(item.videoEl, target);
+          requestVideoSeek(item.mediaEl, target);
         }
         renderFrame();
       });
@@ -1209,37 +1855,66 @@
       handleEl.addEventListener('pointermove', (e) => {
         if (!activeTrim || activeTrim.handleEl !== handleEl) return;
         e.stopPropagation();
-        const deltaSec = (e.clientX - activeTrim.startX) / PX_PER_SEC;
+        const deltaSec = (e.clientX - activeTrim.startX) / state.pxPerSec;
 
-        if (activeTrim.type === 'clip') {
+        if (activeTrim.type === 'clip' || activeTrim.type === 'pip') {
           const maxTotal = item.maxDuration || 120;
+          const spd = item.speed || 1.0;
+
           if (edge === 'left') {
-            const minDelta = -activeTrim.origTrimStart;
-            const maxDelta = activeTrim.origDur - 0.4;
+            const minDelta = isPip ? -activeTrim.origStart : -(activeTrim.origTrimStart / spd);
+            const maxDelta = activeTrim.origDur - 0.3;
             const clampedDelta = Math.max(minDelta, Math.min(maxDelta, deltaSec));
 
-            item.trimStart = activeTrim.origTrimStart + clampedDelta;
+            if (isPip) {
+              item.start = activeTrim.origStart + clampedDelta;
+              item.trimStart = Math.max(0, activeTrim.origTrimStart + clampedDelta * spd);
+            } else {
+              item.trimStart = activeTrim.origTrimStart + clampedDelta * spd;
+            }
             item.duration = activeTrim.origDur - clampedDelta;
 
-            if (item.videoEl) {
-              requestVideoSeek(item.videoEl, item.trimStart);
+            if (item.mediaEl && item.mediaEl.tagName === 'VIDEO') {
+              requestVideoSeek(item.mediaEl, item.trimStart);
             }
           } else if (edge === 'right') {
-            const maxAvailDur = Math.max(0.4, maxTotal - (item.trimStart || 0));
-            item.duration = Math.max(0.4, Math.min(maxAvailDur, activeTrim.origDur + deltaSec));
+            const maxAvailDur = item.mediaType === 'image'
+              ? 120
+              : Math.max(0.3, (maxTotal - (item.trimStart || 0)) / spd);
+            item.duration = Math.max(0.3, Math.min(maxAvailDur, activeTrim.origDur + deltaSec));
 
-            if (item.videoEl) {
-              const endTarget = (item.trimStart || 0) + item.duration * item.speed - 0.02;
-              requestVideoSeek(item.videoEl, endTarget);
+            if (item.mediaEl && item.mediaEl.tagName === 'VIDEO') {
+              const endTarget = (item.trimStart || 0) + item.duration * spd - 0.02;
+              requestVideoSeek(item.mediaEl, endTarget);
             }
           }
 
-          if (blockEl) blockEl.style.width = (item.duration * PX_PER_SEC) + 'px';
-          if (labelEl) {
-            const idx = state.clips.indexOf(item);
-            const trimTag = (item.trimStart || 0) > 0.05 ? ` [裁 ${(item.trimStart).toFixed(1)}s~]` : '';
-            labelEl.textContent = `#${idx + 1} ${item.name}${trimTag} (${item.duration.toFixed(1)}s)`;
+          if (blockEl) {
+            if (isPip) blockEl.style.left = ((item.start || 0) * state.pxPerSec) + 'px';
+            blockEl.style.width = (item.duration * state.pxPerSec) + 'px';
           }
+          if (labelEl) labelEl.textContent = formatClipLabel(item);
+          renderFrame();
+        } else if (activeTrim.type === 'audio') {
+          const maxTotal = item.maxDuration || 300;
+          if (edge === 'left') {
+            // 往右拉裁切音訊開頭並順移起點，往左拉還原
+            const minDelta = -Math.min(activeTrim.origStart, activeTrim.origTrimStart);
+            const maxDelta = activeTrim.origDur - 0.3;
+            const clampedDelta = Math.max(minDelta, Math.min(maxDelta, deltaSec));
+
+            item.start = Math.max(0, activeTrim.origStart + clampedDelta);
+            item.trimStart = Math.max(0, activeTrim.origTrimStart + clampedDelta);
+            item.duration = activeTrim.origDur - clampedDelta;
+          } else if (edge === 'right') {
+            const maxAvailDur = Math.max(0.3, maxTotal - (item.trimStart || 0));
+            item.duration = Math.max(0.3, Math.min(maxAvailDur, activeTrim.origDur + deltaSec));
+          }
+          if (blockEl) {
+            blockEl.style.left = ((item.start || 0) * state.pxPerSec) + 'px';
+            blockEl.style.width = (item.duration * state.pxPerSec) + 'px';
+          }
+          if (labelEl) labelEl.textContent = formatAudioClipLabel(item);
           renderFrame();
         } else if (activeTrim.type === 'sub') {
           if (edge === 'right') {
@@ -1251,8 +1926,8 @@
             item.duration = activeTrim.origDur - shift;
           }
           if (blockEl) {
-            blockEl.style.left = (item.start * PX_PER_SEC) + 'px';
-            blockEl.style.width = (item.duration * PX_PER_SEC) + 'px';
+            blockEl.style.left = (item.start * state.pxPerSec) + 'px';
+            blockEl.style.width = (item.duration * state.pxPerSec) + 'px';
           }
           if (labelEl) labelEl.textContent = `T ${item.text} (${item.duration.toFixed(1)}s)`;
           renderFrame();
@@ -1263,15 +1938,8 @@
         if (!activeTrim || activeTrim.handleEl !== handleEl) return;
         e.stopPropagation();
         handleEl.classList.remove('active');
-        const wasClip = activeTrim.type === 'clip';
-        const wasLeft = edge === 'left';
         activeTrim = null;
-
-        if (wasClip && wasLeft) {
-          showToast(`已裁切開頭至 ${(item.trimStart || 0).toFixed(1)}s（片段長 ${item.duration.toFixed(1)}s）`);
-        } else {
-          showToast(`已調整長度：${item.duration.toFixed(1)} 秒`);
-        }
+        showToast(`已裁切片段長度：${item.duration.toFixed(1)} 秒`);
         renderTimeline();
         renderDrawer();
         syncVideoElements(true);
@@ -1282,7 +1950,7 @@
       handleEl.addEventListener('pointercancel', finishTrim);
     }
 
-    // ====== 長按影片片段自動縮成全局小方塊拖曳排序 ======
+    // ====== 長按片段拖曳（主軌 <-> 畫中畫軌，或音訊軌左右移動出現位置） ======
     let longPressTimer = null;
     let reorderState = null;
 
@@ -1293,43 +1961,45 @@
       }
     }
 
-    function startClipLongPress(e, clip) {
-      if (state.clips.length <= 1) return;
+    function startClipLongPress(e, clip, sourceType, sourceTrackId = null) {
       if (e.target.closest('.trim-handle') || activeTrim) return;
 
       cancelLongPress();
-      const pointerId = e.pointerId;
       const startX = e.clientX;
+      const startY = e.clientY;
 
       longPressTimer = setTimeout(() => {
         isDraggingTimeline = false;
         timelineScroll.classList.remove('grabbing');
-        timelineScroll.scrollLeft = 0;
 
         pushUndo();
         reorderState = {
           clipId: clip.id,
-          pointerId,
-          startX
+          sourceType, // 'main' | 'pip' | 'audio'
+          sourceTrackId,
+          startX,
+          startY,
+          origStart: clip.start || 0
         };
-        state.selectedClipId = clip.id;
-        state.lastSelectedType = 'clip';
-        updateDeleteButtonLabel();
 
-        if (clip.videoEl) {
-          requestVideoSeek(clip.videoEl, clip.trimStart || 0);
+        if (sourceType === 'audio') {
+          state.selectedAudioId = clip.id;
+          state.lastSelectedType = 'audio';
+          showToast('已啟動音軌移動：左右拖曳對齊時間位置 ↔️');
+        } else {
+          state.selectedClipId = clip.id;
+          state.lastSelectedType = sourceType === 'pip' ? 'pip' : 'clip';
+          showToast('已啟動跨軌拖曳：上下拖轉畫中畫，左右拖調順序 ↕️↔️');
         }
-
+        updateDeleteButtonLabel();
         if (navigator.vibrate) navigator.vibrate(25);
-        showToast(`全局排序模式（共 ${state.clips.length} 段）：左右拖曳方塊調換順序 ↔️`);
         renderTimeline();
-        renderFrame();
       }, 220);
     }
 
     window.addEventListener('pointermove', (e) => {
       if (longPressTimer && !reorderState) {
-        if (Math.abs(e.clientX - dragStartX) > 10) {
+        if (Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY) > 10) {
           cancelLongPress();
         }
       }
@@ -1337,156 +2007,300 @@
       if (!reorderState) return;
       e.preventDefault();
 
-      const curIdx = state.clips.findIndex(c => c.id === reorderState.clipId);
-      if (curIdx === -1) return;
-
-      const clipEls = document.querySelectorAll('#videoTrack .clip-block');
-      if (!clipEls[curIdx]) return;
-
-      if (curIdx > 0) {
-        const prevRect = clipEls[curIdx - 1].getBoundingClientRect();
-        const prevMid = prevRect.left + prevRect.width / 2;
-        if (e.clientX < prevMid) {
-          const temp = state.clips[curIdx - 1];
-          state.clips[curIdx - 1] = state.clips[curIdx];
-          state.clips[curIdx] = temp;
-          if (navigator.vibrate) navigator.vibrate(15);
-          renderTimeline();
+      // 若是獨立音訊條，左右拖動自由改變出現秒數 start
+      if (reorderState.sourceType === 'audio') {
+        const aClip = state.audioClips.find(a => a.id === reorderState.clipId);
+        if (aClip) {
+          const dxSec = (e.clientX - reorderState.startX) / state.pxPerSec;
+          aClip.start = Math.max(0, reorderState.origStart + dxSec);
+          const blockEl = document.querySelector(`.audio-clip-block[data-audio-id="${aClip.id}"]`);
+          if (blockEl) blockEl.style.left = (aClip.start * state.pxPerSec) + 'px';
           renderFrame();
-          return;
+        }
+        return;
+      }
+
+      const trackEls = document.querySelectorAll('#tracksContainer .track-row[data-track-kind]');
+      trackEls.forEach(el => el.classList.remove('drop-target'));
+
+      let hoveredTrackEl = null;
+      trackEls.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (e.clientY >= rect.top - 8 && e.clientY <= rect.bottom + 8) {
+          hoveredTrackEl = el;
+          el.classList.add('drop-target');
+        }
+      });
+
+      if (reorderState.sourceType === 'pip') {
+        const tr = state.pipTracks.find(t => t.id === reorderState.sourceTrackId);
+        const pClip = tr?.clips.find(c => c.id === reorderState.clipId);
+        if (pClip) {
+          const dxSec = (e.clientX - reorderState.startX) / state.pxPerSec;
+          pClip.start = Math.max(0, reorderState.origStart + dxSec);
+          const blockEl = document.querySelector(`.clip-block[data-clip-id="${pClip.id}"]`);
+          if (blockEl) blockEl.style.left = (pClip.start * state.pxPerSec) + 'px';
+          renderFrame();
         }
       }
 
-      if (curIdx < state.clips.length - 1) {
-        const nextRect = clipEls[curIdx + 1].getBoundingClientRect();
-        const nextMid = nextRect.left + nextRect.width / 2;
-        if (e.clientX > nextMid) {
-          const temp = state.clips[curIdx + 1];
-          state.clips[curIdx + 1] = state.clips[curIdx];
-          state.clips[curIdx] = temp;
-          if (navigator.vibrate) navigator.vibrate(15);
-          renderTimeline();
-          renderFrame();
-          return;
+      if (reorderState.sourceType === 'main' && (!hoveredTrackEl || hoveredTrackEl.dataset.trackKind === 'main')) {
+        const curIdx = state.clips.findIndex(c => c.id === reorderState.clipId);
+        const clipEls = document.querySelectorAll('#mainVideoTrack .clip-block');
+        if (curIdx > 0 && clipEls[curIdx - 1]) {
+          const prevRect = clipEls[curIdx - 1].getBoundingClientRect();
+          if (e.clientX < prevRect.left + prevRect.width / 2) {
+            [state.clips[curIdx - 1], state.clips[curIdx]] = [state.clips[curIdx], state.clips[curIdx - 1]];
+            renderTimeline();
+            renderFrame();
+          }
+        } else if (curIdx >= 0 && curIdx < state.clips.length - 1 && clipEls[curIdx + 1]) {
+          const nextRect = clipEls[curIdx + 1].getBoundingClientRect();
+          if (e.clientX > nextRect.left + nextRect.width / 2) {
+            [state.clips[curIdx + 1], state.clips[curIdx]] = [state.clips[curIdx], state.clips[curIdx + 1]];
+            renderTimeline();
+            renderFrame();
+          }
         }
       }
     }, { passive: false });
 
-    const endReorder = () => {
+    const endReorder = (e) => {
       cancelLongPress();
-      if (reorderState) {
-        const movedId = reorderState.clipId;
+      if (!reorderState) return;
+
+      if (reorderState.sourceType === 'audio') {
         reorderState = null;
-
-        let newStartSec = 0;
-        for (const c of state.clips) {
-          if (c.id === movedId) break;
-          newStartSec += c.duration;
-        }
-
         renderTimeline();
         renderDrawer();
-        seekTo(newStartSec);
-        showToast('已完成片段順序調整 ✅');
+        syncVideoElements(true);
+        showToast('已更新音軌時間位置 ✅');
+        return;
       }
+
+      const dropEl = document.querySelector('#tracksContainer .track-row.drop-target');
+      const targetKind = dropEl?.dataset.trackKind;
+      const targetTrackId = dropEl?.dataset.trackId;
+
+      let draggedClip = null;
+      if (reorderState.sourceType === 'main') {
+        const idx = state.clips.findIndex(c => c.id === reorderState.clipId);
+        if (idx !== -1 && targetKind === 'pip') {
+          draggedClip = state.clips.splice(idx, 1)[0];
+        }
+      } else if (reorderState.sourceType === 'pip') {
+        const srcTr = state.pipTracks.find(t => t.id === reorderState.sourceTrackId);
+        const idx = srcTr ? srcTr.clips.findIndex(c => c.id === reorderState.clipId) : -1;
+        if (idx !== -1 && (targetKind === 'main' || (targetKind === 'pip' && targetTrackId !== reorderState.sourceTrackId))) {
+          draggedClip = srcTr.clips.splice(idx, 1)[0];
+        }
+      }
+
+      if (draggedClip) {
+        if (targetKind === 'pip') {
+          const destTrack = state.pipTracks.find(t => t.id === targetTrackId) || state.pipTracks[0];
+          draggedClip.start = Math.max(0, state.currentTime);
+          destTrack.clips.push(draggedClip);
+          state.lastSelectedType = 'pip';
+          state.selectedClipId = draggedClip.id;
+          showToast(`已移至「${destTrack.name}」（覆蓋下方圖層）🖼️`);
+        } else if (targetKind === 'main') {
+          state.clips.push(draggedClip);
+          state.lastSelectedType = 'clip';
+          state.selectedClipId = draggedClip.id;
+          showToast('已移回主影片軌道 🎞️');
+        }
+      } else if (e && e.clientY < timelineScroll.getBoundingClientRect().top + 24 && reorderState.sourceType === 'main') {
+        const idx = state.clips.findIndex(c => c.id === reorderState.clipId);
+        if (idx !== -1) {
+          const moved = state.clips.splice(idx, 1)[0];
+          const newTrackId = 'pip-track-' + Date.now();
+          const layerNum = state.pipTracks.length + 1;
+          state.pipTracks.unshift({
+            id: newTrackId,
+            name: `畫中畫 L${layerNum} (最頂層)`,
+            clips: [{ ...moved, start: Math.max(0, state.currentTime) }]
+          });
+          state.lastSelectedType = 'pip';
+          state.selectedClipId = moved.id;
+          showToast(`已自動新增最上層畫中畫軌道 L${layerNum} ✨`);
+        }
+      }
+
+      reorderState = null;
+      updateDeleteButtonLabel();
+      renderTimeline();
+      renderDrawer();
+      syncVideoElements(true);
+      renderFrame();
     };
 
     window.addEventListener('pointerup', endReorder);
     window.addEventListener('pointercancel', endReorder);
 
-    // ====== 渲染時間軸 ======
+    // ====== 渲染多層時間軸 ======
     function renderTimeline() {
-      const isCompactReorder = Boolean(reorderState);
-      timelineScroll.classList.toggle('reorder-mode', isCompactReorder);
-
+      const pps = state.pxPerSec;
       const total = getTotalDuration();
       const displaySec = Math.max(total + 5, 15);
-      const totalPx = displaySec * PX_PER_SEC;
+      const totalPx = displaySec * pps;
       const ruler = document.getElementById('ruler');
       ruler.style.width = totalPx + 'px';
       ruler.innerHTML = '';
-      for (let s = 0; s <= Math.ceil(displaySec); s++) {
+
+      const step = pps < 25 ? 5 : (pps < 40 ? 2 : (pps > 110 ? 0.5 : 1));
+      for (let s = 0; s <= Math.ceil(displaySec); s += step) {
         const mark = document.createElement('div');
         mark.style.position = 'absolute';
-        mark.style.left = (s * PX_PER_SEC) + 'px';
-        mark.textContent = `${s}s`;
+        mark.style.left = (s * pps) + 'px';
+        mark.textContent = Number.isInteger(s) ? `${s}s` : `${s.toFixed(1)}s`;
         ruler.appendChild(mark);
       }
 
-      // 1. 影片軌道
-      const vTrack = document.getElementById('videoTrack');
-      vTrack.innerHTML = '';
-      if (state.clips.length === 0) {
-        const emptyBtn = document.createElement('div');
-        emptyBtn.className = 'empty-track-hint';
-        emptyBtn.textContent = '＋ 點此匯入影片檔（目前無影片）';
-        emptyBtn.onclick = () => { if (!timelineWasDragged) document.getElementById('videoFileInput').click(); };
-        vTrack.appendChild(emptyBtn);
-      } else {
-        const availW = Math.max(260, timelineScroll.clientWidth - 40);
-        const compactW = Math.max(46, Math.min(92, Math.floor((availW - (state.clips.length - 1) * 8) / state.clips.length)));
+      const container = document.getElementById('tracksContainer');
+      container.innerHTML = '';
 
-        state.clips.forEach((clip, idx) => {
-          const isSel = clip.id === state.selectedClipId && state.lastSelectedType === 'clip';
-          const isReordering = reorderState && reorderState.clipId === clip.id;
-          const el = document.createElement('div');
+      // 1. 畫中畫軌道
+      state.pipTracks.forEach((pTrack, tIdx) => {
+        const row = document.createElement('div');
+        row.className = 'track-row pip-track';
+        row.dataset.trackKind = 'pip';
+        row.dataset.trackId = pTrack.id;
 
-          if (isCompactReorder) {
-            el.className = 'clip-block compact-card' + (isReordering ? ' reordering' : '');
-            el.style.width = compactW + 'px';
-            el.innerHTML = `
-              <span class="compact-num">#${idx + 1}</span>
-              <span class="compact-sub">${clip.duration.toFixed(1)}s</span>
-            `;
-          } else {
-            el.className = 'clip-block' + (isSel ? ' selected' : '');
-            el.style.width = (clip.duration * PX_PER_SEC) + 'px';
+        const badge = document.createElement('span');
+        badge.className = 'track-badge';
+        badge.style.color = '#d8b4fe';
+        badge.textContent = `頂層${tIdx + 1}`;
+        row.appendChild(badge);
+
+        if (pTrack.clips.length === 0) {
+          const hint = document.createElement('div');
+          hint.className = 'empty-track-hint';
+          hint.textContent = `＋ 匯入畫中畫素材（或長按下方影片往上拖至此層）`;
+          hint.onclick = () => {
+            if (timelineWasDragged) return;
+            window._targetPipTrackId = pTrack.id;
+            document.getElementById('pipFileInput').click();
+          };
+          row.appendChild(hint);
+        } else {
+          pTrack.clips.forEach(pClip => {
+            const isSel = pClip.id === state.selectedClipId && state.lastSelectedType === 'pip';
+            const isReordering = reorderState && reorderState.clipId === pClip.id;
+            const el = document.createElement('div');
+            el.className = 'clip-block pip-clip' + (isSel ? ' selected' : '') + (isReordering ? ' reordering' : '');
+            el.dataset.clipId = pClip.id;
+            el.style.left = ((pClip.start || 0) * pps) + 'px';
+            el.style.width = (pClip.duration * pps) + 'px';
 
             const leftHandle = document.createElement('div');
             leftHandle.className = 'trim-handle left';
-            leftHandle.title = '往右拉即時裁切開頭 · 往左拉還原';
-
             const labelSpan = document.createElement('span');
             labelSpan.className = 'clip-label';
-            const trimTag = (clip.trimStart || 0) > 0.05 ? ` [裁 ${(clip.trimStart).toFixed(1)}s~]` : '';
-            labelSpan.textContent = `#${idx + 1} ${clip.name}${trimTag} (${clip.duration.toFixed(1)}s)`;
-
+            labelSpan.textContent = formatClipLabel(pClip);
             const rightHandle = document.createElement('div');
             rightHandle.className = 'trim-handle right';
-            rightHandle.title = '左右拖拉即時裁切結尾';
 
-            attachTrimEvents(leftHandle, 'clip', clip, 'left', el, labelSpan);
-            attachTrimEvents(rightHandle, 'clip', clip, 'right', el, labelSpan);
+            attachTrimEvents(leftHandle, 'pip', pClip, 'left', el, labelSpan, true);
+            attachTrimEvents(rightHandle, 'pip', pClip, 'right', el, labelSpan, true);
 
             el.appendChild(leftHandle);
             el.appendChild(labelSpan);
             el.appendChild(rightHandle);
 
             el.addEventListener('pointerdown', (e) => {
-              startClipLongPress(e, clip);
+              startClipLongPress(e, pClip, 'pip', pTrack.id);
             });
 
             el.onclick = () => {
               if (timelineWasDragged || reorderState) return;
-              state.selectedClipId = clip.id;
-              state.lastSelectedType = 'clip';
+              state.selectedClipId = pClip.id;
+              state.lastSelectedType = 'pip';
               updateDeleteButtonLabel();
               renderTimeline();
               renderDrawer();
               renderFrame();
             };
 
-            clip.keyframes.forEach(kf => {
+            (pClip.keyframes || []).forEach(kf => {
               const d = document.createElement('div');
               d.className = 'kf-diamond';
-              d.style.left = (kf.t * PX_PER_SEC) + 'px';
+              d.style.left = (kf.t * pps) + 'px';
               el.appendChild(d);
             });
-          }
+
+            row.appendChild(el);
+          });
+        }
+        container.appendChild(row);
+      });
+
+      // 2. 主影片軌道
+      const vTrack = document.createElement('div');
+      vTrack.id = 'mainVideoTrack';
+      vTrack.className = 'track-row main-track';
+      vTrack.dataset.trackKind = 'main';
+
+      const mainBadge = document.createElement('span');
+      mainBadge.className = 'track-badge';
+      mainBadge.style.color = '#93c5fd';
+      mainBadge.textContent = '主軌';
+      vTrack.appendChild(mainBadge);
+
+      if (state.clips.length === 0) {
+        const emptyBtn = document.createElement('div');
+        emptyBtn.className = 'empty-track-hint';
+        emptyBtn.textContent = '＋ 點此匯入主影片／圖片';
+        emptyBtn.onclick = () => { if (!timelineWasDragged) document.getElementById('videoFileInput').click(); };
+        vTrack.appendChild(emptyBtn);
+      } else {
+        state.clips.forEach((clip, idx) => {
+          const isSel = clip.id === state.selectedClipId && state.lastSelectedType === 'clip';
+          const isReordering = reorderState && reorderState.clipId === clip.id;
+          const el = document.createElement('div');
+          el.className = 'clip-block' + (isSel ? ' selected' : '') + (isReordering ? ' reordering' : '');
+          el.dataset.clipId = clip.id;
+          el.style.width = (clip.duration * pps) + 'px';
+
+          const leftHandle = document.createElement('div');
+          leftHandle.className = 'trim-handle left';
+          const labelSpan = document.createElement('span');
+          labelSpan.className = 'clip-label';
+          labelSpan.textContent = formatClipLabel(clip, `#${idx + 1} `);
+          const rightHandle = document.createElement('div');
+          rightHandle.className = 'trim-handle right';
+
+          attachTrimEvents(leftHandle, 'clip', clip, 'left', el, labelSpan, false);
+          attachTrimEvents(rightHandle, 'clip', clip, 'right', el, labelSpan, false);
+
+          el.appendChild(leftHandle);
+          el.appendChild(labelSpan);
+          el.appendChild(rightHandle);
+
+          el.addEventListener('pointerdown', (e) => {
+            startClipLongPress(e, clip, 'main');
+          });
+
+          el.onclick = () => {
+            if (timelineWasDragged || reorderState) return;
+            state.selectedClipId = clip.id;
+            state.lastSelectedType = 'clip';
+            updateDeleteButtonLabel();
+            renderTimeline();
+            renderDrawer();
+            renderFrame();
+          };
+
+          (clip.keyframes || []).forEach(kf => {
+            const d = document.createElement('div');
+            d.className = 'kf-diamond';
+            d.style.left = (kf.t * pps) + 'px';
+            el.appendChild(d);
+          });
 
           vTrack.appendChild(el);
 
-          if (!isCompactReorder && idx < state.clips.length - 1) {
+          if (idx < state.clips.length - 1) {
             const trBtn = document.createElement('div');
             trBtn.className = 'trans-node';
             const trObj = TRANSITIONS.find(t => t.id === clip.transitionAfter) || TRANSITIONS[0];
@@ -1507,14 +2321,85 @@
           }
         });
       }
+      container.appendChild(vTrack);
 
-      // 2. 字幕軌道
-      const sTrack = document.getElementById('subTrack');
-      sTrack.innerHTML = '';
+      // 3. 獨立音訊軌道（多段獨立音軌：支援頭尾裁切、左右移動對齊、增益放大與影片轉音軌）
+      const aTrack = document.createElement('div');
+      aTrack.className = 'track-row audio-track';
+      const audBadge = document.createElement('span');
+      audBadge.className = 'track-badge';
+      audBadge.style.color = '#6ee7b7';
+      audBadge.textContent = '音軌';
+      aTrack.appendChild(audBadge);
+
+      if (state.audioClips.length === 0) {
+        const emptyAudio = document.createElement('div');
+        emptyAudio.className = 'empty-track-hint';
+        emptyAudio.textContent = '＋ 點此插入音樂 或「匯入影片轉音軌」';
+        emptyAudio.onclick = () => {
+          if (timelineWasDragged) return;
+          state.activeTab = 'audio';
+          updateTabsUI();
+          renderDrawer();
+        };
+        aTrack.appendChild(emptyAudio);
+      } else {
+        state.audioClips.forEach(aClip => {
+          const isSel = aClip.id === state.selectedAudioId && state.lastSelectedType === 'audio';
+          const isReordering = reorderState && reorderState.clipId === aClip.id;
+          const aEl = document.createElement('div');
+          aEl.className = 'audio-clip-block' + (isSel ? ' selected' : '') + (isReordering ? ' reordering' : '');
+          aEl.dataset.audioId = aClip.id;
+          aEl.style.left = ((aClip.start || 0) * pps) + 'px';
+          aEl.style.width = (aClip.duration * pps) + 'px';
+
+          const leftHandle = document.createElement('div');
+          leftHandle.className = 'trim-handle left';
+          const labelSpan = document.createElement('span');
+          labelSpan.className = 'clip-label';
+          labelSpan.textContent = formatAudioClipLabel(aClip);
+          const rightHandle = document.createElement('div');
+          rightHandle.className = 'trim-handle right';
+
+          attachTrimEvents(leftHandle, 'audio', aClip, 'left', aEl, labelSpan, false);
+          attachTrimEvents(rightHandle, 'audio', aClip, 'right', aEl, labelSpan, false);
+
+          aEl.appendChild(leftHandle);
+          aEl.appendChild(labelSpan);
+          aEl.appendChild(rightHandle);
+
+          aEl.addEventListener('pointerdown', (e) => {
+            startClipLongPress(e, aClip, 'audio');
+          });
+
+          aEl.onclick = () => {
+            if (timelineWasDragged || reorderState) return;
+            state.selectedAudioId = aClip.id;
+            state.lastSelectedType = 'audio';
+            state.activeTab = 'audio';
+            updateTabsUI();
+            updateDeleteButtonLabel();
+            renderTimeline();
+            renderDrawer();
+          };
+          aTrack.appendChild(aEl);
+        });
+      }
+      container.appendChild(aTrack);
+
+      // 4. 字幕軌道
+      const sTrack = document.createElement('div');
+      sTrack.className = 'track-row';
+      const subBadge = document.createElement('span');
+      subBadge.className = 'track-badge';
+      subBadge.style.color = '#f9a8d4';
+      subBadge.textContent = '字幕';
+      sTrack.appendChild(subBadge);
+
       if (state.subtitles.length === 0) {
         const emptySub = document.createElement('div');
         emptySub.className = 'empty-track-hint';
-        emptySub.textContent = '＋ 點此新增字幕（目前無字幕）';
+        emptySub.textContent = '＋ 點此新增字幕（支援橫排 / 直式書寫）';
         emptySub.onclick = () => { if (!timelineWasDragged) addNewSubtitle(); };
         sTrack.appendChild(emptySub);
       } else {
@@ -1522,16 +2407,15 @@
           const isSel = sub.id === state.selectedSubId && state.lastSelectedType === 'sub';
           const el = document.createElement('div');
           el.className = 'sub-block' + (isSel ? ' selected' : '');
-          el.style.left = (sub.start * PX_PER_SEC) + 'px';
-          el.style.width = (sub.duration * PX_PER_SEC) + 'px';
+          el.style.left = (sub.start * pps) + 'px';
+          el.style.width = (sub.duration * pps) + 'px';
 
           const leftHandle = document.createElement('div');
           leftHandle.className = 'trim-handle left';
-
           const labelSpan = document.createElement('span');
           labelSpan.className = 'clip-label';
-          labelSpan.textContent = `T ${sub.text} (${sub.duration.toFixed(1)}s)`;
-
+          const dirTag = sub.orientation === 'vertical' ? '[直]' : '[橫]';
+          labelSpan.textContent = `${dirTag} ${sub.text} (${sub.duration.toFixed(1)}s)`;
           const rightHandle = document.createElement('div');
           rightHandle.className = 'trim-handle right';
 
@@ -1556,40 +2440,14 @@
           sTrack.appendChild(el);
         });
       }
-
-      // 3. 音訊軌道
-      const aTrack = document.getElementById('audioTrack');
-      aTrack.innerHTML = '';
-      if (!state.audio) {
-        const emptyAudio = document.createElement('div');
-        emptyAudio.className = 'empty-track-hint';
-        emptyAudio.textContent = '＋ 點此插入音樂 / 伴奏（目前無音訊）';
-        emptyAudio.onclick = () => { if (!timelineWasDragged) document.getElementById('audioFileInput').click(); };
-        aTrack.appendChild(emptyAudio);
-      } else {
-        const isSel = state.lastSelectedType === 'audio';
-        const aEl = document.createElement('div');
-        aEl.className = 'audio-block' + (isSel ? ' selected' : '');
-        aEl.style.left = '0px';
-        aEl.style.width = Math.max(140, total * PX_PER_SEC) + 'px';
-        aEl.textContent = `🎵 ${state.audio.name}`;
-        aEl.onclick = () => {
-          if (timelineWasDragged) return;
-          state.lastSelectedType = 'audio';
-          state.activeTab = 'audio';
-          updateTabsUI();
-          updateDeleteButtonLabel();
-          renderTimeline();
-          renderDrawer();
-        };
-        aTrack.appendChild(aEl);
-      }
+      container.appendChild(sTrack);
     }
 
-    // ====== 按住時間軸軌道直接左右拖曳（Pointer Drag Scrubbing） ======
+    // ====== 按住時間軸軌道直接左右拖曳 ======
     let isDraggingTimeline = false;
     let timelineWasDragged = false;
     let dragStartX = 0;
+    let dragStartY = 0;
     let dragStartScrollLeft = 0;
 
     timelineScroll.addEventListener('pointerdown', (e) => {
@@ -1599,6 +2457,7 @@
       isDraggingTimeline = true;
       timelineWasDragged = false;
       dragStartX = e.clientX;
+      dragStartY = e.clientY;
       dragStartScrollLeft = timelineScroll.scrollLeft;
       timelineScroll.classList.add('grabbing');
     });
@@ -1612,7 +2471,7 @@
       const nextScroll = Math.max(0, dragStartScrollLeft - dx);
       timelineScroll.scrollLeft = nextScroll;
 
-      const t = Math.max(0, Math.min(getTotalDuration(), nextScroll / PX_PER_SEC));
+      const t = Math.max(0, Math.min(getTotalDuration(), nextScroll / state.pxPerSec));
       state.currentTime = t;
       document.getElementById('curTimeLabel').textContent = formatTime(t);
       syncVideoElements(true);
@@ -1630,7 +2489,7 @@
       if (timelineWasDragged || reorderState) return;
       const rect = e.currentTarget.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
-      seekTo(clickX / PX_PER_SEC);
+      seekTo(clickX / state.pxPerSec);
     });
 
     timelineScroll.addEventListener('wheel', (e) => {
@@ -1641,43 +2500,208 @@
       }
     }, { passive: false });
 
-    let scrubRafPending = false;
-    timelineScroll.addEventListener('scroll', () => {
-      if (state.isPlaying || isDraggingTimeline || reorderState) return;
-      const t = Math.max(0, Math.min(getTotalDuration(), timelineScroll.scrollLeft / PX_PER_SEC));
-      state.currentTime = t;
-      document.getElementById('curTimeLabel').textContent = formatTime(t);
-
-      if (!scrubRafPending) {
-        scrubRafPending = true;
-        requestAnimationFrame(() => {
-          scrubRafPending = false;
-          syncVideoElements(true);
-          renderFrame();
-        });
-      }
-    }, { passive: true });
-
-    // 即時同步影片畫面
+    // ====== 即時同步所有圖層的影像與音訊（含原聲靜音/增益與獨立音軌） ======
     function syncVideoElements(immediate = false) {
-      if (activeTrim && activeTrim.type === 'clip') return;
+      if (activeTrim) return;
+
+      // 1. 主影片軌道（影像 + 原聲增益控制）
       let acc = 0;
       state.clips.forEach(c => {
-        if (c.videoEl) {
+        if (c.mediaEl && c.mediaEl.tagName === 'VIDEO') {
+          c.mediaEl.playbackRate = c.speed || 1.0;
+          applyMediaAudioGain(c.mediaEl, c.muted, c.audioGain ?? 1.0);
           if (state.currentTime >= acc && state.currentTime <= acc + c.duration) {
             const offset = c.trimStart || 0;
             const targetT = Math.max(0.01, offset + (state.currentTime - acc) * c.speed);
-            if (immediate) {
-              requestVideoSeek(c.videoEl, targetT);
-            } else if (Math.abs(c.videoEl.currentTime - targetT) > 0.15) {
-              c.videoEl.currentTime = targetT;
-            }
+            if (immediate) requestVideoSeek(c.mediaEl, targetT);
+            else if (Math.abs(c.mediaEl.currentTime - targetT) > 0.18) c.mediaEl.currentTime = targetT;
           } else {
-            if (!c.videoEl.paused) c.videoEl.pause();
+            if (!c.mediaEl.paused) c.mediaEl.pause();
           }
         }
         acc += c.duration;
       });
+
+      // 2. 所有畫中畫軌道
+      state.pipTracks.forEach(tr => {
+        tr.clips.forEach(pClip => {
+          if (pClip.mediaEl && pClip.mediaEl.tagName === 'VIDEO') {
+            pClip.mediaEl.playbackRate = pClip.speed || 1.0;
+            applyMediaAudioGain(pClip.mediaEl, pClip.muted, pClip.audioGain ?? 1.0);
+            const pStart = pClip.start || 0;
+            if (state.currentTime >= pStart && state.currentTime <= pStart + pClip.duration) {
+              const offset = pClip.trimStart || 0;
+              const targetT = Math.max(0.01, offset + (state.currentTime - pStart) * pClip.speed);
+              if (immediate) requestVideoSeek(pClip.mediaEl, targetT);
+              else if (Math.abs(pClip.mediaEl.currentTime - targetT) > 0.18) pClip.mediaEl.currentTime = targetT;
+            } else {
+              if (!pClip.mediaEl.paused) pClip.mediaEl.pause();
+            }
+          }
+        });
+      });
+
+      // 3. 獨立音訊軌道（支援多段音訊與「影片轉音軌」片段同步）
+      state.audioClips.forEach(aClip => {
+        if (!aClip.mediaEl) return;
+        applyMediaAudioGain(aClip.mediaEl, aClip.muted, aClip.gain ?? 1.0);
+        const aStart = aClip.start || 0;
+        if (state.currentTime >= aStart && state.currentTime <= aStart + aClip.duration) {
+          const offset = aClip.trimStart || 0;
+          const targetT = Math.max(0.01, offset + (state.currentTime - aStart));
+          if (Math.abs(aClip.mediaEl.currentTime - targetT) > 0.18) {
+            aClip.mediaEl.currentTime = Math.min(aClip.mediaEl.duration || 999, targetT);
+          }
+          if (state.isPlaying && aClip.mediaEl.paused) {
+            aClip.mediaEl.play().catch(() => {});
+          }
+        } else {
+          if (!aClip.mediaEl.paused) aClip.mediaEl.pause();
+        }
+      });
+
+      // 4. 自訂背景影片（固定靜音）
+      if (state.background.mode === 'custom' && state.background.mediaEl?.tagName === 'VIDEO') {
+        const bgVid = state.background.mediaEl;
+        bgVid.muted = true;
+        const dur = bgVid.duration || 10;
+        const targetT = state.currentTime % dur;
+        if (immediate) requestVideoSeek(bgVid, targetT);
+      }
+    }
+
+    // ====== 畫布互動 ======
+    let draggingCanvasItem = null;
+
+    function getClipLocalTime(clip, isPip) {
+      if (isPip) {
+        return Math.max(0, Math.min(clip.duration, state.currentTime - (clip.start || 0)));
+      }
+      let acc = 0;
+      for (const c of state.clips) {
+        if (c.id === clip.id) {
+          return Math.max(0, Math.min(c.duration, state.currentTime - acc));
+        }
+        acc += c.duration;
+      }
+      return 0;
+    }
+
+    function upsertClipKeyframe(clip, localT, patch) {
+      if (!clip.keyframes) clip.keyframes = [];
+      let existing = clip.keyframes.find(k => Math.abs(k.t - localT) < 0.2);
+      if (!existing) {
+        const curTr = getInterpolatedTransform(clip, localT);
+        existing = { t: localT, ...curTr };
+        clip.keyframes.push(existing);
+      }
+      Object.assign(existing, patch);
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const normX = (e.clientX - rect.left) / rect.width;
+      const normY = (e.clientY - rect.top) / rect.height;
+      const canvasX = normX * canvas.width;
+      const canvasY = normY * canvas.height;
+
+      const sel = getSelectedVisualClip();
+
+      if (state.eyedropperMode && sel) {
+        const px = ctx.getImageData(Math.round(canvasX), Math.round(canvasY), 1, 1).data;
+        const hex = '#' + [px[0], px[1], px[2]].map(v => v.toString(16).padStart(2, '0')).join('');
+        sel.clip.cutout.keyColor = hex;
+        state.eyedropperMode = false;
+        showToast(`已吸取去背顏色：${hex}`);
+        renderDrawer();
+        renderFrame();
+        return;
+      }
+
+      if (state.penEditMode && sel) {
+        pushUndo();
+        if (!sel.clip.mask.penPoints) sel.clip.mask.penPoints = [];
+        sel.clip.mask.penPoints.push({ x: normX, y: normY });
+        showToast(`已加入第 ${sel.clip.mask.penPoints.length} 個鋼筆錨點（滿 3 點自動裁切）`);
+        renderDrawer();
+        renderFrame();
+        return;
+      }
+
+      if (state.activeTab === 'text' && state.selectedSubId) {
+        const sub = state.subtitles.find(s => s.id === state.selectedSubId);
+        if (sub) {
+          draggingCanvasItem = { type: 'sub', sub };
+          state.lastSelectedType = 'sub';
+          updateDeleteButtonLabel();
+          updateSubPos(e, sub);
+          return;
+        }
+      }
+
+      if (sel) {
+        pushUndo();
+        const localT = getClipLocalTime(sel.clip, sel.isPip);
+        const curTr = getInterpolatedTransform(sel.clip, localT);
+        draggingCanvasItem = {
+          type: 'clip',
+          clip: sel.clip,
+          isPip: sel.isPip,
+          localT,
+          startX: e.clientX,
+          startY: e.clientY,
+          origX: curTr.x,
+          origY: curTr.y
+        };
+      }
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!draggingCanvasItem) return;
+      if (draggingCanvasItem.type === 'sub') {
+        updateSubPos(e, draggingCanvasItem.sub);
+      } else if (draggingCanvasItem.type === 'clip') {
+        const rect = canvas.getBoundingClientRect();
+        const scaleRatioX = canvas.width / rect.width;
+        const scaleRatioY = canvas.height / rect.height;
+        const dx = (e.clientX - draggingCanvasItem.startX) * scaleRatioX;
+        const dy = (e.clientY - draggingCanvasItem.startY) * scaleRatioY;
+
+        upsertClipKeyframe(draggingCanvasItem.clip, draggingCanvasItem.localT, {
+          x: draggingCanvasItem.origX + dx,
+          y: draggingCanvasItem.origY + dy
+        });
+        renderTimeline();
+        renderDrawer();
+        renderFrame();
+      }
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (draggingCanvasItem?.type === 'clip') {
+        showToast(`已在 ${draggingCanvasItem.localT.toFixed(1)}s 記錄位移關鍵幀 ◆`);
+      }
+      draggingCanvasItem = null;
+    });
+
+    canvas.addEventListener('wheel', (e) => {
+      const sel = getSelectedVisualClip();
+      if (!sel) return;
+      e.preventDefault();
+      const localT = getClipLocalTime(sel.clip, sel.isPip);
+      const curTr = getInterpolatedTransform(sel.clip, localT);
+      const nextScale = Math.max(0.1, Math.min(4.0, curTr.scale + (e.deltaY < 0 ? 0.06 : -0.06)));
+      upsertClipKeyframe(sel.clip, localT, { scale: nextScale });
+      renderTimeline();
+      renderDrawer();
+      renderFrame();
+    }, { passive: false });
+
+    function updateSubPos(e, sub) {
+      const rect = canvas.getBoundingClientRect();
+      sub.x = Math.max(0.05, Math.min(0.95, (e.clientX - rect.left) / rect.width));
+      sub.y = Math.max(0.05, Math.min(0.95, (e.clientY - rect.top) / rect.height));
+      renderFrame();
     }
 
     // ====== 刪除目前選取項目 ======
@@ -1696,18 +2720,41 @@
         }
       }
 
-      if (state.lastSelectedType === 'audio' && state.audio) {
-        pushUndo();
-        if (state.audio.el) state.audio.el.pause();
-        state.audio = null;
-        state.lastSelectedType = 'clip';
-        updateDeleteButtonLabel();
-        showToast('已移除音訊軌道 🗑️');
-        renderTimeline(); renderDrawer();
-        return;
+      if (state.lastSelectedType === 'audio' && state.selectedAudioId) {
+        const target = state.audioClips.find(a => a.id === state.selectedAudioId);
+        if (target) {
+          pushUndo();
+          if (target.mediaEl) target.mediaEl.pause();
+          state.audioClips = state.audioClips.filter(a => a.id !== target.id);
+          state.selectedAudioId = state.audioClips[0]?.id || null;
+          state.lastSelectedType = state.selectedAudioId ? 'audio' : 'clip';
+          updateDeleteButtonLabel();
+          showToast('已刪除選取音軌片段 🗑️');
+          renderTimeline(); renderDrawer();
+          return;
+        }
+      }
+
+      if (state.lastSelectedType === 'pip' && state.selectedClipId) {
+        for (const tr of state.pipTracks) {
+          const found = tr.clips.find(c => c.id === state.selectedClipId);
+          if (found) {
+            pushUndo();
+            if (found.mediaEl?.tagName === 'VIDEO') found.mediaEl.pause();
+            tr.clips = tr.clips.filter(c => c.id !== found.id);
+            state.selectedClipId = state.clips[0]?.id || null;
+            state.lastSelectedType = 'clip';
+            updateDeleteButtonLabel();
+            showToast('已刪除畫中畫素材 🗑️');
+            renderTimeline(); renderDrawer(); renderFrame();
+            return;
+          }
+        }
       }
 
       if (state.clips.length > 0 && state.selectedClipId) {
+        const found = state.clips.find(c => c.id === state.selectedClipId);
+        if (found?.mediaEl?.tagName === 'VIDEO') found.mediaEl.pause();
         pushUndo();
         state.clips = state.clips.filter(c => c.id !== state.selectedClipId);
         state.selectedClipId = state.clips[0]?.id || null;
@@ -1717,7 +2764,7 @@
         return;
       }
 
-      showToast('請先點選要刪除的片段、字幕或音訊');
+      showToast('請先點選要刪除的片段、音軌或字幕');
     }
 
     document.getElementById('deleteSelectedBtn').onclick = deleteCurrentSelected;
@@ -1725,12 +2772,15 @@
     // 清空全部軌道
     document.getElementById('clearAllBtn').onclick = () => {
       pushUndo();
-      if (state.audio?.el) state.audio.el.pause();
+      state.clips.forEach(c => { if (c.mediaEl?.tagName === 'VIDEO') c.mediaEl.pause(); });
+      state.audioClips.forEach(a => { if (a.mediaEl) a.mediaEl.pause(); });
       state.clips = [];
+      state.pipTracks = [{ id: 'pip-track-1', name: '畫中畫 L1 (頂層)', clips: [] }];
       state.subtitles = [];
-      state.audio = null;
+      state.audioClips = [];
       state.selectedClipId = null;
       state.selectedSubId = null;
+      state.selectedAudioId = null;
       state.lastSelectedType = 'clip';
       state.currentTime = 0;
       timelineScroll.scrollLeft = 0;
@@ -1778,6 +2828,7 @@
       state.subtitles.push({
         id,
         text: '新字幕點此編輯',
+        orientation: 'horizontal',
         start: state.currentTime,
         duration: 3.0,
         x: 0.5,
@@ -1796,134 +2847,550 @@
       renderTimeline(); renderDrawer(); renderFrame();
     }
 
+    // 從目前選取的影片分離出獨立音軌
+    function extractAudioFromClip(clip, isPip) {
+      if (!clip || !clip.mediaEl || clip.mediaEl.tagName !== 'VIDEO') {
+        return showToast('請先選取一段影片再分離音軌');
+      }
+      pushUndo();
+      // 建立一個獨立的音訊播放器共用同一份影片來源 URL
+      const audEl = document.createElement('video');
+      audEl.src = clip.mediaEl.src;
+      audEl.preload = 'auto';
+      audEl.playsInline = true;
+      ensureAudioNode(audEl);
+
+      // 計算該影片在時間軸上的起始位置
+      let startSec = clip.start || 0;
+      if (!isPip) {
+        startSec = 0;
+        for (const c of state.clips) {
+          if (c.id === clip.id) break;
+          startSec += c.duration;
+        }
+      }
+
+      const id = 'aud-' + Date.now() + Math.random();
+      state.audioClips.push({
+        id,
+        name: clip.name,
+        fromVideo: true,
+        start: startSec,
+        trimStart: clip.trimStart || 0,
+        duration: clip.duration,
+        maxDuration: clip.maxDuration || 300,
+        gain: clip.audioGain ?? 1.0,
+        muted: false,
+        mediaEl: audEl
+      });
+
+      // 將原影片設為靜音避免聲音重疊
+      clip.muted = true;
+      state.selectedAudioId = id;
+      state.lastSelectedType = 'audio';
+      state.activeTab = 'audio';
+      updateTabsUI();
+      updateDeleteButtonLabel();
+      renderTimeline(); renderDrawer(); syncVideoElements(true);
+      showToast('已從影片分離出獨立音軌（原影片已自動靜音）🎵');
+    }
+
     // ====== 底部抽屜工具面板 ======
     function renderDrawer() {
       const container = document.getElementById('drawerContent');
-      const clip = state.clips.find(c => c.id === state.selectedClipId) || state.clips[0];
+      const selObj = getSelectedVisualClip();
+      const clip = selObj?.clip || null;
       const sub = state.subtitles.find(s => s.id === state.selectedSubId) || state.subtitles[0];
+      const aClip = state.audioClips.find(a => a.id === state.selectedAudioId) || state.audioClips[0];
+
+      if (state.activeTab !== 'cutout') {
+        state.penEditMode = false;
+        state.eyedropperMode = false;
+      }
 
       if (state.activeTab === 'media') {
         container.innerHTML = `
-          <div class="action-grid" style="margin-bottom:12px;">
-            <button class="box-btn primary" onclick="document.getElementById('videoFileInput').click()">＋ 匯入影片檔</button>
+          <div class="action-grid" style="margin-bottom:8px;">
+            <button class="box-btn primary" onclick="document.getElementById('videoFileInput').click()">＋ 匯入主影片</button>
+            <button class="box-btn purple" id="importPipBtn">＋ 匯入畫中畫</button>
+            <button class="box-btn" id="addPipLayerBtn">＋ 新增頂層軌道</button>
+          </div>
+          <div class="action-grid" style="margin-bottom:8px;">
             <button class="box-btn" id="drawerSplitBtn">✂️ 在此分割</button>
-            <button class="box-btn danger" id="delClipBtn">🗑️ 刪除此片段</button>
+            <button class="box-btn danger" id="delClipBtn">🗑️ 刪除此素材</button>
+            <button class="box-btn" id="resetPosBtn">🎯 置中復位</button>
           </div>
           ${clip ? `
-            <div class="control-row">
-              <label>開頭裁切</label>
-              <input type="range" min="0" max="${Math.max(0, (clip.maxDuration || 60) - 0.4)}" step="0.1" value="${clip.trimStart || 0}" id="clipTrimStartRange">
-              <span>${(clip.trimStart || 0).toFixed(1)}s</span>
+            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px; display:flex; justify-content:space-between;">
+              <span>目前選取：${selObj.isPip ? '【畫中畫】' : '【主軌】'}${clip.name}</span>
+              <strong style="color:${clip.speed > 1 ? 'var(--cyan)' : (clip.speed < 1 ? 'var(--gold)' : '#fff')}">${clip.speed}x</strong>
+            </div>
+            <div class="pill-group">
+              ${SPEED_PRESETS.map(sp => `
+                <button class="pill ${Math.abs(clip.speed - sp.val) < 0.01 ? 'active' : ''}" data-speed="${sp.val}">${sp.label}</button>
+              `).join('')}
             </div>
             <div class="control-row">
-              <label>片段時長</label>
-              <input type="range" min="0.4" max="${Math.max(0.4, (clip.maxDuration || 60) - (clip.trimStart || 0))}" step="0.1" value="${clip.duration}" id="clipDurRange">
-              <span>${clip.duration.toFixed(1)}s</span>
-            </div>
-            <div class="control-row">
-              <label>變速倍率</label>
-              <input type="range" min="0.5" max="2.0" step="0.25" value="${clip.speed}" id="clipSpeedRange">
-              <span>${clip.speed}x</span>
+              <label>無段變速</label>
+              <input type="range" min="0.25" max="4.0" step="0.05" value="${clip.speed}" id="clipSpeedRange">
+              <span>${clip.speed.toFixed(2)}x</span>
             </div>
           ` : `
-            <div style="text-align:center; padding:16px 0; color:var(--text-muted);">
-              目前為空白專案，請點擊上方「＋ 匯入影片檔」載入你的舞蹈或 Vlog 影片。
+            <div style="text-align:center; padding:10px 0; color:var(--text-muted);">
+              上方軌道會自動覆蓋下方軌道；長按任一片段往上拖曳可直接轉為畫中畫！
             </div>
           `}
         `;
-        document.getElementById('drawerSplitBtn').onclick = splitAtPlayhead;
-        document.getElementById('delClipBtn').onclick = () => {
-          state.lastSelectedType = 'clip';
-          deleteCurrentSelected();
+        document.getElementById('importPipBtn').onclick = () => {
+          window._targetPipTrackId = state.pipTracks[0]?.id;
+          document.getElementById('pipFileInput').click();
         };
+        document.getElementById('addPipLayerBtn').onclick = () => {
+          const layerNum = state.pipTracks.length + 1;
+          state.pipTracks.unshift({
+            id: 'pip-track-' + Date.now(),
+            name: `畫中畫 L${layerNum} (最頂層)`,
+            clips: []
+          });
+          renderTimeline();
+          showToast(`已新增最上層畫中畫軌道 L${layerNum}`);
+        };
+        document.getElementById('drawerSplitBtn').onclick = splitAtPlayhead;
+        document.getElementById('delClipBtn').onclick = deleteCurrentSelected;
+        document.getElementById('resetPosBtn').onclick = () => {
+          if (!clip) return;
+          pushUndo();
+          const localT = getClipLocalTime(clip, selObj.isPip);
+          upsertClipKeyframe(clip, localT, { scale: 1.0, x: 0, y: 0, rot: 0 });
+          renderTimeline(); renderDrawer(); renderFrame();
+          showToast('已重置素材位置與縮放');
+        };
+
         if (clip) {
-          document.getElementById('clipTrimStartRange').oninput = (e) => {
-            const newStart = parseFloat(e.target.value);
-            const oldEnd = (clip.trimStart || 0) + clip.duration;
-            clip.trimStart = newStart;
-            clip.duration = Math.max(0.4, oldEnd - newStart);
-            if (clip.videoEl) requestVideoSeek(clip.videoEl, newStart);
-            renderTimeline(); renderDrawer(); renderFrame();
+          container.querySelectorAll('.pill[data-speed]').forEach(btn => {
+            btn.onclick = () => {
+              const spd = parseFloat(btn.dataset.speed);
+              applyClipSpeed(clip, spd, true);
+              showToast(`已切換為 ${spd}x 速度`);
+            };
+          });
+          const speedSlider = document.getElementById('clipSpeedRange');
+          let sliderUndoSaved = false;
+          speedSlider.addEventListener('pointerdown', () => { sliderUndoSaved = false; });
+          speedSlider.oninput = (e) => {
+            applyClipSpeed(clip, parseFloat(e.target.value), !sliderUndoSaved);
+            sliderUndoSaved = true;
           };
-          document.getElementById('clipDurRange').oninput = (e) => {
-            clip.duration = parseFloat(e.target.value);
-            if (clip.videoEl) {
-              requestVideoSeek(clip.videoEl, (clip.trimStart || 0) + clip.duration * clip.speed - 0.02);
-            }
-            renderTimeline(); renderDrawer(); renderFrame();
+        }
+      }
+
+      else if (state.activeTab === 'fx') {
+        const fx = state.effects;
+        const sp = fx.spotlight;
+        const fadeIn = clip?.fadeIn || { type: 'none', dur: 0.8 };
+        const fadeOut = clip?.fadeOut || { type: 'none', dur: 0.8 };
+
+        container.innerHTML = `
+          ${clip ? `
+            <div style="font-size:11px; color:#fda4af; font-weight:700; margin-bottom:4px;">1. 片頭/片尾出入畫動畫（針對：${clip.name}）</div>
+            <div class="control-row">
+              <label>片頭進場</label>
+              <button class="pill ${fadeIn.type === 'none' ? 'active' : ''}" data-fi="none">無</button>
+              <button class="pill ${fadeIn.type === 'black' ? 'active' : ''}" data-fi="black">⬛ 漸黑</button>
+              <button class="pill ${fadeIn.type === 'white' ? 'active' : ''}" data-fi="white">⬜ 漸白</button>
+              <input type="range" min="0.2" max="3.0" step="0.1" value="${fadeIn.dur}" id="fiDurRange" style="max-width:75px;">
+              <span>${fadeIn.dur.toFixed(1)}s</span>
+            </div>
+            <div class="control-row">
+              <label>片尾出場</label>
+              <button class="pill ${fadeOut.type === 'none' ? 'active' : ''}" data-fo="none">無</button>
+              <button class="pill ${fadeOut.type === 'black' ? 'active' : ''}" data-fo="black">⬛ 漸黑</button>
+              <button class="pill ${fadeOut.type === 'white' ? 'active' : ''}" data-fo="white">⬜ 漸白</button>
+              <input type="range" min="0.2" max="3.0" step="0.1" value="${fadeOut.dur}" id="foDurRange" style="max-width:75px;">
+              <span>${fadeOut.dur.toFixed(1)}s</span>
+            </div>
+          ` : ''}
+
+          <div style="font-size:11px; color:#93c5fd; font-weight:700; margin:6px 0 4px;">2. 動態粒子特效（下雪 ＆ 飄花瓣）</div>
+          <div class="pill-group">
+            <button class="pill ${fx.particleType === 'none' ? 'active' : ''}" data-pt="none">無粒子</button>
+            <button class="pill ${fx.particleType === 'snow' ? 'active' : ''}" data-pt="snow">❄️ 下雪特效</button>
+            <button class="pill ${fx.particleType === 'petal' ? 'active' : ''}" data-pt="petal">🌸 飄花瓣特效</button>
+          </div>
+          ${fx.particleType !== 'none' ? `
+            <div class="control-row">
+              <label>粒子大小</label>
+              <input type="range" min="2" max="18" step="0.5" value="${fx.particleSize}" id="ptSizeRange">
+              <span>${fx.particleSize}</span>
+              <label style="min-width:34px;">密度</label>
+              <input type="range" min="10" max="150" step="5" value="${fx.particleDensity}" id="ptDensRange">
+              <span>${fx.particleDensity}</span>
+            </div>
+            ${fx.particleType === 'petal' ? `
+              <div class="pill-group">
+                ${PETAL_COLORS.map(pc => `
+                  <button class="pill ${fx.petalColor === pc.hex ? 'active' : ''}" data-pcol="${pc.hex}">${pc.name}</button>
+                `).join('')}
+              </div>
+            ` : ''}
+          ` : ''}
+
+          <div style="font-size:11px; color:#ffcc33; font-weight:700; margin:6px 0 4px;">3. 舞台聚光燈效果（可調打光角度與範圍）</div>
+          <div class="control-row">
+            <button class="pill ${sp.enabled ? 'active' : ''}" id="toggleSpotBtn">
+              ${sp.enabled ? '🔦 聚光燈：開啟中' : '🔦 開啟舞台聚光燈'}
+            </button>
+            ${sp.enabled ? `
+              <label style="min-width:52px;">打光角度</label>
+              <input type="range" min="-60" max="60" step="2" value="${sp.angle}" id="spotAngleRange">
+              <span>${sp.angle}°</span>
+            ` : ''}
+          </div>
+          ${sp.enabled ? `
+            <div class="control-row">
+              <label>光圈寬度</label>
+              <input type="range" min="0.15" max="0.75" step="0.02" value="${sp.spread}" id="spotSpreadRange">
+              <label style="min-width:52px;">環境暗度</label>
+              <input type="range" min="0.2" max="0.95" step="0.05" value="${sp.darkness}" id="spotDarkRange">
+            </div>
+            <div class="control-row">
+              <label>焦點左右</label>
+              <input type="range" min="0.05" max="0.95" step="0.02" value="${sp.focusX}" id="spotXRange">
+              <label style="min-width:52px;">焦點上下</label>
+              <input type="range" min="0.1" max="0.95" step="0.02" value="${sp.focusY}" id="spotYRange">
+            </div>
+          ` : ''}
+        `;
+
+        if (clip) {
+          container.querySelectorAll('[data-fi]').forEach(btn => {
+            btn.onclick = () => {
+              pushUndo();
+              clip.fadeIn.type = btn.dataset.fi;
+              renderTimeline(); renderDrawer(); renderFrame();
+            };
+          });
+          container.querySelectorAll('[data-fo]').forEach(btn => {
+            btn.onclick = () => {
+              pushUndo();
+              clip.fadeOut.type = btn.dataset.fo;
+              renderTimeline(); renderDrawer(); renderFrame();
+            };
+          });
+          document.getElementById('fiDurRange').oninput = (e) => {
+            clip.fadeIn.dur = parseFloat(e.target.value);
+            renderDrawer(); renderFrame();
           };
-          document.getElementById('clipSpeedRange').oninput = (e) => {
-            clip.speed = parseFloat(e.target.value);
-            renderDrawer();
+          document.getElementById('foDurRange').oninput = (e) => {
+            clip.fadeOut.dur = parseFloat(e.target.value);
+            renderDrawer(); renderFrame();
+          };
+        }
+
+        container.querySelectorAll('[data-pt]').forEach(btn => {
+          btn.onclick = () => {
+            fx.particleType = btn.dataset.pt;
+            renderDrawer(); renderFrame();
+          };
+        });
+
+        if (document.getElementById('ptSizeRange')) {
+          document.getElementById('ptSizeRange').oninput = (e) => {
+            fx.particleSize = parseFloat(e.target.value);
+            renderDrawer(); renderFrame();
+          };
+          document.getElementById('ptDensRange').oninput = (e) => {
+            fx.particleDensity = parseInt(e.target.value, 10);
+            renderDrawer(); renderFrame();
+          };
+        }
+
+        container.querySelectorAll('[data-pcol]').forEach(btn => {
+          btn.onclick = () => {
+            fx.petalColor = btn.dataset.pcol;
+            renderDrawer(); renderFrame();
+          };
+        });
+
+        document.getElementById('toggleSpotBtn').onclick = () => {
+          sp.enabled = !sp.enabled;
+          renderDrawer(); renderFrame();
+        };
+
+        if (sp.enabled) {
+          document.getElementById('spotAngleRange').oninput = (e) => {
+            sp.angle = parseInt(e.target.value, 10);
+            renderDrawer(); renderFrame();
+          };
+          document.getElementById('spotSpreadRange').oninput = (e) => {
+            sp.spread = parseFloat(e.target.value);
+            renderFrame();
+          };
+          document.getElementById('spotDarkRange').oninput = (e) => {
+            sp.darkness = parseFloat(e.target.value);
+            renderFrame();
+          };
+          document.getElementById('spotXRange').oninput = (e) => {
+            sp.focusX = parseFloat(e.target.value);
+            renderFrame();
+          };
+          document.getElementById('spotYRange').oninput = (e) => {
+            sp.focusY = parseFloat(e.target.value);
+            renderFrame();
           };
         }
       }
 
       else if (state.activeTab === 'keyframe') {
         if (!clip) {
-          container.innerHTML = `<p style="color:var(--text-muted); text-align:center; margin-top:20px;">請先匯入一段影片，再設定關鍵幀運鏡 ◆</p>`;
+          container.innerHTML = `<p style="color:var(--text-muted); text-align:center; margin-top:20px;">請先匯入主影片或畫中畫素材，再設定關鍵幀位移軌跡 ◆</p>`;
           return;
         }
-        let acc = 0, localT = 0;
-        for (const c of state.clips) {
-          if (c.id === clip.id) {
-            localT = Math.max(0, Math.min(c.duration, state.currentTime - acc));
-            break;
-          }
-          acc += c.duration;
-        }
+        const localT = getClipLocalTime(clip, selObj.isPip);
         const curTr = getInterpolatedTransform(clip, localT);
 
         container.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span style="color:#ffcc33; font-weight:700;">◆ 關鍵幀運鏡（局部放大 / 跟拍）</span>
-            <div style="display:flex; gap:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="color:#ffcc33; font-weight:700;">◆ 關鍵幀軌跡（可直接拖曳畫布把畫面移出底板）</span>
+            <div style="display:flex; gap:5px;">
               <button class="chip-btn" style="border-color:#ffcc33; color:#ffcc33;" id="addKfBtn">＋ 打關鍵幀</button>
-              <button class="chip-btn danger" id="clearKfBtn">清空關鍵幀</button>
+              <button class="chip-btn danger" id="clearKfBtn">重置軌跡</button>
             </div>
           </div>
           <div class="control-row">
             <label>畫面縮放</label>
-            <input type="range" min="0.6" max="2.5" step="0.05" value="${curTr.scale}" id="kfScale">
+            <input type="range" min="0.1" max="3.0" step="0.05" value="${curTr.scale}" id="kfScale">
             <span>${curTr.scale.toFixed(2)}x</span>
           </div>
           <div class="control-row">
             <label>水平位移</label>
-            <input type="range" min="-150" max="150" step="2" value="${curTr.x}" id="kfX">
+            <input type="range" min="-600" max="600" step="4" value="${curTr.x}" id="kfX">
             <span>${Math.round(curTr.x)}</span>
           </div>
           <div class="control-row">
             <label>垂直位移</label>
-            <input type="range" min="-200" max="200" step="2" value="${curTr.y}" id="kfY">
+            <input type="range" min="-800" max="800" step="4" value="${curTr.y}" id="kfY">
             <span>${Math.round(curTr.y)}</span>
           </div>
         `;
 
-        const upsertKf = (patch) => {
-          let existing = clip.keyframes.find(k => Math.abs(k.t - localT) < 0.25);
-          if (!existing) {
-            existing = { t: localT, ...curTr };
-            clip.keyframes.push(existing);
-          }
-          Object.assign(existing, patch);
-          renderTimeline();
-          renderFrame();
-        };
-
         document.getElementById('addKfBtn').onclick = () => {
           pushUndo();
-          upsertKf({});
-          showToast(`已在 ${localT.toFixed(1)}s 加入關鍵幀 ◆`);
+          upsertClipKeyframe(clip, localT, {});
+          renderTimeline(); renderFrame();
+          showToast(`已在 ${localT.toFixed(1)}s 打下關鍵幀 ◆`);
         };
         document.getElementById('clearKfBtn').onclick = () => {
           pushUndo();
           clip.keyframes = [{ t: 0, scale: 1.0, x: 0, y: 0, rot: 0 }];
           renderTimeline(); renderDrawer(); renderFrame();
-          showToast('已重置關鍵幀');
+          showToast('已清除所有位移關鍵幀');
         };
-        document.getElementById('kfScale').oninput = (e) => upsertKf({ scale: parseFloat(e.target.value) });
-        document.getElementById('kfX').oninput = (e) => upsertKf({ x: parseFloat(e.target.value) });
-        document.getElementById('kfY').oninput = (e) => upsertKf({ y: parseFloat(e.target.value) });
+        document.getElementById('kfScale').oninput = (e) => {
+          upsertClipKeyframe(clip, localT, { scale: parseFloat(e.target.value) });
+          renderTimeline(); renderFrame();
+        };
+        document.getElementById('kfX').oninput = (e) => {
+          upsertClipKeyframe(clip, localT, { x: parseFloat(e.target.value) });
+          renderTimeline(); renderFrame();
+        };
+        document.getElementById('kfY').oninput = (e) => {
+          upsertClipKeyframe(clip, localT, { y: parseFloat(e.target.value) });
+          renderTimeline(); renderFrame();
+        };
+      }
+
+      else if (state.activeTab === 'cutout') {
+        if (!clip) {
+          container.innerHTML = `<p style="color:var(--text-muted); text-align:center; margin-top:20px;">請先匯入並選取主影片或畫中畫，再設定去背、融合與遮罩 🪄</p>`;
+          return;
+        }
+        const cut = clip.cutout || { mode: 'none', keyColor: '#00ff00', tolerance: 65, smoothness: 15 };
+        const msk = clip.mask || { type: 'none', feather: 12, penPoints: [] };
+
+        container.innerHTML = `
+          <div style="font-size:11px; color:#e9d5ff; font-weight:700; margin-bottom:4px;">1. 雙模式去背（針對：${clip.name}）</div>
+          <div class="pill-group">
+            <button class="pill ${cut.mode === 'none' ? 'active' : ''}" data-cut="none">不去背</button>
+            <button class="pill ${cut.mode === 'chroma' ? 'active' : ''}" data-cut="chroma">🎨 色度去背 (綠/白/黑幕)</button>
+            <button class="pill ${cut.mode === 'ai' ? 'active' : ''}" data-cut="ai">🤖 AI 人像智慧去背</button>
+          </div>
+          ${cut.mode === 'chroma' ? `
+            <div class="control-row">
+              <label>去背顏色</label>
+              <input type="color" value="${cut.keyColor}" id="keyColorPick" style="width:32px; height:24px; border:none; background:none;">
+              <button class="chip-btn" id="eyedropBtn">${state.eyedropperMode ? '🎯 請點畫布取色...' : '💉 畫布滴管取色'}</button>
+              <label style="min-width:32px;">容差</label>
+              <input type="range" min="10" max="180" value="${cut.tolerance}" id="keyTolRange">
+            </div>
+          ` : ''}
+
+          <div style="font-size:11px; color:#93c5fd; font-weight:700; margin:6px 0 4px;">2. 畫中畫融合模式 ＆ 不透明度</div>
+          <div class="pill-group">
+            ${BLEND_MODES.map(bm => `
+              <button class="pill ${clip.blendMode === bm.id ? 'active' : ''}" data-blend="${bm.id}">${bm.name}</button>
+            `).join('')}
+          </div>
+          <div class="control-row">
+            <label>不透明度</label>
+            <input type="range" min="0" max="1" step="0.05" value="${clip.opacity ?? 1}" id="clipOpacityRange">
+            <span>${Math.round((clip.opacity ?? 1) * 100)}%</span>
+          </div>
+
+          <div style="font-size:11px; color:#ffcc33; font-weight:700; margin:6px 0 4px;">3. 遮罩形狀 ＆ 鋼筆自訂路徑</div>
+          <div class="pill-group">
+            ${MASK_TYPES.map(mt => `
+              <button class="pill ${msk.type === mt.id ? 'active' : ''}" data-mask="${mt.id}">${mt.name}</button>
+            `).join('')}
+          </div>
+          ${msk.type === 'feather' ? `
+            <div class="control-row">
+              <label>羽化柔邊</label>
+              <input type="range" min="2" max="60" value="${msk.feather || 20}" id="maskFeatherRange">
+              <span>${msk.feather || 20}</span>
+            </div>
+          ` : ''}
+          ${msk.type === 'pen' ? `
+            <div class="control-row">
+              <button class="chip-btn" style="border-color:var(--gold); color:var(--gold);" id="togglePenBtn">
+                ${state.penEditMode ? '✅ 完成鋼筆點選' : '✒️ 繼續點選畫布錨點'}
+              </button>
+              <button class="chip-btn danger" id="clearPenBtn">🗑️ 清除路徑 (${(msk.penPoints || []).length}點)</button>
+            </div>
+          ` : ''}
+        `;
+
+        container.querySelectorAll('[data-cut]').forEach(btn => {
+          btn.onclick = () => {
+            pushUndo();
+            clip.cutout.mode = btn.dataset.cut;
+            if (clip.cutout.mode === 'ai') showToast('已啟用本地 AI 人像去背模型 🤖');
+            renderDrawer(); renderFrame();
+          };
+        });
+
+        if (document.getElementById('keyColorPick')) {
+          document.getElementById('keyColorPick').oninput = (e) => {
+            clip.cutout.keyColor = e.target.value;
+            renderFrame();
+          };
+          document.getElementById('eyedropBtn').onclick = () => {
+            state.eyedropperMode = !state.eyedropperMode;
+            renderDrawer();
+          };
+          document.getElementById('keyTolRange').oninput = (e) => {
+            clip.cutout.tolerance = parseInt(e.target.value, 10);
+            renderFrame();
+          };
+        }
+
+        container.querySelectorAll('[data-blend]').forEach(btn => {
+          btn.onclick = () => {
+            pushUndo();
+            clip.blendMode = btn.dataset.blend;
+            renderDrawer(); renderFrame();
+          };
+        });
+
+        document.getElementById('clipOpacityRange').oninput = (e) => {
+          clip.opacity = parseFloat(e.target.value);
+          renderDrawer(); renderFrame();
+        };
+
+        container.querySelectorAll('[data-mask]').forEach(btn => {
+          btn.onclick = () => {
+            pushUndo();
+            clip.mask.type = btn.dataset.mask;
+            state.penEditMode = (clip.mask.type === 'pen');
+            if (state.penEditMode) showToast('請直接在上方影片畫布點擊 3 個以上錨點勾勒形狀 ✒️');
+            renderDrawer(); renderFrame();
+          };
+        });
+
+        if (document.getElementById('maskFeatherRange')) {
+          document.getElementById('maskFeatherRange').oninput = (e) => {
+            clip.mask.feather = parseInt(e.target.value, 10);
+            renderDrawer(); renderFrame();
+          };
+        }
+
+        if (document.getElementById('togglePenBtn')) {
+          document.getElementById('togglePenBtn').onclick = () => {
+            state.penEditMode = !state.penEditMode;
+            renderDrawer(); renderFrame();
+          };
+          document.getElementById('clearPenBtn').onclick = () => {
+            pushUndo();
+            clip.mask.penPoints = [];
+            state.penEditMode = true;
+            renderDrawer(); renderFrame();
+          };
+        }
+      }
+
+      else if (state.activeTab === 'canvasbg') {
+        const bg = state.background;
+        container.innerHTML = `
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">
+            底板背景設定（當影片移出畫面或縮小後顯示的底層內容）
+          </div>
+          <div class="pill-group">
+            <button class="pill ${bg.mode === 'solid' ? 'active' : ''}" data-bg="solid">⬛ 純色底板</button>
+            <button class="pill ${bg.mode === 'gradient' ? 'active' : ''}" data-bg="gradient">🌈 漸層底板</button>
+            <button class="pill ${bg.mode === 'blur' ? 'active' : ''}" data-bg="blur">🌫️ 原片模糊背景</button>
+            <button class="pill ${bg.mode === 'custom' ? 'active' : ''}" data-bg="custom">🖼️ 自訂圖片/影片底板</button>
+          </div>
+          ${bg.mode === 'solid' ? `
+            <div class="control-row">
+              <label>底板顏色</label>
+              <input type="color" value="${bg.color1}" id="bgColor1" style="width:44px; height:28px; border:none; background:none;">
+              <button class="chip-btn" onclick="state.background.color1='#000000'; renderDrawer(); renderFrame();">重設純黑</button>
+              <button class="chip-btn" onclick="state.background.color1='#ffffff'; renderDrawer(); renderFrame();">純白</button>
+            </div>
+          ` : ''}
+          ${bg.mode === 'gradient' ? `
+            <div class="control-row">
+              <label>漸層起訖色</label>
+              <input type="color" value="${bg.color1}" id="bgGrad1" style="width:40px; height:28px; border:none; background:none;">
+              <input type="color" value="${bg.color2}" id="bgGrad2" style="width:40px; height:28px; border:none; background:none;">
+            </div>
+          ` : ''}
+          ${bg.mode === 'custom' ? `
+            <div class="control-row">
+              <button class="box-btn primary" style="flex:1;" onclick="document.getElementById('bgFileInput').click()">＋ 匯入自訂底板圖片或影片</button>
+            </div>
+            <p style="color:var(--text-muted); font-size:11px; margin:4px 0 0;">
+              目前自訂底板：${bg.mediaName || '尚未匯入檔案'}
+            </p>
+          ` : ''}
+        `;
+
+        container.querySelectorAll('[data-bg]').forEach(btn => {
+          btn.onclick = () => {
+            state.background.mode = btn.dataset.bg;
+            if (state.background.mode === 'custom' && !state.background.mediaEl) {
+              document.getElementById('bgFileInput').click();
+            }
+            renderDrawer(); renderFrame();
+          };
+        });
+
+        if (document.getElementById('bgColor1')) {
+          document.getElementById('bgColor1').oninput = (e) => {
+            state.background.color1 = e.target.value;
+            renderFrame();
+          };
+        }
+        if (document.getElementById('bgGrad1')) {
+          document.getElementById('bgGrad1').oninput = (e) => {
+            state.background.color1 = e.target.value;
+            renderFrame();
+          };
+          document.getElementById('bgGrad2').oninput = (e) => {
+            state.background.color2 = e.target.value;
+            renderFrame();
+          };
+        }
       }
 
       else if (state.activeTab === 'text') {
@@ -1935,14 +3402,16 @@
         container.innerHTML = `
           <div class="control-row">
             <button class="chip-btn" style="background:var(--accent); border:none; color:#fff;" id="newSubBtn">＋ 新增字幕</button>
-            <input type="text" id="subTextInput" value="${sub ? sub.text : ''}" placeholder="${sub ? '輸入字幕內容...' : '請先點左側＋新增字幕'}" ${sub ? '' : 'disabled'}>
-            ${sub ? `<button class="chip-btn danger" id="delSubBtn">🗑️ 刪除此字幕</button>` : ''}
+            <input type="text" id="subTextInput" value="${sub ? sub.text : ''}" placeholder="${sub ? '輸入文字（直式可用 | 換行）' : '請先點左側＋新增字幕'}" ${sub ? '' : 'disabled'}>
+            ${sub ? `<button class="chip-btn danger" id="delSubBtn">🗑️</button>` : ''}
           </div>
           ${sub ? `
             <div class="control-row">
-              <label>字級/顏色</label>
-              <input type="range" min="14" max="48" value="${sub.size}" id="subSizeRange">
-              <input type="color" value="${sub.color}" id="subColorPick" style="width:32px; height:26px; border:none; background:none;">
+              <label>排版方向</label>
+              <button class="pill ${sub.orientation !== 'vertical' ? 'active' : ''}" id="orientHorizBtn">➡️ 橫式排版</button>
+              <button class="pill ${sub.orientation === 'vertical' ? 'active' : ''}" id="orientVertBtn">⬇️ 直式書寫</button>
+              <input type="range" min="14" max="48" value="${sub.size}" id="subSizeRange" style="max-width:90px;">
+              <input type="color" value="${sub.color}" id="subColorPick" style="width:28px; height:24px; border:none; background:none;">
             </div>
           ` : ''}
           <div class="pill-group">
@@ -1972,6 +3441,15 @@
           document.getElementById('subTextInput').oninput = (e) => {
             sub.text = e.target.value;
             renderTimeline(); renderFrame();
+          };
+          document.getElementById('orientHorizBtn').onclick = () => {
+            sub.orientation = 'horizontal';
+            renderTimeline(); renderDrawer(); renderFrame();
+          };
+          document.getElementById('orientVertBtn').onclick = () => {
+            sub.orientation = 'vertical';
+            renderTimeline(); renderDrawer(); renderFrame();
+            showToast('已切換為傳統直式書寫（可用 | 分直行）');
           };
           document.getElementById('subSizeRange').oninput = (e) => {
             sub.size = parseInt(e.target.value, 10);
@@ -2003,7 +3481,7 @@
 
       else if (state.activeTab === 'color') {
         if (!clip) {
-          container.innerHTML = `<p style="color:var(--text-muted); text-align:center; margin-top:20px;">請先匯入一段影片，再調整濾鏡調色 🎨</p>`;
+          container.innerHTML = `<p style="color:var(--text-muted); text-align:center; margin-top:20px;">請先匯入並選取主影片或畫中畫，再調整調色濾鏡 🎨</p>`;
           return;
         }
         const col = clip.color;
@@ -2056,37 +3534,83 @@
       }
 
       else if (state.activeTab === 'audio') {
+        const hasVideoClip = clip && clip.mediaEl?.tagName === 'VIDEO';
         container.innerHTML = `
-          <div class="control-row">
-            <button class="box-btn primary" style="flex:1;" onclick="document.getElementById('audioFileInput').click()">🎵 插入音樂 / 伴奏檔</button>
-            ${state.audio ? `<button class="box-btn danger" id="removeAudioBtn">🗑️ 移除音訊</button>` : ''}
+          <div class="action-grid" style="margin-bottom:8px;">
+            <button class="box-btn cyan" onclick="document.getElementById('audioFileInput').click()">🎵 插入音樂檔</button>
+            <button class="box-btn primary" onclick="document.getElementById('videoToAudioInput').click()">🎬 匯入影片轉音軌</button>
+            <button class="box-btn" id="extractCurVidBtn" ${hasVideoClip ? '' : 'disabled style="opacity:0.4;"'}>📤 分離目前影片音軌</button>
           </div>
-          ${state.audio ? `
-            <div class="control-row">
-              <label>音樂音量</label>
-              <input type="range" min="0" max="1" step="0.05" value="${state.audio.volume}" id="audioVolRange">
-              <span>${Math.round(state.audio.volume * 100)}%</span>
+
+          ${hasVideoClip ? `
+            <div style="font-size:11px; color:#93c5fd; font-weight:700; margin:4px 0;">
+              🎞️ 影片原聲控制（${clip.name}）
             </div>
-            <p style="color:var(--text-muted); font-size:11px; margin:6px 0 0;">
-              目前音軌：${state.audio.name}
-            </p>
+            <div class="control-row">
+              <button class="chip-btn ${clip.muted ? 'danger' : ''}" id="toggleVidMuteBtn">
+                ${clip.muted ? '🔇 原聲已靜音' : '🔊 原聲開啟中'}
+              </button>
+              <label style="min-width:52px;">原聲增益</label>
+              <input type="range" min="0" max="3" step="0.05" value="${clip.audioGain ?? 1}" id="vidGainRange" ${clip.muted ? 'disabled' : ''}>
+              <span>${Math.round((clip.audioGain ?? 1) * 100)}%</span>
+            </div>
+          ` : ''}
+
+          ${aClip ? `
+            <div style="font-size:11px; color:#6ee7b7; font-weight:700; margin:6px 0 4px;">
+              🎵 獨立音軌片段控制（${aClip.name} · 可拉兩側白條 ⋮ 裁切）
+            </div>
+            <div class="control-row">
+              <button class="chip-btn ${aClip.muted ? 'danger' : ''}" id="toggleAudMuteBtn">
+                ${aClip.muted ? '🔇 音軌已靜音' : '🔊 音軌開啟'}
+              </button>
+              <label style="min-width:52px;">音軌增益</label>
+              <input type="range" min="0" max="3" step="0.05" value="${aClip.gain ?? 1}" id="audGainRange" ${aClip.muted ? 'disabled' : ''}>
+              <span>${Math.round((aClip.gain ?? 1) * 100)}%</span>
+              <button class="chip-btn danger" id="delAudClipBtn">🗑️</button>
+            </div>
           ` : `
-            <p style="color:var(--text-muted); font-size:11px; text-align:center; margin-top:16px;">
-              目前沒有音訊，點擊上方按鈕可匯入手機或電腦的 MP3 / M4A 音樂檔。
+            <p style="color:var(--text-muted); font-size:11px; text-align:center; margin:8px 0 0;">
+              支援直接匯入音樂或「匯入影片轉音軌」，匯出時會自動混音背景音樂與影片原聲。
             </p>
           `}
         `;
-        if (document.getElementById('removeAudioBtn')) {
-          document.getElementById('removeAudioBtn').onclick = () => {
-            state.lastSelectedType = 'audio';
-            deleteCurrentSelected();
+
+        if (document.getElementById('extractCurVidBtn') && hasVideoClip) {
+          document.getElementById('extractCurVidBtn').onclick = () => extractAudioFromClip(clip, selObj.isPip);
+        }
+
+        if (hasVideoClip) {
+          document.getElementById('toggleVidMuteBtn').onclick = () => {
+            pushUndo();
+            clip.muted = !clip.muted;
+            applyMediaAudioGain(clip.mediaEl, clip.muted, clip.audioGain ?? 1.0);
+            renderTimeline(); renderDrawer();
+            showToast(clip.muted ? '已將此影片原聲靜音 🔇' : '已恢復影片原聲 🔊');
+          };
+          document.getElementById('vidGainRange').oninput = (e) => {
+            clip.audioGain = parseFloat(e.target.value);
+            applyMediaAudioGain(clip.mediaEl, clip.muted, clip.audioGain);
+            renderTimeline(); renderDrawer();
           };
         }
-        if (document.getElementById('audioVolRange')) {
-          document.getElementById('audioVolRange').oninput = (e) => {
-            state.audio.volume = parseFloat(e.target.value);
-            if (state.audio.el) state.audio.el.volume = state.audio.volume;
-            renderDrawer();
+
+        if (aClip) {
+          document.getElementById('toggleAudMuteBtn').onclick = () => {
+            pushUndo();
+            aClip.muted = !aClip.muted;
+            applyMediaAudioGain(aClip.mediaEl, aClip.muted, aClip.gain ?? 1.0);
+            renderTimeline(); renderDrawer();
+          };
+          document.getElementById('audGainRange').oninput = (e) => {
+            aClip.gain = parseFloat(e.target.value);
+            applyMediaAudioGain(aClip.mediaEl, aClip.muted, aClip.gain);
+            renderTimeline(); renderDrawer();
+          };
+          document.getElementById('delAudClipBtn').onclick = () => {
+            state.selectedAudioId = aClip.id;
+            state.lastSelectedType = 'audio';
+            deleteCurrentSelected();
           };
         }
       }
@@ -2119,8 +3643,44 @@
       };
     });
 
-    // ====== 分割片段 ======
+    // ====== 分割片段（支援主軌、畫中畫、以及獨立音訊軌） ======
     function splitAtPlayhead() {
+      // 1. 若目前選取的是音訊軌且播放頭在音訊中間，優先分割音訊
+      if (state.lastSelectedType === 'audio' && state.selectedAudioId) {
+        const idx = state.audioClips.findIndex(a => a.id === state.selectedAudioId);
+        if (idx !== -1) {
+          const a = state.audioClips[idx];
+          const aStart = a.start || 0;
+          if (state.currentTime > aStart + 0.3 && state.currentTime < aStart + a.duration - 0.3) {
+            pushUndo();
+            const leftDur = state.currentTime - aStart;
+            const rightDur = a.duration - leftDur;
+            a.duration = leftDur;
+
+            const newEl = document.createElement(a.mediaEl.tagName);
+            newEl.src = a.mediaEl.src;
+            newEl.preload = 'auto';
+            ensureAudioNode(newEl);
+
+            const clone = {
+              ...a,
+              id: 'aud-' + Date.now(),
+              name: a.name + '(切)',
+              start: state.currentTime,
+              trimStart: (a.trimStart || 0) + leftDur,
+              duration: rightDur,
+              mediaEl: newEl
+            };
+            state.audioClips.splice(idx + 1, 0, clone);
+            state.selectedAudioId = clone.id;
+            showToast('已分割音訊軌道 ✂️');
+            renderTimeline(); renderDrawer(); syncVideoElements(true);
+            return;
+          }
+        }
+      }
+
+      // 2. 主影片軌道
       let acc = 0;
       for (let i = 0; i < state.clips.length; i++) {
         const c = state.clips[i];
@@ -2131,14 +3691,22 @@
           const origTrimStart = c.trimStart || 0;
           c.duration = leftDur;
 
+          let rightMediaEl = c.mediaEl;
+          if (c.mediaEl?.tagName === 'VIDEO') {
+            rightMediaEl = document.createElement('video');
+            rightMediaEl.src = c.mediaEl.src;
+            rightMediaEl.preload = 'auto';
+            rightMediaEl.playsInline = true;
+            ensureAudioNode(rightMediaEl);
+          }
+
           const clone = {
-            ...JSON.parse(JSON.stringify(c)),
+            ...cloneClipData(c),
             id: 'clip-' + Date.now(),
-            name: c.name + ' (切段)',
+            name: c.name + '(切)',
             trimStart: origTrimStart + leftDur * c.speed,
             duration: rightDur,
-            maxDuration: c.maxDuration || 120,
-            videoEl: c.videoEl
+            mediaEl: rightMediaEl
           };
           state.clips.splice(i + 1, 0, clone);
           state.selectedClipId = clone.id;
@@ -2150,55 +3718,80 @@
         }
         acc += c.duration;
       }
-      showToast('請將播放頭移至片段中間再分割');
+
+      // 3. 畫中畫軌道
+      for (const tr of state.pipTracks) {
+        for (let i = 0; i < tr.clips.length; i++) {
+          const p = tr.clips[i];
+          const pStart = p.start || 0;
+          if (state.currentTime > pStart + 0.3 && state.currentTime < pStart + p.duration - 0.3) {
+            pushUndo();
+            const leftDur = state.currentTime - pStart;
+            const rightDur = p.duration - leftDur;
+            p.duration = leftDur;
+
+            let rightMediaEl = p.mediaEl;
+            if (p.mediaEl?.tagName === 'VIDEO') {
+              rightMediaEl = document.createElement('video');
+              rightMediaEl.src = p.mediaEl.src;
+              rightMediaEl.preload = 'auto';
+              rightMediaEl.playsInline = true;
+              ensureAudioNode(rightMediaEl);
+            }
+
+            const clone = {
+              ...cloneClipData(p),
+              id: 'pip-' + Date.now(),
+              name: p.name + '(切)',
+              start: state.currentTime,
+              trimStart: (p.trimStart || 0) + leftDur * p.speed,
+              duration: rightDur,
+              mediaEl: rightMediaEl
+            };
+            tr.clips.splice(i + 1, 0, clone);
+            state.selectedClipId = clone.id;
+            state.lastSelectedType = 'pip';
+            updateDeleteButtonLabel();
+            showToast('已分割畫中畫片段 ✂️');
+            renderTimeline(); renderDrawer(); syncVideoElements(true); renderFrame();
+            return;
+          }
+        }
+      }
+
+      showToast('請將播放頭移至片段或音軌中間再分割');
     }
 
     document.getElementById('splitBtn').onclick = splitAtPlayhead;
 
-    // ====== 檔案匯入 ======
-    document.getElementById('videoFileInput').onchange = (e) => {
-      const files = Array.from(e.target.files);
-      if (files.length > 0) pushUndo();
-      files.forEach(file => {
-        const url = URL.createObjectURL(file);
+    // ====== 檔案載入 ======
+    function loadMediaFile(file, onReady) {
+      const url = URL.createObjectURL(file);
+      const isImage = file.type.startsWith('image/');
+
+      if (isImage) {
+        const img = new Image();
+        img.onload = () => {
+          onReady({ mediaEl: img, mediaType: 'image', duration: 5.0, maxDuration: 120 });
+        };
+        img.src = url;
+      } else {
         const vid = document.createElement('video');
         vid.src = url;
         vid.preload = 'auto';
-        vid.muted = true;
         vid.playsInline = true;
         vid.setAttribute('playsinline', '');
         vid.setAttribute('webkit-playsinline', '');
-
-        const finalizeImport = () => {
-          if (vid._imported) return;
-          vid._imported = true;
-          const id = 'clip-' + Date.now() + Math.random();
-          const realDur = (vid.duration && isFinite(vid.duration)) ? vid.duration : 10;
-          state.clips.push({
-            id,
-            name: file.name.slice(0, 14),
-            trimStart: 0,
-            duration: realDur,
-            maxDuration: realDur,
-            speed: 1.0,
-            transitionAfter: 'fade',
-            color: { b: 100, c: 100, s: 100, warm: 0 },
-            videoEl: vid,
-            keyframes: [{ t: 0, scale: 1.0, x: 0, y: 0, rot: 0 }]
-          });
-          state.selectedClipId = id;
-          state.lastSelectedType = 'clip';
-          updateDeleteButtonLabel();
-          renderTimeline(); renderDrawer(); renderFrame();
-          showToast(`已匯入影片：${file.name}`);
-        };
+        ensureAudioNode(vid);
 
         vid.onloadeddata = () => {
+          if (vid._imported) return;
+          vid._imported = true;
           requestVideoSeek(vid, 0.01);
-          finalizeImport();
+          const realDur = (vid.duration && isFinite(vid.duration)) ? vid.duration : 10;
+          onReady({ mediaEl: vid, mediaType: 'video', duration: realDur, maxDuration: realDur });
         };
 
-        // 每次解碼完成立刻刷新畫布，並檢查是否有排隊中的最新影格要繼續解碼
         vid.onseeked = () => {
           renderFrame();
           if (typeof vid._pendingSeekTime === 'number') {
@@ -2210,28 +3803,147 @@
           }
         };
 
-        vid.onerror = () => {
-          finalizeImport();
-          showToast('此影片編碼格式可能不支援瀏覽器預覽');
-        };
-
         vid.load();
+      }
+    }
+
+    document.getElementById('videoFileInput').onchange = (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length > 0) pushUndo();
+      files.forEach(file => {
+        loadMediaFile(file, ({ mediaEl, mediaType, duration, maxDuration }) => {
+          const id = 'clip-' + Date.now() + Math.random();
+          state.clips.push(createDefaultClipProps({
+            id,
+            name: file.name.slice(0, 12),
+            duration,
+            maxDuration,
+            mediaEl,
+            mediaType
+          }));
+          state.selectedClipId = id;
+          state.lastSelectedType = 'clip';
+          updateDeleteButtonLabel();
+          renderTimeline(); renderDrawer(); renderFrame();
+          showToast(`已匯入主軌：${file.name}`);
+        });
       });
       e.target.value = '';
     };
 
-    document.getElementById('audioFileInput').onchange = (e) => {
+    document.getElementById('pipFileInput').onchange = (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length > 0) pushUndo();
+      const targetTrack = state.pipTracks.find(t => t.id === window._targetPipTrackId) || state.pipTracks[0];
+      files.forEach(file => {
+        loadMediaFile(file, ({ mediaEl, mediaType, duration, maxDuration }) => {
+          const id = 'pip-' + Date.now() + Math.random();
+          targetTrack.clips.push(createDefaultClipProps({
+            id,
+            name: file.name.slice(0, 12),
+            start: state.currentTime,
+            duration,
+            maxDuration,
+            mediaEl,
+            mediaType
+          }));
+          state.selectedClipId = id;
+          state.lastSelectedType = 'pip';
+          updateDeleteButtonLabel();
+          renderTimeline(); renderDrawer(); renderFrame();
+          showToast(`已匯入畫中畫（頂層）：${file.name}`);
+        });
+      });
+      e.target.value = '';
+    };
+
+    document.getElementById('bgFileInput').onchange = (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      pushUndo();
-      const url = URL.createObjectURL(file);
-      const audioEl = new Audio(url);
-      audioEl.volume = state.audio ? state.audio.volume : 0.8;
-      state.audio = { name: file.name, volume: audioEl.volume, url, el: audioEl };
-      state.lastSelectedType = 'audio';
-      updateDeleteButtonLabel();
-      renderTimeline(); renderDrawer();
-      showToast(`已插入音訊：${file.name}`);
+      loadMediaFile(file, ({ mediaEl, mediaType }) => {
+        if (mediaType === 'video') {
+          mediaEl.loop = true;
+          mediaEl.muted = true;
+        }
+        state.background.mode = 'custom';
+        state.background.mediaEl = mediaEl;
+        state.background.mediaType = mediaType;
+        state.background.mediaName = file.name;
+        renderDrawer(); renderFrame();
+        showToast(`已套用自訂底板：${file.name}`);
+      });
+      e.target.value = '';
+    };
+
+    // 匯入純音訊檔（MP3 / M4A / WAV）
+    document.getElementById('audioFileInput').onchange = (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length > 0) pushUndo();
+      files.forEach(file => {
+        const url = URL.createObjectURL(file);
+        const audioEl = new Audio(url);
+        audioEl.preload = 'auto';
+        ensureAudioNode(audioEl);
+
+        audioEl.onloadedmetadata = () => {
+          const id = 'aud-' + Date.now() + Math.random();
+          const realDur = (audioEl.duration && isFinite(audioEl.duration)) ? audioEl.duration : 15;
+          state.audioClips.push({
+            id,
+            name: file.name.slice(0, 14),
+            fromVideo: false,
+            start: state.currentTime,
+            trimStart: 0,
+            duration: realDur,
+            maxDuration: realDur,
+            gain: 1.0,
+            muted: false,
+            mediaEl: audioEl
+          });
+          state.selectedAudioId = id;
+          state.lastSelectedType = 'audio';
+          updateDeleteButtonLabel();
+          renderTimeline(); renderDrawer();
+          showToast(`已插入音樂音軌：${file.name} 🎵`);
+        };
+      });
+      e.target.value = '';
+    };
+
+    // 匯入影片檔直接轉成獨立音軌（抽離畫面只留聲音，與影片軌同步）
+    document.getElementById('videoToAudioInput').onchange = (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length > 0) pushUndo();
+      files.forEach(file => {
+        const url = URL.createObjectURL(file);
+        const vidAud = document.createElement('video');
+        vidAud.src = url;
+        vidAud.preload = 'auto';
+        vidAud.playsInline = true;
+        ensureAudioNode(vidAud);
+
+        vidAud.onloadedmetadata = () => {
+          const id = 'aud-' + Date.now() + Math.random();
+          const realDur = (vidAud.duration && isFinite(vidAud.duration)) ? vidAud.duration : 15;
+          state.audioClips.push({
+            id,
+            name: file.name.slice(0, 14),
+            fromVideo: true,
+            start: state.currentTime,
+            trimStart: 0,
+            duration: realDur,
+            maxDuration: realDur,
+            gain: 1.0,
+            muted: false,
+            mediaEl: vidAud
+          });
+          state.selectedAudioId = id;
+          state.lastSelectedType = 'audio';
+          updateDeleteButtonLabel();
+          renderTimeline(); renderDrawer();
+          showToast(`已將影片轉成獨立音軌：${file.name} 🎬➡️🎵`);
+        };
+      });
       e.target.value = '';
     };
 
@@ -2256,30 +3968,6 @@
       e.target.value = '';
     };
 
-    // ====== 拖曳畫布字幕 ======
-    let draggingSub = false;
-    canvas.addEventListener('pointerdown', (e) => {
-      const sub = state.subtitles.find(s => s.id === state.selectedSubId);
-      if (!sub) return;
-      draggingSub = true;
-      state.lastSelectedType = 'sub';
-      updateDeleteButtonLabel();
-      updateSubPos(e, sub);
-    });
-    canvas.addEventListener('pointermove', (e) => {
-      if (!draggingSub) return;
-      const sub = state.subtitles.find(s => s.id === state.selectedSubId);
-      if (sub) updateSubPos(e, sub);
-    });
-    window.addEventListener('pointerup', () => draggingSub = false);
-
-    function updateSubPos(e, sub) {
-      const rect = canvas.getBoundingClientRect();
-      sub.x = Math.max(0.05, Math.min(0.95, (e.clientX - rect.left) / rect.width));
-      sub.y = Math.max(0.05, Math.min(0.95, (e.clientY - rect.top) / rect.height));
-      renderFrame();
-    }
-
     // ====== 播放迴圈 ======
     let lastTs = 0;
     function tick(ts) {
@@ -2293,7 +3981,7 @@
         state.currentTime = 0;
         togglePlay(false);
       } else {
-        timelineScroll.scrollLeft = state.currentTime * PX_PER_SEC;
+        timelineScroll.scrollLeft = state.currentTime * state.pxPerSec;
         syncVideoElements(false);
         renderFrame();
         requestAnimationFrame(tick);
@@ -2301,38 +3989,88 @@
     }
 
     function togglePlay(force) {
-      if (state.clips.length === 0 && state.subtitles.length === 0) {
-        return showToast('請先匯入影片或新增字幕再播放');
+      const hasAnyPip = state.pipTracks.some(t => t.clips.length > 0);
+      if (state.clips.length === 0 && !hasAnyPip && state.subtitles.length === 0 && state.audioClips.length === 0) {
+        return showToast('請先匯入影片、音訊或新增字幕再播放');
       }
       state.isPlaying = typeof force === 'boolean' ? force : !state.isPlaying;
       document.getElementById('playBtn').textContent = state.isPlaying ? '⏸' : '▶';
       if (state.isPlaying) {
+        getAudioCtx();
         lastTs = 0;
         syncVideoElements(true);
-        if (state.audio && state.audio.el) {
-          state.audio.el.currentTime = state.currentTime;
-          state.audio.el.play().catch(() => {});
+
+        state.clips.forEach(c => {
+          if (c.mediaEl?.tagName === 'VIDEO') {
+            c.mediaEl.playbackRate = c.speed || 1.0;
+            applyMediaAudioGain(c.mediaEl, c.muted, c.audioGain ?? 1.0);
+            c.mediaEl.play().catch(() => {});
+          }
+        });
+        state.pipTracks.forEach(tr => tr.clips.forEach(p => {
+          if (p.mediaEl?.tagName === 'VIDEO') {
+            p.mediaEl.playbackRate = p.speed || 1.0;
+            applyMediaAudioGain(p.mediaEl, p.muted, p.audioGain ?? 1.0);
+            p.mediaEl.play().catch(() => {});
+          }
+        }));
+        state.audioClips.forEach(a => {
+          if (a.mediaEl) {
+            applyMediaAudioGain(a.mediaEl, a.muted, a.gain ?? 1.0);
+            const aStart = a.start || 0;
+            if (state.currentTime >= aStart && state.currentTime <= aStart + a.duration) {
+              a.mediaEl.currentTime = Math.max(0.01, (a.trimStart || 0) + (state.currentTime - aStart));
+              a.mediaEl.play().catch(() => {});
+            }
+          }
+        });
+        if (state.background.mode === 'custom' && state.background.mediaEl?.tagName === 'VIDEO') {
+          state.background.mediaEl.muted = true;
+          state.background.mediaEl.play().catch(() => {});
         }
-        state.clips.forEach(c => { if (c.videoEl) c.videoEl.play().catch(() => {}); });
         requestAnimationFrame(tick);
       } else {
-        if (state.audio && state.audio.el) state.audio.el.pause();
-        state.clips.forEach(c => { if (c.videoEl) c.videoEl.pause(); });
+        state.clips.forEach(c => { if (c.mediaEl?.tagName === 'VIDEO') c.mediaEl.pause(); });
+        state.pipTracks.forEach(tr => tr.clips.forEach(p => {
+          if (p.mediaEl?.tagName === 'VIDEO') p.mediaEl.pause();
+        }));
+        state.audioClips.forEach(a => { if (a.mediaEl) a.mediaEl.pause(); });
+        if (state.background.mediaEl?.tagName === 'VIDEO') state.background.mediaEl.pause();
         renderFrame();
       }
     }
 
     document.getElementById('playBtn').onclick = () => togglePlay();
 
-    // ====== 匯出錄製成影片檔 ======
+    // ====== 匯出錄製成影片檔（同步混音錄入所有背景音樂＋影片原聲） ======
     document.getElementById('exportBtn').onclick = () => {
-      if (state.clips.length === 0) return showToast('請先匯入影片再匯出');
+      const hasAnyPip = state.pipTracks.some(t => t.clips.length > 0);
+      if (state.clips.length === 0 && !hasAnyPip && state.audioClips.length === 0) {
+        return showToast('請先匯入影片或音訊再匯出');
+      }
       if (typeof MediaRecorder === 'undefined') {
         return showToast('目前瀏覽器不支援直接錄製匯出，請改用 Chrome 或 Safari 最新版');
       }
-      showToast('正在高速渲染並匯出影片，請稍候...');
-      const stream = canvas.captureStream(30);
-      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+      getAudioCtx();
+      showToast('正在高速渲染並混音匯出（包含音樂與影片原聲），請稍候...');
+
+      // 合併畫布視訊軌道 ＋ Web Audio API 混音音訊軌道
+      const videoStream = canvas.captureStream(30);
+      const combinedStream = new MediaStream();
+      videoStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
+      if (exportMixDest && exportMixDest.stream) {
+        exportMixDest.stream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
+      }
+
+      let mimeType = 'video/webm';
+      if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) {
+        mimeType = 'video/webm;codecs=vp9,opus';
+      } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
+        mimeType = 'video/webm;codecs=vp8,opus';
+      }
+
+      const recorder = new MediaRecorder(combinedStream, { mimeType });
       const chunks = [];
       recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
       recorder.onstop = () => {
@@ -2342,10 +4080,11 @@
         a.href = url;
         a.download = `CutVideo_${Date.now()}.webm`;
         a.click();
-        showToast('影片匯出完成！已開始下載 🎬');
+        showToast('影片匯出完成（已含完整混音）！開始下載 🎬🔊');
       };
 
       state.currentTime = 0;
+      timelineScroll.scrollLeft = 0;
       recorder.start();
       togglePlay(true);
 
