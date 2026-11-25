@@ -168,7 +168,7 @@
       border: 1px solid var(--border);
       border-radius: 14px;
       width: 100%;
-      max-width: 380px;
+      max-width: 390px;
       padding: 16px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
     }
@@ -183,10 +183,46 @@
     }
 
     .export-modal p.sub {
-      margin: 0 0 12px;
+      margin: 0 0 10px;
       font-size: 11px;
       color: var(--text-muted);
       line-height: 1.5;
+    }
+
+    .quality-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .quality-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 10px;
+      text-align: left;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .quality-card.active {
+      border-color: var(--cyan);
+      background: rgba(44, 230, 195, 0.13);
+    }
+
+    .quality-card .q-name {
+      font-size: 12px;
+      font-weight: 800;
+      color: #fff;
+      display: block;
+    }
+
+    .quality-card .q-spec {
+      font-size: 10px;
+      color: var(--text-muted);
+      display: block;
+      margin-top: 2px;
     }
 
     .export-option-card {
@@ -1162,17 +1198,28 @@
   <div class="modal-backdrop" id="exportModalBackdrop">
     <div class="export-modal">
       <h3>
-        <span>📤 選擇匯出方式（1080p 60fps）</span>
+        <span>📤 選擇匯出畫質與方式</span>
         <button class="chip-btn" id="closeExportModalBtn">✕</button>
       </h3>
       <p class="sub">
-        自動無損渲染至 <strong>1080p 60fps MP4</strong>，並保留調色、裁剪、關鍵幀與雙軌混音。
+        1080p 素材建議選 <strong>1080p 60fps</strong> 最銳利不失真；4K 素材或大幅裁切放大可選 <strong>4K 60fps</strong>。
       </p>
+
+      <div class="quality-selector">
+        <button class="quality-card active" id="qCard1080">
+          <span class="q-name">✨ 1080p · 60fps</span>
+          <span class="q-spec">18 Mbps · 清晰流暢標準</span>
+        </button>
+        <button class="quality-card" id="qCard4K">
+          <span class="q-name">💎 4K · 60fps 極致</span>
+          <span class="q-spec">45 Mbps · 4K原片/放大專用</span>
+        </button>
+      </div>
 
       <div id="exportOptionsList">
         <button class="export-option-card" id="optExportFullOnly">
-          <span class="opt-title">🎬 1. 僅匯出完整影片（1080p 60fps）</span>
-          <span class="opt-desc">輸出 1 支從頭到尾合成完畢的高畫質完整影片檔</span>
+          <span class="opt-title">🎬 1. 僅匯出完整影片</span>
+          <span class="opt-desc" id="fullExportDesc">輸出 1 支 1080p 60fps MP4 完整影片檔</span>
         </button>
 
         <button class="export-option-card" id="optExportFullAndSplits">
@@ -1208,7 +1255,7 @@
 
   <!-- Stage -->
   <div class="stage-wrap" id="stageWrap">
-    <div class="stage-hint" id="stageHint">支援自動草稿快取（重整不遺失）· 匯出 1080p 60fps MP4</div>
+    <div class="stage-hint" id="stageHint">9:16 / 16:9 / 1:1 比例預覽與匯出座標已 100% 同步對齊</div>
     <div class="stage-top-right">
       <div class="stage-pill-box" title="切換畫布框線操作模式">
         <button class="stage-mode-btn active" id="modeTransformBtn">↔️ 拉伸/移動</button>
@@ -1372,6 +1419,8 @@
       snapEnabled: true,
       snapThresholdPx: 14,
       ratio: '9:16',
+      exportQuality: '1080p',
+      renderScaleFactor: 1,
       currentTime: 0,
       isPlaying: false,
       isExporting: false,
@@ -1433,12 +1482,12 @@
       audioClips: []
     };
 
-    // ====== IndexedDB 大容量草稿緩存系統（重整或關閉瀏覽器不遺失專案與影片素材） ======
+    // ====== IndexedDB 大容量草稿緩存系統 ======
     const DB_NAME = 'CutVideoDraftDB';
     const DB_VERSION = 1;
     const STORE_FILES = 'mediaFiles';
     const STORE_PROJECT = 'projectState';
-    const memoryBlobRegistry = new Map(); // fileId -> Blob/File
+    const memoryBlobRegistry = new Map();
 
     function openDraftDB() {
       return new Promise((resolve, reject) => {
@@ -1498,6 +1547,7 @@
           const payload = {
             savedAt: Date.now(),
             ratio: state.ratio,
+            exportQuality: state.exportQuality,
             pxPerSec: state.pxPerSec,
             snapEnabled: state.snapEnabled,
             snapThresholdPx: state.snapThresholdPx,
@@ -1602,7 +1652,6 @@
         const badge = document.getElementById('draftStatusBadge');
         if (badge) badge.textContent = '⏳ 恢復草稿中...';
 
-        // 還原主軌片段
         const restoredClips = [];
         for (const c of (saved.clips || [])) {
           const blob = await getMediaBlobFromDB(c.fileId);
@@ -1610,7 +1659,6 @@
           if (el) restoredClips.push({ ...c, mediaEl: el });
         }
 
-        // 還原畫中畫軌道
         const restoredPipTracks = [];
         for (const tr of (saved.pipTracks || [])) {
           const pClips = [];
@@ -1622,7 +1670,6 @@
           restoredPipTracks.push({ ...tr, clips: pClips });
         }
 
-        // 還原獨立音軌
         const restoredAudio = [];
         for (const a of (saved.audioClips || [])) {
           const blob = await getMediaBlobFromDB(a.fileId);
@@ -1630,7 +1677,6 @@
           if (el) restoredAudio.push({ ...a, mediaEl: el });
         }
 
-        // 還原自訂底板
         if (saved.background) {
           state.background = { ...saved.background, mediaEl: null };
           if (saved.background.mode === 'custom' && saved.background.mediaFileId) {
@@ -1649,10 +1695,11 @@
         state.audioClips = restoredAudio;
         state.trackVisibility = saved.trackVisibility || { main: true, audio: true, sub: true };
         if (saved.effects) state.effects = saved.effects;
+        if (saved.exportQuality) state.exportQuality = saved.exportQuality;
         if (saved.ratio) {
           state.ratio = saved.ratio;
           document.querySelectorAll('.ratio-btn').forEach(b => b.classList.toggle('active', b.dataset.ratio === state.ratio));
-          applyCanvasResolutionForRatio(state.ratio, false);
+          applyCanvasResolutionForRatio(state.ratio, null);
         }
         state.selectedClipId = state.clips[0]?.id || state.pipTracks[0]?.clips[0]?.id || null;
         state.lastSelectedType = state.clips[0] ? 'clip' : (state.pipTracks[0]?.clips[0] ? 'pip' : 'clip');
@@ -2428,7 +2475,7 @@
       }
     }
 
-    // ====== 變形計算 ======
+    // ====== 變形與三種比例（9:16 / 16:9 / 1:1）座標精準同步計算 ======
     function getInterpolatedTransform(clip, localT) {
       const base = clip?.baseTransform || { scaleX: 1.0, scaleY: 1.0, x: 0, y: 0, rot: 0 };
       if (!clip || !clip.keyframes || clip.keyframes.length === 0) {
@@ -2455,7 +2502,9 @@
       return { ...base };
     }
 
+    // 所有預覽與匯出皆等比乘上 sf（renderScaleFactor），確保 9:16、16:9、1:1 三種尺寸 100% 不跑位不裁錯
     function computeClipStageRects(clip, localT, W, H, isPipLayer) {
+      const sf = state.renderScaleFactor || 1;
       const el = clip.mediaEl;
       const isVideo = el && el.tagName === 'VIDEO';
       const srcW = isVideo ? (el.videoWidth || 360) : (el?.naturalWidth || 360);
@@ -2479,8 +2528,8 @@
       const tr = getInterpolatedTransform(clip, localT);
       const dispW = baseW * (tr.scaleX ?? 1);
       const dispH = baseH * (tr.scaleY ?? 1);
-      const cx = W / 2 + tr.x;
-      const cy = H / 2 + tr.y;
+      const cx = W / 2 + (tr.x || 0) * sf;
+      const cy = H / 2 + (tr.y || 0) * sf;
 
       const crop = clip.crop || { left: 0, right: 0, top: 0, bottom: 0 };
       const fullLeft = cx - dispW / 2;
@@ -2561,8 +2610,11 @@
 
       const rects = computeClipStageRects(clip, localT, W, H, isPipLayer);
       const { dispW, dispH, cx, cy, tr, crop } = rects;
+      const sf = state.renderScaleFactor || 1;
 
       targetCtx.save();
+      targetCtx.imageSmoothingEnabled = true;
+      targetCtx.imageSmoothingQuality = 'high';
       targetCtx.globalAlpha = clip.opacity !== undefined ? clip.opacity : 1.0;
       targetCtx.globalCompositeOperation = clip.blendMode || 'source-over';
 
@@ -2599,7 +2651,7 @@
           targetCtx.arc(cLeftLocal + cWLocal / 2, cTopLocal + cHLocal / 2, r, 0, Math.PI * 2);
           targetCtx.clip();
         } else if (mask.type === 'roundrect') {
-          targetCtx.roundRect(cLeftLocal, cTopLocal, cWLocal, cHLocal, 24);
+          targetCtx.roundRect(cLeftLocal, cTopLocal, cWLocal, cHLocal, 24 * sf);
           targetCtx.clip();
         } else if (mask.type === 'feather') {
           maskCanvas.width = Math.max(10, Math.round(dispW));
@@ -2607,7 +2659,7 @@
           maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
           maskCtx.drawImage(drawSource, 0, 0, maskCanvas.width, maskCanvas.height);
 
-          const fPx = Math.min(maskCanvas.width * 0.4, (mask.feather || 20) * 1.8);
+          const fPx = Math.min(maskCanvas.width * 0.4, (mask.feather || 20) * 1.8 * sf);
           maskCtx.globalCompositeOperation = 'destination-in';
           const gradH = maskCtx.createLinearGradient(0, 0, maskCanvas.width, 0);
           gradH.addColorStop(0, 'rgba(0,0,0,0)');
@@ -2773,6 +2825,7 @@
     // ====== 氛圍特效渲染器 ======
     function renderAtmosphereEffects(targetCtx, W, H, t) {
       const fx = state.effects;
+      const sf = state.renderScaleFactor || 1;
 
       if (fx.spotlight && fx.spotlight.enabled) {
         const sp = fx.spotlight;
@@ -2826,7 +2879,7 @@
 
       if (fx.particleType !== 'none') {
         const count = Math.min(150, fx.particleDensity || 45);
-        const baseSize = fx.particleSize || 6;
+        const baseSize = (fx.particleSize || 6) * sf;
         const spd = fx.particleSpeed || 1.0;
 
         targetCtx.save();
@@ -2872,6 +2925,9 @@
     function renderFrame() {
       const W = canvas.width;
       const H = canvas.height;
+      const sf = state.renderScaleFactor || 1;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.clearRect(0, 0, W, H);
 
       const bg = state.background;
@@ -2935,7 +2991,7 @@
         const sh = el.tagName === 'VIDEO' ? el.videoHeight : el.naturalHeight;
         if (sw > 0 && sh > 0) {
           ctx.save();
-          ctx.filter = 'blur(18px) brightness(0.65)';
+          ctx.filter = `blur(${18 * sf}px) brightness(0.65)`;
           const r = Math.max(W / sw, H / sh) * 1.15;
           ctx.drawImage(el, (W - sw * r) / 2, (H - sh * r) / 2, sw * r, sh * r);
           ctx.restore();
@@ -2956,8 +3012,8 @@
             ctx.fillRect(0, 0, W, H);
           } else if (activeMainClip.transitionAfter === 'zoom') {
             ctx.strokeStyle = `rgba(255, 59, 127, ${1 - p})`;
-            ctx.lineWidth = 12 * (1 - p);
-            ctx.strokeRect(p * 30, p * 30, W - p * 60, H - p * 60);
+            ctx.lineWidth = 12 * sf * (1 - p);
+            ctx.strokeRect(p * 30 * sf, p * 30 * sf, W - p * 60 * sf, H - p * 60 * sf);
           } else if (activeMainClip.transitionAfter === 'slide') {
             ctx.fillStyle = '#000';
             ctx.fillRect(W * (1 - p), 0, W * p, H);
@@ -2987,7 +3043,8 @@
         state.subtitles.forEach(sub => {
           if (state.currentTime >= sub.start && state.currentTime <= sub.start + sub.duration) {
             ctx.save();
-            ctx.font = `700 ${sub.size}px ${sub.font}`;
+            const scaledFontSize = Math.round(sub.size * sf);
+            ctx.font = `700 ${scaledFontSize}px ${sub.font}`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
@@ -2997,18 +3054,18 @@
 
             if (!isVertical) {
               const metrics = ctx.measureText(sub.text);
-              const padX = 14, padY = 8;
+              const padX = 14 * sf, padY = 8 * sf;
               const boxW = metrics.width + padX * 2;
-              const boxH = sub.size + padY * 2;
+              const boxH = scaledFontSize + padY * 2;
 
               if (sub.bg && sub.bg !== 'transparent') {
                 ctx.fillStyle = sub.bg;
                 ctx.beginPath();
-                ctx.roundRect(sx - boxW / 2, sy - boxH / 2, boxW, boxH, 8);
+                ctx.roundRect(sx - boxW / 2, sy - boxH / 2, boxW, boxH, 8 * sf);
                 ctx.fill();
               }
               if (sub.stroke) {
-                ctx.lineWidth = 3;
+                ctx.lineWidth = 3 * sf;
                 ctx.strokeStyle = sub.stroke;
                 ctx.strokeText(sub.text, sx, sy);
               }
@@ -3023,16 +3080,16 @@
               }
             } else {
               const lines = sub.text.split(/\n|\|/);
-              const charStep = sub.size * 1.12;
-              const colStep = sub.size * 1.3;
+              const charStep = scaledFontSize * 1.12;
+              const colStep = scaledFontSize * 1.3;
               const maxChars = Math.max(...lines.map(l => Array.from(l).length), 1);
-              const totalW = lines.length * colStep + 18;
-              const totalH = maxChars * charStep + 18;
+              const totalW = lines.length * colStep + 18 * sf;
+              const totalH = maxChars * charStep + 18 * sf;
 
               if (sub.bg && sub.bg !== 'transparent') {
                 ctx.fillStyle = sub.bg;
                 ctx.beginPath();
-                ctx.roundRect(sx - totalW / 2, sy - totalH / 2, totalW, totalH, 8);
+                ctx.roundRect(sx - totalW / 2, sy - totalH / 2, totalW, totalH, 8 * sf);
                 ctx.fill();
               }
 
@@ -3042,7 +3099,7 @@
                 chars.forEach((ch, rowIdx) => {
                   const charY = sy - ((chars.length - 1) / 2 - rowIdx) * charStep;
                   if (sub.stroke) {
-                    ctx.lineWidth = 3;
+                    ctx.lineWidth = 3 * sf;
                     ctx.strokeStyle = sub.stroke;
                     ctx.strokeText(ch, colX, charY);
                   }
@@ -3501,7 +3558,7 @@
       return wrap;
     }
 
-    // ====== 渲染多層時間軸（動態撐開寬度，白色播放線可一路走到最後一秒不撞牆） ======
+    // ====== 渲染多層時間軸 ======
     function renderTimeline() {
       const isCompactMainReorder = Boolean(reorderState && reorderState.sourceType === 'main');
       timelineScroll.classList.toggle('compact-reorder-mode', isCompactMainReorder);
@@ -4440,7 +4497,7 @@
             </div>
           ` : `
             <div style="text-align:center; padding:10px 0; color:var(--text-muted);">
-              已啟用自動草稿快取（重整或重開網頁不遺失）；匯出預設為 1080p 60fps MP4！
+              9:16、16:9 與 1:1 比例預覽及匯出座標皆已同步對齊；所有操作自動存為草稿！
             </div>
           `}
         `;
@@ -5330,20 +5387,45 @@
       };
     });
 
-    // ====== 畫面比例與解析度切換（預覽 360p，匯出無損 1080p） ======
-    function applyCanvasResolutionForRatio(ratio, isExportMode = false) {
-      if (ratio === '9:16') {
-        canvas.width = isExportMode ? 1080 : 360;
-        canvas.height = isExportMode ? 1920 : 640;
-        canvas.style.aspectRatio = '9 / 16';
-      } else if (ratio === '16:9') {
-        canvas.width = isExportMode ? 1920 : 640;
-        canvas.height = isExportMode ? 1080 : 360;
-        canvas.style.aspectRatio = '16 / 9';
+    // ====== 畫面比例與高畫質解析度切換（9:16、16:9、1:1 三種尺寸完整支援） ======
+    function applyCanvasResolutionForRatio(ratio, exportQualityMode = null) {
+      if (!exportQualityMode) {
+        state.renderScaleFactor = 1;
+        if (ratio === '9:16') {
+          canvas.width = 360; canvas.height = 640;
+          canvas.style.aspectRatio = '9 / 16';
+        } else if (ratio === '16:9') {
+          canvas.width = 640; canvas.height = 360;
+          canvas.style.aspectRatio = '16 / 9';
+        } else {
+          canvas.width = 480; canvas.height = 480;
+          canvas.style.aspectRatio = '1 / 1';
+        }
+        return;
+      }
+
+      if (exportQualityMode === '4k') {
+        if (ratio === '9:16') {
+          canvas.width = 2160; canvas.height = 3840;
+          state.renderScaleFactor = 6;
+        } else if (ratio === '16:9') {
+          canvas.width = 3840; canvas.height = 2160;
+          state.renderScaleFactor = 6;
+        } else {
+          canvas.width = 2160; canvas.height = 2160;
+          state.renderScaleFactor = 4.5;
+        }
       } else {
-        canvas.width = isExportMode ? 1080 : 480;
-        canvas.height = isExportMode ? 1080 : 480;
-        canvas.style.aspectRatio = '1 / 1';
+        if (ratio === '9:16') {
+          canvas.width = 1080; canvas.height = 1920;
+          state.renderScaleFactor = 3;
+        } else if (ratio === '16:9') {
+          canvas.width = 1920; canvas.height = 1080;
+          state.renderScaleFactor = 3;
+        } else {
+          canvas.width = 1080; canvas.height = 1080;
+          state.renderScaleFactor = 2.25;
+        }
       }
     }
 
@@ -5352,7 +5434,7 @@
         document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.ratio = btn.dataset.ratio;
-        applyCanvasResolutionForRatio(state.ratio, false);
+        applyCanvasResolutionForRatio(state.ratio, null);
         renderFrame();
         scheduleAutoSaveDraft();
       };
@@ -5520,7 +5602,7 @@
 
     document.getElementById('splitBtn').onclick = splitAtPlayhead;
 
-    // ====== 檔案載入（同步寫入 IndexedDB 草稿庫） ======
+    // ====== 檔案載入 ======
     function loadMediaFile(file, onReady) {
       const fileId = 'file-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
       saveMediaBlobToDB(fileId, file);
@@ -5742,7 +5824,7 @@
       e.target.value = '';
     };
 
-    // ====== 播放迴圈（同步即時更新匯出百分比進度條） ======
+    // ====== 播放迴圈 ======
     let lastTs = 0;
     let exportSegmentStopTime = null;
     let exportProgressHook = null;
@@ -5857,7 +5939,7 @@
       togglePlay();
     };
 
-    // ====== 1080p 60fps MP4 高畫質匯出系統 ＋ 即時百分比進度條 ======
+    // ====== 1080p 60fps / 4K 60fps 雙畫質配置匯出系統 ======
     const exportModalBackdrop = document.getElementById('exportModalBackdrop');
     const exportOptionsList = document.getElementById('exportOptionsList');
     const exportProgressBox = document.getElementById('exportProgressBox');
@@ -5865,6 +5947,27 @@
     const exportProgressText = document.getElementById('exportProgressText');
     const exportProgressSub = document.getElementById('exportProgressSub');
     const exportProgressFill = document.getElementById('exportProgressFill');
+
+    function updateExportQualityUI() {
+      const is4K = state.exportQuality === '4k';
+      document.getElementById('qCard1080').classList.toggle('active', !is4K);
+      document.getElementById('qCard4K').classList.toggle('active', is4K);
+      const qLabel = is4K ? '4K 60fps (45Mbps)' : '1080p 60fps (18Mbps)';
+      const segs = collectEditableSegments();
+      document.getElementById('fullExportDesc').textContent =
+        `輸出 1 支 ${qLabel} MP4 完整影片檔`;
+      document.getElementById('splitCountDesc').textContent =
+        `同時下載 1 支完整影片 ＋ 目前已裁切的 ${segs.length} 份獨立編輯片段（皆為 ${qLabel}）`;
+    }
+
+    document.getElementById('qCard1080').onclick = () => {
+      state.exportQuality = '1080p';
+      updateExportQualityUI();
+    };
+    document.getElementById('qCard4K').onclick = () => {
+      state.exportQuality = '4k';
+      updateExportQualityUI();
+    };
 
     function detectBestExportFormat() {
       const mp4Candidates = [
@@ -5918,7 +6021,6 @@
     function recordTimeRangeHighQuality(startSec, endSec, baseFilename, taskIndex, totalTasks) {
       return new Promise((resolve) => {
         getAudioCtx();
-        // 60fps 高流暢度擷取
         const videoStream = canvas.captureStream(60);
         const combinedStream = new MediaStream();
         videoStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
@@ -5927,8 +6029,9 @@
         }
 
         const fmt = detectBestExportFormat();
+        const is4K = state.exportQuality === '4k';
         const recOptions = {
-          videoBitsPerSecond: 16000000 // 16 Mbps 1080p 高畫質碼率
+          videoBitsPerSecond: is4K ? 45000000 : 18000000
         };
         if (fmt.mimeType) recOptions.mimeType = fmt.mimeType;
 
@@ -5947,6 +6050,7 @@
         };
 
         const segDur = Math.max(0.1, endSec - startSec);
+        const qTag = is4K ? '4K · 60fps' : '1080p · 60fps';
         exportProgressHook = (curT) => {
           const localElapsed = Math.max(0, Math.min(segDur, curT - startSec));
           const segRatio = localElapsed / segDur;
@@ -5954,7 +6058,7 @@
           exportPercentBig.textContent = `${overallPct}%`;
           exportProgressFill.style.width = `${overallPct}%`;
           exportProgressSub.textContent =
-            `本段進度：${formatTime(localElapsed)} / ${formatTime(segDur)}（1080p · 60fps · ${fmt.ext.toUpperCase()}）`;
+            `本段進度：${formatTime(localElapsed)} / ${formatTime(segDur)}（${qTag} · ${state.ratio} · ${fmt.ext.toUpperCase()}）`;
         };
 
         state.currentTime = startSec;
@@ -5985,28 +6089,28 @@
       exportOptionsList.style.display = 'none';
       exportProgressBox.style.display = 'block';
 
-      // 切換為 1080p 高解析度畫布進行渲染
-      applyCanvasResolutionForRatio(state.ratio, true);
+      const qMode = state.exportQuality;
+      const qLabel = qMode === '4k' ? '4K60' : '1080p60';
+      applyCanvasResolutionForRatio(state.ratio, qMode);
 
       const stamp = new Date().toISOString().slice(11, 19).replace(/:/g, '');
       const segments = includeSplits ? collectEditableSegments() : [];
       const totalTasks = 1 + segments.length;
 
       exportProgressText.textContent = `正在渲染完整影片 (1 / ${totalTasks})...`;
-      const usedExt = await recordTimeRangeHighQuality(0, getTotalDuration(), `CutVideo_完整影片_1080p60_${stamp}`, 0, totalTasks);
+      const usedExt = await recordTimeRangeHighQuality(0, getTotalDuration(), `CutVideo_完整影片_${qLabel}_${stamp}`, 0, totalTasks);
 
       for (let i = 0; i < segments.length; i++) {
         const seg = segments[i];
         exportProgressText.textContent = `正在分開存檔裁切片段 (${i + 2} / ${totalTasks})：${seg.label}`;
         await new Promise(r => setTimeout(r, 350));
-        await recordTimeRangeHighQuality(seg.start, seg.end, `CutVideo_${seg.label}_1080p60_${stamp}`, i + 1, totalTasks);
+        await recordTimeRangeHighQuality(seg.start, seg.end, `CutVideo_${seg.label}_${qLabel}_${stamp}`, i + 1, totalTasks);
       }
 
       exportPercentBig.textContent = '100%';
       exportProgressFill.style.width = '100%';
 
-      // 恢復為流暢預覽解析度
-      applyCanvasResolutionForRatio(state.ratio, false);
+      applyCanvasResolutionForRatio(state.ratio, null);
       state.isExporting = false;
       state.currentTime = 0;
       timelineScroll.scrollLeft = 0;
@@ -6016,8 +6120,8 @@
       exportOptionsList.style.display = 'block';
       exportProgressBox.style.display = 'none';
       showToast(includeSplits
-        ? `1080p 60fps ${usedExt.toUpperCase()} 全部匯出完成（共 ${totalTasks} 支檔案）📦`
-        : `1080p 60fps ${usedExt.toUpperCase()} 完整影片匯出完成！🎬🔊`);
+        ? `${qLabel} ${usedExt.toUpperCase()} 全部匯出完成（共 ${totalTasks} 支檔案）📦`
+        : `${qLabel} ${usedExt.toUpperCase()} 完整影片匯出完成！🎬🔊`);
     }
 
     document.getElementById('exportBtn').onclick = () => {
@@ -6030,17 +6134,14 @@
       }
       if (state.isPlaying) togglePlay(false);
 
-      const segs = collectEditableSegments();
-      document.getElementById('splitCountDesc').textContent =
-        `同時下載 1 支完整影片 ＋ 目前已裁切的 ${segs.length} 份獨立編輯片段（皆為 1080p 60fps）`;
-
+      updateExportQualityUI();
       exportOptionsList.style.display = 'block';
       exportProgressBox.style.display = 'none';
       exportModalBackdrop.classList.add('open');
     };
 
     document.getElementById('closeExportModalBtn').onclick = () => {
-      if (state.isExporting) return showToast('正在渲染 1080p 60fps 影片中，請稍候完成');
+      if (state.isExporting) return showToast('正在渲染高畫質影片中，請稍候完成');
       exportModalBackdrop.classList.remove('open');
     };
 
