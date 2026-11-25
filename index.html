@@ -276,7 +276,7 @@
 
   <!-- Stage -->
   <div class="stage-wrap" id="stageWrap">
-    <div class="stage-hint" id="stageHint">支援 .srt 字幕匯入 · AI 配音自動對齊字幕長度</div>
+    <div class="stage-hint" id="stageHint">直接拖曳畫面可移動 · 拖拉藍/黃框控制點可拉伸或裁剪</div>
     <div class="stage-top-right">
       <div class="stage-pill-box" title="切換畫布框線操作模式">
         <button class="stage-mode-btn active" id="modeTransformBtn">↔️ 拉伸/移動</button>
@@ -1229,8 +1229,8 @@
       document.getElementById('modeCropBtn').classList.toggle('crop-active', mode === 'crop');
       renderFrame();
     }
-    document.getElementById('modeTransformBtn').onclick = () => { setCanvasBoxMode('transform'); showToast('已切換為「自由拉伸寬高／移動」模式 ↔️'); };
-    document.getElementById('modeCropBtn').onclick = () => { setCanvasBoxMode('crop'); showToast('已切換為「框線裁剪畫面」模式 ✂️'); };
+    document.getElementById('modeTransformBtn').onclick = () => { setCanvasBoxMode('transform'); showToast('已切換為「自由拉伸寬高／移動」模式（藍框）↔️'); };
+    document.getElementById('modeCropBtn').onclick = () => { setCanvasBoxMode('crop'); showToast('已切換為「框線裁剪畫面」模式（黃虛線框）✂️'); };
 
     function setStageHeight(px) {
       const maxH = Math.round(window.innerHeight * 0.68);
@@ -1351,6 +1351,57 @@
       renderTimeline();
       timelineScroll.scrollLeft = Math.round(anchorTime * state.pxPerSec);
     });
+
+    function isClipActiveAtCurrentTime(clip, isPip) {
+      if (!clip) return false;
+      if (isPip) {
+        const s = clip.start || 0;
+        return state.currentTime >= s - 0.02 && state.currentTime <= s + clip.duration + 0.02;
+      }
+      let acc = 0;
+      for (const c of state.clips) {
+        if (c.id === clip.id) {
+          return state.currentTime >= acc - 0.02 && state.currentTime <= acc + c.duration + 0.02;
+        }
+        acc += c.duration;
+      }
+      return false;
+    }
+
+    function getActiveVisualClipAtCurrentTime() {
+      // 優先回傳目前選取且正處於播放線時間範圍內的素材
+      if (state.lastSelectedType === 'pip' && state.selectedClipId) {
+        for (const tr of state.pipTracks) {
+          if (tr.visible === false) continue;
+          const found = tr.clips.find(c => c.id === state.selectedClipId);
+          if (found && isClipActiveAtCurrentTime(found, true)) return { clip: found, isPip: true, track: tr };
+        }
+      }
+      if (state.selectedClipId) {
+        if (state.trackVisibility.main !== false) {
+          const mainFound = state.clips.find(c => c.id === state.selectedClipId);
+          if (mainFound && isClipActiveAtCurrentTime(mainFound, false)) return { clip: mainFound, isPip: false, track: null };
+        }
+        for (const tr of state.pipTracks) {
+          if (tr.visible === false) continue;
+          const found = tr.clips.find(c => c.id === state.selectedClipId);
+          if (found && isClipActiveAtCurrentTime(found, true)) return { clip: found, isPip: true, track: tr };
+        }
+      }
+      // 若原本選取的素材不在當前時間點，自動尋找播放線當下正在顯示的頂層畫中畫或主軌片段
+      for (const tr of state.pipTracks) {
+        if (tr.visible === false) continue;
+        for (const p of tr.clips) {
+          if (isClipActiveAtCurrentTime(p, true)) return { clip: p, isPip: true, track: tr };
+        }
+      }
+      if (state.trackVisibility.main !== false) {
+        for (const c of state.clips) {
+          if (isClipActiveAtCurrentTime(c, false)) return { clip: c, isPip: false, track: null };
+        }
+      }
+      return null;
+    }
 
     function getSelectedVisualClip() {
       if (state.lastSelectedType === 'pip' && state.selectedClipId) {
@@ -1730,33 +1781,34 @@
       const localT = getClipLocalTime(selObj.clip, selObj.isPip);
       const rects = computeClipStageRects(selObj.clip, localT, W, H, selObj.isPip);
       const { cropLeft, cropTop, cropW, cropH } = rects;
-      const right = cropLeft + cropW, bottom = cropTop + cropH, midX = cropLeft + cropW / 2, midY = cropTop + cropH / 2;
+      const rawRight = cropLeft + cropW, rawBottom = cropTop + cropH;
+
+      // 將控制框與 8 個控制點內縮安全邊距（夾在畫布內側 8px），避免滿版時控制點落在畫布外被裁切掉
+      const inset = 8;
+      const visLeft = Math.max(inset, Math.min(W - inset - 24, cropLeft));
+      const visTop = Math.max(inset, Math.min(H - inset - 24, cropTop));
+      const visRight = Math.max(visLeft + 24, Math.min(W - inset, rawRight));
+      const visBottom = Math.max(visTop + 24, Math.min(H - inset, rawBottom));
+      const visWidth = visRight - visLeft;
+      const visHeight = visBottom - visTop;
+      const midX = visLeft + visWidth / 2;
+      const midY = visTop + visHeight / 2;
+
       return {
-        box: { left: cropLeft, top: cropTop, right, bottom, width: cropW, height: cropH, midX, midY },
+        box: { left: visLeft, top: visTop, right: visRight, bottom: visBottom, width: visWidth, height: visHeight, midX, midY },
         rects,
         handles: [
-          { id: 'nw', x: cropLeft, y: cropTop }, { id: 'n', x: midX, y: cropTop }, { id: 'ne', x: right, y: cropTop },
-          { id: 'e', x: right, y: midY }, { id: 'se', x: right, y: bottom }, { id: 's', x: midX, y: bottom },
-          { id: 'sw', x: cropLeft, y: bottom }, { id: 'w', x: cropLeft, y: midY }
+          { id: 'nw', x: visLeft, y: visTop }, { id: 'n', x: midX, y: visTop }, { id: 'ne', x: visRight, y: visTop },
+          { id: 'e', x: visRight, y: midY }, { id: 'se', x: visRight, y: visBottom }, { id: 's', x: midX, y: visBottom },
+          { id: 'sw', x: visLeft, y: visBottom }, { id: 'w', x: visLeft, y: midY }
         ]
       };
     }
 
     function drawSelectionOverlay(targetCtx, W, H) {
       if (state.isPlaying || state.isExporting || state.penEditMode) return;
-      const selObj = getSelectedVisualClip();
+      const selObj = getActiveVisualClipAtCurrentTime();
       if (!selObj) return;
-      if (selObj.isPip) {
-        const s = selObj.clip.start || 0;
-        if (state.currentTime < s || state.currentTime > s + selObj.clip.duration) return;
-      } else {
-        let acc = 0, found = false;
-        for (const c of state.clips) {
-          if (c.id === selObj.clip.id) { if (state.currentTime >= acc && state.currentTime <= acc + c.duration) found = true; break; }
-          acc += c.duration;
-        }
-        if (!found) return;
-      }
       const info = getSelectionBoxHandles(selObj, W, H);
       if (!info) return;
       const { box, handles } = info;
@@ -1772,9 +1824,9 @@
         targetCtx.fillStyle = isCrop ? '#ffcc33' : (isEdgeMid ? '#2ce6c3' : '#38bdf8');
         targetCtx.beginPath();
         if (isEdgeMid && !isCrop) {
-          const rw = (h.id === 'n' || h.id === 's') ? 14 : 6, rh = (h.id === 'e' || h.id === 'w') ? 14 : 6;
+          const rw = (h.id === 'n' || h.id === 's') ? 16 : 7, rh = (h.id === 'e' || h.id === 'w') ? 16 : 7;
           targetCtx.roundRect(h.x - rw / 2, h.y - rh / 2, rw, rh, 3);
-        } else { targetCtx.arc(h.x, h.y, 5.5, 0, Math.PI * 2); }
+        } else { targetCtx.arc(h.x, h.y, 6, 0, Math.PI * 2); }
         targetCtx.fill(); targetCtx.strokeStyle = '#090a0d'; targetCtx.lineWidth = 1.5; targetCtx.stroke();
       });
       targetCtx.restore();
@@ -1854,7 +1906,6 @@
       }
       if (anim === 'pop') {
         const p = Math.min(1, localT / inDur);
-        // 彈性過衝曲線
         const c1 = 1.70158;
         const c3 = c1 + 1;
         const scale = p >= 1 ? 1 : 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2);
@@ -2034,7 +2085,6 @@
                 ctx.lineWidth = strokePx;
                 ctx.strokeStyle = sub.stroke || '#000000';
                 ctx.strokeText(displayText, 0, 0);
-                // 避免填充文字時疊加第二次陰影導致過濃
                 resetCanvasShadow(ctx);
               }
               ctx.fillStyle = sub.color || '#ffffff';
@@ -2642,11 +2692,30 @@
       Object.assign(clip.baseTransform, patch);
     }
 
+    function isPointInsideVisibleSubtitle(normX, normY) {
+      if (state.trackVisibility.sub === false) return null;
+      const activeSubs = state.subtitles.filter(s => state.currentTime >= s.start && state.currentTime <= s.start + s.duration);
+      if (activeSubs.length === 0) return null;
+      // 優先檢查目前選取的字幕，其次檢查其他當前顯示的字幕
+      const ordered = [...activeSubs].sort((a, b) => (a.id === state.selectedSubId ? -1 : b.id === state.selectedSubId ? 1 : 0));
+      for (const sub of ordered) {
+        if (Math.abs(normX - sub.x) <= 0.36 && Math.abs(normY - sub.y) <= 0.08) {
+          return sub;
+        }
+      }
+      return null;
+    }
+
     canvas.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (state.isPlaying) togglePlay(false);
+      try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+
       const rect = canvas.getBoundingClientRect();
       const normX = (e.clientX - rect.left) / rect.width, normY = (e.clientY - rect.top) / rect.height;
       const canvasX = normX * canvas.width, canvasY = normY * canvas.height;
-      const sel = getSelectedVisualClip();
+      const sel = getActiveVisualClipAtCurrentTime() || getSelectedVisualClip();
 
       if (state.eyedropperMode && sel) {
         pushUndo();
@@ -2664,43 +2733,90 @@
         renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); return;
       }
 
-      if (state.activeTab === 'text' && state.selectedSubId) {
-        const sub = state.subtitles.find(s => s.id === state.selectedSubId);
-        if (sub) { pushUndo(); draggingCanvasItem = { type: 'sub', sub }; state.lastSelectedType = 'sub'; updateDeleteButtonLabel(); updateSubPos(e, sub); return; }
-      }
-
+      // 1. 優先偵測是否抓到影片/畫中畫控制框的 8 個控制點（或四條邊線）
       if (sel) {
+        // 同步選取狀態，確保拖曳的就是目前正在操作的素材
+        state.selectedClipId = sel.clip.id;
+        state.lastSelectedType = sel.isPip ? 'pip' : 'clip';
+
         const localT = getClipLocalTime(sel.clip, sel.isPip);
         const boxInfo = getSelectionBoxHandles(sel, canvas.width, canvas.height);
-        if (boxInfo && !state.isPlaying) {
-          const hitHandle = boxInfo.handles.find(h => Math.hypot(canvasX - h.x, canvasY - h.y) <= 18);
-          if (hitHandle) {
+        if (boxInfo) {
+          // 擴大控制點感應半徑至 26px，並支援直接拖拉四邊框線進行拉伸或裁剪
+          let hitHandleId = null;
+          let minDist = 26;
+          for (const h of boxInfo.handles) {
+            const d = Math.hypot(canvasX - h.x, canvasY - h.y);
+            if (d <= minDist) {
+              minDist = d;
+              hitHandleId = h.id;
+            }
+          }
+          if (!hitHandleId) {
+            const { box } = boxInfo;
+            const edgePad = 16;
+            const withinX = canvasX >= box.left - edgePad && canvasX <= box.right + edgePad;
+            const withinY = canvasY >= box.top - edgePad && canvasY <= box.bottom + edgePad;
+            if (withinY && Math.abs(canvasX - box.left) <= edgePad) hitHandleId = 'w';
+            else if (withinY && Math.abs(canvasX - box.right) <= edgePad) hitHandleId = 'e';
+            else if (withinX && Math.abs(canvasY - box.top) <= edgePad) hitHandleId = 'n';
+            else if (withinX && Math.abs(canvasY - box.bottom) <= edgePad) hitHandleId = 's';
+          }
+
+          if (hitHandleId) {
             pushUndo();
             draggingCanvasItem = {
-              type: 'handle', mode: state.canvasBoxMode, handleId: hitHandle.id, clip: sel.clip, isPip: sel.isPip, localT,
+              type: 'handle', mode: state.canvasBoxMode, handleId: hitHandleId, clip: sel.clip, isPip: sel.isPip, localT,
               startX: e.clientX, startY: e.clientY, origTr: { ...getInterpolatedTransform(sel.clip, localT) },
               origRects: { ...boxInfo.rects }, origCrop: { ...(sel.clip.crop || { left: 0, right: 0, top: 0, bottom: 0 }) }
             };
+            renderTimeline();
+            renderFrame();
             return;
           }
         }
+      }
+
+      // 2. 只有當字幕軌未隱藏、且點擊位置確實落在字幕框範圍內時，才拖曳字幕（避免隱藏字幕或點畫面其他處時誤攔截）
+      const hitSub = isPointInsideVisibleSubtitle(normX, normY);
+      if (hitSub && state.activeTab === 'text') {
         pushUndo();
+        state.selectedSubId = hitSub.id;
+        state.lastSelectedType = 'sub';
+        draggingCanvasItem = { type: 'sub', sub: hitSub };
+        updateDeleteButtonLabel();
+        updateSubPos(e, hitSub);
+        return;
+      }
+
+      // 3. 點住畫面任何位置上下左右挪動：直接平移目前選取的影片或畫中畫
+      if (sel) {
+        pushUndo();
+        const localT = getClipLocalTime(sel.clip, sel.isPip);
         const curTr = getInterpolatedTransform(sel.clip, localT);
         draggingCanvasItem = { type: 'move', clip: sel.clip, isPip: sel.isPip, localT, startX: e.clientX, startY: e.clientY, origX: curTr.x, origY: curTr.y };
+        updateDeleteButtonLabel();
+        renderTimeline();
+        renderFrame();
+      } else {
+        showToast('請先匯入主影片或畫中畫素材，即可在畫布上自由移動與裁切');
       }
     });
 
-    canvas.addEventListener('pointermove', (e) => {
+    window.addEventListener('pointermove', (e) => {
       if (!draggingCanvasItem) return;
+      e.preventDefault();
       const rect = canvas.getBoundingClientRect();
       const scaleRatioX = canvas.width / rect.width, scaleRatioY = canvas.height / rect.height;
-      if (draggingCanvasItem.type === 'sub') updateSubPos(e, draggingCanvasItem.sub);
-      else if (draggingCanvasItem.type === 'move') {
+      if (draggingCanvasItem.type === 'sub') {
+        updateSubPos(e, draggingCanvasItem.sub);
+      } else if (draggingCanvasItem.type === 'move') {
         updateClipActiveTransform(draggingCanvasItem.clip, draggingCanvasItem.localT, {
           x: draggingCanvasItem.origX + (e.clientX - draggingCanvasItem.startX) * scaleRatioX,
           y: draggingCanvasItem.origY + (e.clientY - draggingCanvasItem.startY) * scaleRatioY
         });
-        renderDrawer(); renderFrame();
+        if (state.activeTab === 'keyframe') renderDrawer();
+        renderFrame();
       } else if (draggingCanvasItem.type === 'handle') {
         const dx = (e.clientX - draggingCanvasItem.startX) * scaleRatioX, dy = (e.clientY - draggingCanvasItem.startY) * scaleRatioY;
         const { handleId, clip, localT, origTr, origRects, origCrop } = draggingCanvasItem;
@@ -2717,7 +2833,8 @@
             if (handleId === 'n') nextScaleY = Math.max(0.08, Math.min(5.0, (origTr.scaleY ?? 1) - (dy * 2) / origRects.baseH));
           }
           updateClipActiveTransform(clip, localT, { scaleX: nextScaleX, scaleY: nextScaleY });
-          renderDrawer(); renderFrame();
+          if (state.activeTab === 'keyframe') renderDrawer();
+          renderFrame();
         } else if (draggingCanvasItem.mode === 'crop') {
           if (!clip.crop) clip.crop = { left: 0, right: 0, top: 0, bottom: 0 };
           const dw = Math.max(10, origRects.dispW), dh = Math.max(10, origRects.dispH);
@@ -2725,11 +2842,20 @@
           if (handleId.includes('e')) clip.crop.right = Math.max(0, Math.min(0.9 - origCrop.left, origCrop.right - dx / dw));
           if (handleId.includes('n')) clip.crop.top = Math.max(0, Math.min(0.9 - origCrop.bottom, origCrop.top + dy / dh));
           if (handleId.includes('s')) clip.crop.bottom = Math.max(0, Math.min(0.9 - origCrop.top, origCrop.bottom - dy / dh));
-          renderDrawer(); renderFrame();
+          renderFrame();
         }
       }
-    });
-    window.addEventListener('pointerup', () => { if (draggingCanvasItem) scheduleAutoSaveDraft(); draggingCanvasItem = null; });
+    }, { passive: false });
+
+    const finishCanvasDrag = (e) => {
+      if (!draggingCanvasItem) return;
+      try { if (e && typeof e.pointerId === 'number') canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+      draggingCanvasItem = null;
+      renderDrawer();
+      scheduleAutoSaveDraft();
+    };
+    window.addEventListener('pointerup', finishCanvasDrag);
+    window.addEventListener('pointercancel', finishCanvasDrag);
 
     function updateSubPos(e, sub) {
       const rect = canvas.getBoundingClientRect();
@@ -3174,7 +3300,6 @@
         if (sub) {
           document.getElementById('subTextInput').oninput = (e) => { sub.text = e.target.value; renderTimeline(); renderFrame(); scheduleAutoSaveDraft(); };
 
-          // 字幕動畫控制
           container.querySelectorAll('[data-subanim]').forEach(btn => {
             btn.onclick = () => {
               pushUndo();
@@ -3200,7 +3325,6 @@
             };
           }
 
-          // 方向與字級、字色
           document.getElementById('orientHorizBtn').onclick = () => { pushUndo(); sub.orientation = 'horizontal'; renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
           document.getElementById('orientVertBtn').onclick = () => { pushUndo(); sub.orientation = 'vertical'; renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
           document.getElementById('subSizeRange').oninput = (e) => { sub.size = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
@@ -3209,7 +3333,6 @@
             dot.onclick = () => { pushUndo(); sub.color = dot.dataset.subcol; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
           });
 
-          // 外框控制
           document.getElementById('toggleSubStrokeBtn').onclick = () => {
             pushUndo();
             sub.strokeEnabled = !sub.strokeEnabled;
@@ -3220,7 +3343,6 @@
             document.getElementById('subStrokeWidthRange').oninput = (e) => { sub.strokeWidth = parseFloat(e.target.value); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
           }
 
-          // 陰影控制
           document.getElementById('toggleSubShadowBtn').onclick = () => {
             pushUndo();
             sub.shadowEnabled = !sub.shadowEnabled;
@@ -3232,7 +3354,6 @@
             document.getElementById('subShadowOffsetRange').oninput = (e) => { sub.shadowOffset = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
           }
 
-          // 背景底框控制
           container.querySelectorAll('[data-subbg]').forEach(btn => {
             btn.onclick = () => {
               pushUndo();
