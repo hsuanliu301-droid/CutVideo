@@ -143,7 +143,7 @@
     .audio-clip-block { position: absolute; height: 28px; background: linear-gradient(90deg, rgba(20, 184, 166, 0.35), rgba(44, 230, 195, 0.25)); border: 1.5px solid var(--cyan); border-radius: 6px; font-size: 10px; font-weight: 600; padding: 0 16px; display: flex; align-items: center; justify-content: center; color: #ccfbf1; white-space: nowrap; touch-action: none; cursor: pointer; }
     .audio-clip-block.selected { background: rgba(44, 230, 195, 0.5); color: #fff; border-color: #fff; box-shadow: 0 0 0 1.5px var(--cyan); }
 
-    .drawer { background: var(--bg-panel); height: 215px; display: flex; flex-direction: column; flex-shrink: 0; transition: height 0.18s ease; }
+    .drawer { background: var(--bg-panel); height: 235px; display: flex; flex-direction: column; flex-shrink: 0; transition: height 0.18s ease; }
     .drawer.collapsed { height: 48px; }
     .drawer.collapsed .drawer-content { display: none; }
     .drawer-content { flex: 1; padding: 9px 12px; overflow-y: auto; font-size: 12px; }
@@ -153,15 +153,19 @@
     .nav-tab span.icon { font-size: 15px; }
     .drawer-toggle-tab { position: sticky; right: 0; z-index: 10; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; color: var(--cyan); font-size: 10px; font-weight: 700; padding: 4px 7px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px; flex-shrink: 0; margin-right: 4px; }
 
-    .control-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
-    .control-row label { color: var(--text-muted); font-size: 11px; min-width: 62px; }
-    input[type="range"] { flex: 1; accent-color: var(--accent); }
+    .control-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 6px; flex-wrap: wrap; }
+    .control-row label { color: var(--text-muted); font-size: 11px; min-width: 56px; }
+    input[type="range"] { flex: 1; accent-color: var(--accent); min-width: 60px; }
     input[type="text"], input[type="password"], select, textarea { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); padding: 6px 8px; border-radius: 6px; font-size: 12px; flex: 1; user-select: text; min-width: 0; font-family: inherit; }
     textarea { width: 100%; resize: none; height: 52px; line-height: 1.4; }
     .pill-group { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px; }
     .pill-group::-webkit-scrollbar { display: none; }
     .pill { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); padding: 4px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; white-space: nowrap; cursor: pointer; }
     .pill.active { background: var(--accent-soft); border-color: var(--accent); color: #fff; }
+    .swatch-dot { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.45); cursor: pointer; flex-shrink: 0; padding: 0; }
+    .swatch-dot.active { border: 2px solid var(--cyan); transform: scale(1.15); }
+    .sub-style-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 7px 9px; margin-bottom: 8px; }
+    .sub-sec-label { font-size: 11px; font-weight: 700; color: var(--cyan); margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between; }
     .font-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 6px; }
     @media (min-width: 768px) { .font-grid { grid-template-columns: repeat(4, 1fr); } }
     .font-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 7px; text-align: left; color: var(--text-main); cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
@@ -173,6 +177,7 @@
     .box-btn.primary { border-color: var(--accent); background: var(--accent-soft); }
     .box-btn.purple { border-color: var(--purple); background: rgba(168, 85, 247, 0.18); color: #e9d5ff; }
     .box-btn.cyan { border-color: var(--cyan); background: rgba(44, 230, 195, 0.16); color: #99f6e4; }
+    .box-btn.gold { border-color: var(--gold); background: rgba(255, 204, 51, 0.16); color: #fef08a; }
     .box-btn.danger { border-color: var(--danger); background: var(--danger-soft); color: #fca5a5; }
     .hidden-input { display: none; }
     #toast { position: fixed; top: 52px; left: 50%; transform: translateX(-50%); background: rgba(24, 26, 32, 0.96); border: 1px solid var(--accent); color: #fff; padding: 6px 14px; border-radius: 99px; font-size: 12px; z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.25s; white-space: nowrap; }
@@ -370,6 +375,17 @@
       { name: '站酷快樂體', family: "'ZCOOL KuaiLe', sans-serif", cat: '特色', desc: '動感活潑 · 綜藝字卡' }
     ];
 
+    const SUBTITLE_ANIMS = [
+      { id: 'none', name: '無動畫' },
+      { id: 'fade', name: '柔和淡入' },
+      { id: 'pop', name: '彈跳放大' },
+      { id: 'slideUp', name: '向上滑入' },
+      { id: 'typewriter', name: '打字機逐字' },
+      { id: 'wipe', name: '掃光展寬' }
+    ];
+
+    const SUB_COLOR_SWATCHES = ['#ffffff', '#ffeb3b', '#2ce6c3', '#ff7eb3', '#38bdf8', '#111827'];
+
     const FILTER_PRESETS = [
       { id: 'none', name: '原圖', b: 100, c: 100, s: 100, warm: 0 },
       { id: 'dance', name: '練舞室高對比', b: 105, c: 122, s: 112, warm: -5 },
@@ -421,6 +437,63 @@
     ];
 
     function roundSec(val) { return Math.round(val * 100) / 100; }
+
+    function createDefaultSubtitleProps(overrides = {}) {
+      return {
+        id: 'sub-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+        text: '新字幕點此編輯',
+        orientation: 'horizontal',
+        start: 0,
+        duration: 3.0,
+        x: 0.5,
+        y: 0.78,
+        size: 24,
+        font: "'Noto Sans TC', sans-serif",
+        color: '#ffffff',
+        strokeEnabled: true,
+        stroke: '#000000',
+        strokeWidth: 3,
+        shadowEnabled: false,
+        shadowColor: '#000000',
+        shadowBlur: 8,
+        shadowOffset: 3,
+        bgMode: 'semi',
+        bgColor: '#000000',
+        bg: 'rgba(0,0,0,0.48)',
+        anim: 'none',
+        animDur: 0.35,
+        ...overrides
+      };
+    }
+
+    function normalizeSubtitleObject(sub) {
+      if (!sub) return sub;
+      if (typeof sub.strokeEnabled !== 'boolean') {
+        sub.strokeEnabled = Boolean(sub.stroke);
+      }
+      if (!sub.stroke) sub.stroke = '#000000';
+      if (typeof sub.strokeWidth !== 'number') sub.strokeWidth = 3;
+      if (typeof sub.shadowEnabled !== 'boolean') sub.shadowEnabled = false;
+      if (!sub.shadowColor) sub.shadowColor = '#000000';
+      if (typeof sub.shadowBlur !== 'number') sub.shadowBlur = 8;
+      if (typeof sub.shadowOffset !== 'number') sub.shadowOffset = 3;
+      if (!sub.bgMode) {
+        if (!sub.bg || sub.bg === 'transparent') sub.bgMode = 'none';
+        else if (sub.bg.startsWith('rgba')) sub.bgMode = 'semi';
+        else sub.bgMode = 'solid';
+      }
+      if (!sub.bgColor) sub.bgColor = '#000000';
+      if (!sub.anim) sub.anim = 'none';
+      if (typeof sub.animDur !== 'number') sub.animDur = 0.35;
+      return sub;
+    }
+
+    function computeSubtitleBgCss(sub) {
+      if (sub.bgMode === 'none') return 'transparent';
+      if (sub.bgMode === 'solid') return sub.bgColor || '#000000';
+      const { r, g, b } = hexToRgb(sub.bgColor || '#000000');
+      return `rgba(${r},${g},${b},0.48)`;
+    }
 
     let undoStack = [];
     let redoStack = [];
@@ -484,7 +557,6 @@
           text = new TextDecoder('utf-8').decode(buf);
         }
       }
-      // 去除開頭可能殘留的 UTF-8 BOM 隱形字元
       return text.replace(/^\uFEFF/, '');
     }
 
@@ -509,7 +581,6 @@
         }];
       }
 
-      // 依字數比例分配時間，並合併時長小於 0.5s 的過短片段以避免畫面閃爍突兀
       const weights = cleanLines.map(l => Math.max(1, Array.from(l).length));
       const sumW = weights.reduce((a, b) => a + b, 0);
       const rawSegments = [];
@@ -552,7 +623,6 @@
         .trim();
       if (!normalized) return [];
 
-      // 使用 /\n\s*\n+/ 容許空行內含有空白鍵或 Tab 的情況
       const blocks = normalized.split(/\n\s*\n+/);
       const generated = [];
       const timeRangeRegex = /(\d{1,2}[:：]\d{2}[:：]\d{2}[,.，．]\d{1,3})\s*(?:-->|—>|->|－>)\s*(\d{1,2}[:：]\d{2}[:：]\d{2}[,.，．]\d{1,3})/;
@@ -577,7 +647,6 @@
         const endSec = parseSrtTimeToSec(timeMatch[2]);
         if (startSec === null || endSec === null || endSec <= startSec) return;
 
-        // 過濾純 HTML/SRT 樣式標籤（如 <i>、{\an8}），保留實際字幕文字
         const textLines = lines
           .slice(timeLineIdx + 1)
           .map(l => l.replace(/<[^>]+>/g, '').replace(/\{\\[^}]+\}/g, '').trim())
@@ -587,20 +656,12 @@
         const splitSubs = splitMultiLineSrtBlock(startSec, endSec, textLines);
 
         splitSubs.forEach((item, sIdx) => {
-          generated.push({
+          generated.push(createDefaultSubtitleProps({
             id: `sub-srt-${Date.now()}-${bIdx}-${sIdx}`,
             text: item.text,
-            orientation: 'horizontal',
             start: item.start,
-            duration: item.duration,
-            x: 0.5,
-            y: 0.78,
-            size: 24,
-            font: "'Noto Sans TC', sans-serif",
-            color: '#ffffff',
-            stroke: '#000000',
-            bg: 'rgba(0,0,0,0.48)'
-          });
+            duration: item.duration
+          }));
         });
       });
 
@@ -626,7 +687,7 @@
         renderDrawer();
         renderFrame();
         scheduleAutoSaveDraft();
-        showToast(`已成功匯入 ${parsedSubs.length} 段 .srt 字幕，可微調時間或按 AI 配音 ✅`);
+        showToast(`已成功匯入 ${parsedSubs.length} 段 .srt 字幕，可設定樣式並批量套用 ✅`);
       } catch (err) {
         console.error('SRT import error:', err);
         showToast('讀取 .srt 檔案失敗，請確認檔案未損毀');
@@ -854,7 +915,7 @@
 
       state.clips = restoredClips;
       state.pipTracks = restoredPipTracks.length > 0 ? restoredPipTracks : [{ id: 'pip-track-1', name: '畫中畫 L1 (頂層)', visible: true, clips: [] }];
-      state.subtitles = saved.subtitles || [];
+      state.subtitles = (saved.subtitles || []).map(s => normalizeSubtitleObject({ ...s }));
       state.audioClips = restoredAudio;
       state.trackVisibility = saved.trackVisibility || { main: true, audio: true, sub: true };
       if (saved.effects) state.effects = saved.effects;
@@ -1065,7 +1126,6 @@
             fromVideo: false, isAI: true, start: roundSec(startSec), trimStart: 0,
             duration: realDur, maxDuration: realDur, gain: 1.15, muted: false, mediaEl: audioEl
           });
-          // 以語音唸完的時間為主，自動延長對應字幕條長度，方便後續對齊畫面
           if (linkedSub && realDur > linkedSub.duration) {
             linkedSub.duration = realDur;
           }
@@ -1118,11 +1178,12 @@
       if (vc.engine === 'browser') {
         lines.forEach((line, idx) => {
           const estDur = roundSec(Math.max(1.5, line.length * 0.28 / (vc.rate || 1)));
-          state.subtitles.push({
-            id: 'sub-ai-' + Date.now() + idx, text: line, orientation: 'horizontal',
-            start: cursorSec, duration: estDur, x: 0.5, y: 0.78, size: 24,
-            font: "'Noto Sans TC', sans-serif", color: '#ffffff', stroke: '#000000', bg: 'rgba(0,0,0,0.48)'
-          });
+          state.subtitles.push(createDefaultSubtitleProps({
+            id: 'sub-ai-' + Date.now() + idx,
+            text: line,
+            start: cursorSec,
+            duration: estDur
+          }));
           cursorSec = roundSec(cursorSec + estDur + 0.15);
         });
         vc.autoSyncPlayback = true;
@@ -1138,11 +1199,12 @@
           const line = lines[i];
           showToast(`正在生成講稿配音 (${i + 1}/${lines.length})...`);
           const blob = await fetchClonedVoiceBlob(line);
-          const subObj = {
-            id: 'sub-ai-' + Date.now() + i, text: line, orientation: 'horizontal',
-            start: cursorSec, duration: 1.5, x: 0.5, y: 0.78, size: 24,
-            font: "'Noto Sans TC', sans-serif", color: '#ffffff', stroke: '#000000', bg: 'rgba(0,0,0,0.48)'
-          };
+          const subObj = createDefaultSubtitleProps({
+            id: 'sub-ai-' + Date.now() + i,
+            text: line,
+            start: cursorSec,
+            duration: 1.5
+          });
           state.subtitles.push(subObj);
           const actualDur = await attachAudioBlobToTimeline(blob, line, cursorSec, subObj);
           cursorSec = roundSec(cursorSec + actualDur + 0.15);
@@ -1380,7 +1442,7 @@
     function applyStateSnapshot(snap) {
       state.clips = snap.clips.map(cloneClipData);
       state.pipTracks = snap.pipTracks.map(tr => ({ ...tr, visible: tr.visible !== false, clips: tr.clips.map(cloneClipData) }));
-      state.subtitles = JSON.parse(JSON.stringify(snap.subtitles));
+      state.subtitles = JSON.parse(JSON.stringify(snap.subtitles)).map(s => normalizeSubtitleObject(s));
       state.audioClips = snap.audioClips.map(a => ({ ...a }));
       state.trackVisibility = snap.trackVisibility ? { ...snap.trackVisibility } : { main: true, audio: true, sub: true };
       if (snap.background) state.background = { ...snap.background };
@@ -1515,7 +1577,8 @@
     }
 
     function hexToRgb(hex) {
-      const num = parseInt(hex.replace('#', ''), 16);
+      const clean = (hex || '#000000').replace('#', '');
+      const num = parseInt(clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean, 16) || 0;
       return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
     }
 
@@ -1773,6 +1836,70 @@
       }
     }
 
+    // ====== 字幕進出場動畫計算引擎 ======
+    function computeSubtitleAnimState(sub, localT) {
+      const anim = sub.anim || 'none';
+      if (anim === 'none') {
+        return { alpha: 1, scale: 1, offsetY: 0, charRatio: 1, wipeRatio: 1 };
+      }
+      const inDur = Math.min(sub.animDur || 0.35, Math.max(0.12, sub.duration * 0.45));
+      const outDur = Math.min(0.22, Math.max(0.08, sub.duration * 0.25));
+      const timeLeft = sub.duration - localT;
+      const outAlpha = (timeLeft < outDur && anim !== 'typewriter') ? Math.max(0, timeLeft / outDur) : 1;
+
+      if (anim === 'fade') {
+        const p = Math.min(1, localT / inDur);
+        const eased = p * (2 - p);
+        return { alpha: eased * outAlpha, scale: 1, offsetY: 0, charRatio: 1, wipeRatio: 1 };
+      }
+      if (anim === 'pop') {
+        const p = Math.min(1, localT / inDur);
+        // 彈性過衝曲線
+        const c1 = 1.70158;
+        const c3 = c1 + 1;
+        const scale = p >= 1 ? 1 : 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2);
+        return { alpha: Math.min(1, p * 2.5) * outAlpha, scale: Math.max(0.15, scale), offsetY: 0, charRatio: 1, wipeRatio: 1 };
+      }
+      if (anim === 'slideUp') {
+        const p = Math.min(1, localT / inDur);
+        const eased = 1 - Math.pow(1 - p, 3);
+        return { alpha: eased * outAlpha, scale: 1, offsetY: (1 - eased) * 26, charRatio: 1, wipeRatio: 1 };
+      }
+      if (anim === 'typewriter') {
+        const typeSpan = Math.max(0.2, Math.min(sub.duration * 0.78, Math.max(inDur * 1.6, Array.from(sub.text || '').length * 0.055)));
+        const charRatio = Math.min(1, Math.max(0.05, localT / typeSpan));
+        return { alpha: 1, scale: 1, offsetY: 0, charRatio, wipeRatio: 1 };
+      }
+      if (anim === 'wipe') {
+        const p = Math.min(1, localT / inDur);
+        const eased = 1 - Math.pow(1 - p, 2.5);
+        return { alpha: outAlpha, scale: 1, offsetY: 0, charRatio: 1, wipeRatio: Math.max(0.02, eased) };
+      }
+      return { alpha: 1, scale: 1, offsetY: 0, charRatio: 1, wipeRatio: 1 };
+    }
+
+    function applySubtitleTextEffects(targetCtx, sub, sf) {
+      if (sub.shadowEnabled) {
+        targetCtx.shadowColor = sub.shadowColor || '#000000';
+        targetCtx.shadowBlur = (sub.shadowBlur ?? 8) * sf;
+        const off = (sub.shadowOffset ?? 3) * sf;
+        targetCtx.shadowOffsetX = off;
+        targetCtx.shadowOffsetY = off;
+      } else {
+        targetCtx.shadowColor = 'transparent';
+        targetCtx.shadowBlur = 0;
+        targetCtx.shadowOffsetX = 0;
+        targetCtx.shadowOffsetY = 0;
+      }
+    }
+
+    function resetCanvasShadow(targetCtx) {
+      targetCtx.shadowColor = 'transparent';
+      targetCtx.shadowBlur = 0;
+      targetCtx.shadowOffsetX = 0;
+      targetCtx.shadowOffsetY = 0;
+    }
+
     function renderFrame() {
       const W = canvas.width, H = canvas.height, sf = state.renderScaleFactor || 1;
       ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
@@ -1852,37 +1979,125 @@
       drawSelectionOverlay(ctx, W, H);
 
       if (state.trackVisibility.sub !== false) {
-        state.subtitles.forEach(sub => {
+        state.subtitles.forEach(rawSub => {
+          const sub = normalizeSubtitleObject(rawSub);
           if (state.currentTime >= sub.start && state.currentTime <= sub.start + sub.duration) {
+            const localT = Math.max(0, state.currentTime - sub.start);
+            const animState = computeSubtitleAnimState(sub, localT);
+
             ctx.save();
             const scaledFontSize = Math.round(sub.size * sf);
             ctx.font = `700 ${scaledFontSize}px ${sub.font}`;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            const sx = sub.x * W, sy = sub.y * H;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            const sx = sub.x * W;
+            const sy = sub.y * H + animState.offsetY * sf;
+
+            ctx.globalAlpha = Math.max(0, Math.min(1, animState.alpha));
+            ctx.translate(sx, sy);
+            ctx.scale(animState.scale, animState.scale);
+
+            const bgFill = computeSubtitleBgCss(sub);
+            const hasStroke = sub.strokeEnabled && (sub.strokeWidth ?? 3) > 0;
+            const strokePx = (sub.strokeWidth ?? 3) * sf;
+
             if (sub.orientation !== 'vertical') {
-              const metrics = ctx.measureText(sub.text), padX = 14 * sf, padY = 8 * sf;
+              const allChars = Array.from(sub.text || '');
+              const visibleCount = animState.charRatio < 1 ? Math.max(1, Math.ceil(allChars.length * animState.charRatio)) : allChars.length;
+              const displayText = allChars.slice(0, visibleCount).join('');
+
+              const metrics = ctx.measureText(displayText);
+              const padX = 14 * sf, padY = 8 * sf;
               const boxW = metrics.width + padX * 2, boxH = scaledFontSize + padY * 2;
-              if (sub.bg && sub.bg !== 'transparent') { ctx.fillStyle = sub.bg; ctx.beginPath(); ctx.roundRect(sx - boxW / 2, sy - boxH / 2, boxW, boxH, 8 * sf); ctx.fill(); }
-              if (sub.stroke) { ctx.lineWidth = 3 * sf; ctx.strokeStyle = sub.stroke; ctx.strokeText(sub.text, sx, sy); }
-              ctx.fillStyle = sub.color; ctx.fillText(sub.text, sx, sy);
+
+              if (animState.wipeRatio < 1) {
+                const clipW = (boxW + 24 * sf) * animState.wipeRatio;
+                const clipH = boxH + 32 * sf;
+                ctx.beginPath();
+                ctx.rect(-clipW / 2, -clipH / 2, clipW, clipH);
+                ctx.clip();
+              }
+
+              if (bgFill && bgFill !== 'transparent') {
+                resetCanvasShadow(ctx);
+                ctx.fillStyle = bgFill;
+                ctx.beginPath();
+                ctx.roundRect(-boxW / 2, -boxH / 2, boxW, boxH, 8 * sf);
+                ctx.fill();
+              }
+
+              applySubtitleTextEffects(ctx, sub, sf);
+              if (hasStroke) {
+                ctx.lineWidth = strokePx;
+                ctx.strokeStyle = sub.stroke || '#000000';
+                ctx.strokeText(displayText, 0, 0);
+                // 避免填充文字時疊加第二次陰影導致過濃
+                resetCanvasShadow(ctx);
+              }
+              ctx.fillStyle = sub.color || '#ffffff';
+              ctx.fillText(displayText, 0, 0);
+              resetCanvasShadow(ctx);
+
               if (sub.id === state.selectedSubId && state.lastSelectedType === 'sub' && !state.isPlaying && !state.isExporting) {
-                ctx.strokeStyle = '#ff3b7f'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]); ctx.strokeRect(sx - boxW / 2 - 4, sy - boxH / 2 - 4, boxW + 8, boxH + 8);
+                ctx.strokeStyle = '#ff3b7f'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+                ctx.strokeRect(-boxW / 2 - 4, -boxH / 2 - 4, boxW + 8, boxH + 8);
               }
             } else {
-              const lines = sub.text.split(/\n|\|/), charStep = scaledFontSize * 1.12, colStep = scaledFontSize * 1.3;
+              const rawLines = (sub.text || '').split(/\n|\|/);
+              const totalChars = rawLines.reduce((accC, l) => accC + Array.from(l).length, 0);
+              let remainingQuota = animState.charRatio < 1 ? Math.max(1, Math.ceil(totalChars * animState.charRatio)) : totalChars;
+              const lines = rawLines.map(l => {
+                const arr = Array.from(l);
+                if (remainingQuota <= 0) return '';
+                const take = arr.slice(0, remainingQuota).join('');
+                remainingQuota -= arr.length;
+                return take;
+              }).filter(Boolean);
+
+              const charStep = scaledFontSize * 1.12, colStep = scaledFontSize * 1.3;
               const maxChars = Math.max(...lines.map(l => Array.from(l).length), 1);
-              const totalW = lines.length * colStep + 18 * sf, totalH = maxChars * charStep + 18 * sf;
-              if (sub.bg && sub.bg !== 'transparent') { ctx.fillStyle = sub.bg; ctx.beginPath(); ctx.roundRect(sx - totalW / 2, sy - totalH / 2, totalW, totalH, 8 * sf); ctx.fill(); }
+              const totalW = Math.max(1, lines.length) * colStep + 18 * sf, totalH = maxChars * charStep + 18 * sf;
+
+              if (animState.wipeRatio < 1) {
+                const clipW = totalW + 24 * sf;
+                const clipH = (totalH + 24 * sf) * animState.wipeRatio;
+                ctx.beginPath();
+                ctx.rect(-clipW / 2, -clipH / 2, clipW, clipH);
+                ctx.clip();
+              }
+
+              if (bgFill && bgFill !== 'transparent') {
+                resetCanvasShadow(ctx);
+                ctx.fillStyle = bgFill;
+                ctx.beginPath();
+                ctx.roundRect(-totalW / 2, -totalH / 2, totalW, totalH, 8 * sf);
+                ctx.fill();
+              }
+
               lines.forEach((lineStr, colIdx) => {
-                const chars = Array.from(lineStr), colX = sx + ((lines.length - 1) / 2 - colIdx) * colStep;
+                const chars = Array.from(lineStr);
+                const colX = ((lines.length - 1) / 2 - colIdx) * colStep;
                 chars.forEach((ch, rowIdx) => {
-                  const charY = sy - ((chars.length - 1) / 2 - rowIdx) * charStep;
-                  if (sub.stroke) { ctx.lineWidth = 3 * sf; ctx.strokeStyle = sub.stroke; ctx.strokeText(ch, colX, charY); }
-                  ctx.fillStyle = sub.color; ctx.fillText(ch, colX, charY);
+                  const charY = -((chars.length - 1) / 2 - rowIdx) * charStep;
+                  applySubtitleTextEffects(ctx, sub, sf);
+                  if (hasStroke) {
+                    ctx.lineWidth = strokePx;
+                    ctx.strokeStyle = sub.stroke || '#000000';
+                    ctx.strokeText(ch, colX, charY);
+                    resetCanvasShadow(ctx);
+                  }
+                  ctx.fillStyle = sub.color || '#ffffff';
+                  ctx.fillText(ch, colX, charY);
+                  resetCanvasShadow(ctx);
                 });
               });
+
               if (sub.id === state.selectedSubId && state.lastSelectedType === 'sub' && !state.isPlaying && !state.isExporting) {
-                ctx.strokeStyle = '#ff3b7f'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]); ctx.strokeRect(sx - totalW / 2 - 4, sy - totalH / 2 - 4, totalW + 8, totalH + 8);
+                ctx.strokeStyle = '#ff3b7f'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+                ctx.strokeRect(-totalW / 2 - 4, -totalH / 2 - 4, totalW + 8, totalH + 8);
               }
             }
             ctx.restore();
@@ -2590,10 +2805,50 @@
 
     function addNewSubtitle() {
       pushUndo();
-      const id = 'sub-' + Date.now();
-      state.subtitles.push({ id, text: '新字幕點此編輯', orientation: 'horizontal', start: roundSec(state.currentTime), duration: 3.0, x: 0.5, y: 0.75, size: 24, font: "'Noto Sans TC', sans-serif", color: '#ffffff', stroke: '#000000', bg: 'rgba(0,0,0,0.45)' });
-      state.selectedSubId = id; state.lastSelectedType = 'sub'; state.activeTab = 'text';
+      const newSub = createDefaultSubtitleProps({
+        start: roundSec(state.currentTime),
+        duration: 3.0
+      });
+      state.subtitles.push(newSub);
+      state.selectedSubId = newSub.id; state.lastSelectedType = 'sub'; state.activeTab = 'text';
       setDrawerCollapsed(false); updateTabsUI(); updateDeleteButtonLabel(); renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft();
+    }
+
+    function applySubtitleStyleToAll(sourceSub) {
+      if (!sourceSub || state.subtitles.length <= 1) {
+        return showToast('目前僅有 1 段字幕，無需批量套用');
+      }
+      pushUndo();
+      const styleSnapshot = {
+        orientation: sourceSub.orientation,
+        x: sourceSub.x,
+        y: sourceSub.y,
+        size: sourceSub.size,
+        font: sourceSub.font,
+        color: sourceSub.color,
+        strokeEnabled: sourceSub.strokeEnabled,
+        stroke: sourceSub.stroke,
+        strokeWidth: sourceSub.strokeWidth,
+        shadowEnabled: sourceSub.shadowEnabled,
+        shadowColor: sourceSub.shadowColor,
+        shadowBlur: sourceSub.shadowBlur,
+        shadowOffset: sourceSub.shadowOffset,
+        bgMode: sourceSub.bgMode,
+        bgColor: sourceSub.bgColor,
+        bg: sourceSub.bg,
+        anim: sourceSub.anim,
+        animDur: sourceSub.animDur
+      };
+      state.subtitles.forEach(s => {
+        if (s.id !== sourceSub.id) {
+          Object.assign(s, styleSnapshot);
+        }
+      });
+      renderTimeline();
+      renderDrawer();
+      renderFrame();
+      scheduleAutoSaveDraft();
+      showToast(`已將此樣式、動畫與位置套用至全部 ${state.subtitles.length} 段字幕 ✨`);
     }
 
     function extractAudioFromClip(clip, isPip) {
@@ -2609,12 +2864,13 @@
       showToast('已從影片分離出獨立音軌（原影片已自動靜音）🎵');
     }
 
-    // ====== 底部抽屜工具面板（含「📄 匯入 .srt」按鈕） ======
+    // ====== 底部抽屜工具面板（含字幕動畫、字色/外框/陰影/底框、一鍵批量套用） ======
     function renderDrawer() {
       const container = document.getElementById('drawerContent');
       const selObj = getSelectedVisualClip();
       const clip = selObj?.clip || null;
-      const sub = state.subtitles.find(s => s.id === state.selectedSubId) || state.subtitles[0];
+      const rawSub = state.subtitles.find(s => s.id === state.selectedSubId) || state.subtitles[0];
+      const sub = rawSub ? normalizeSubtitleObject(rawSub) : null;
       const aClip = state.audioClips.find(a => a.id === state.selectedAudioId) || state.audioClips[0];
       if (state.activeTab !== 'cutout') { state.penEditMode = false; state.eyedropperMode = false; }
 
@@ -2829,23 +3085,169 @@
           <div class="control-row">
             <button class="chip-btn" style="background:var(--accent); border:none; color:#fff;" id="newSubBtn">＋ 新增字幕</button>
             <button class="chip-btn" style="border-color:var(--cyan); color:var(--cyan);" id="importSrtBtn">📄 匯入 .srt</button>
-            <input type="text" id="subTextInput" value="${sub ? sub.text : ''}" placeholder="${sub ? '輸入文字（直式可用 | 換行）' : '請先點左側＋新增字幕'}" ${sub ? '' : 'disabled'}>
+            ${sub ? `<button class="chip-btn" style="border-color:var(--gold); background:rgba(255,204,51,0.16); color:#fef08a;" id="applyAllSubStyleBtn" title="將目前選取字幕的字體、大小、方向、顏色、外框、陰影、底框、動畫與畫面位置套用到全部字幕">✨ 套用樣式至全部 (${state.subtitles.length})</button>` : ''}
             ${sub ? `<button class="chip-btn" style="border-color:var(--purple); color:#e9d5ff;" id="subToVoiceBtn">🎙️ AI配音</button><button class="chip-btn danger" id="delSubBtn">🗑️</button>` : ''}
           </div>
-          ${sub ? `<div class="control-row"><label>排版方向</label><button class="pill ${sub.orientation !== 'vertical' ? 'active' : ''}" id="orientHorizBtn">➡️ 橫式排版</button><button class="pill ${sub.orientation === 'vertical' ? 'active' : ''}" id="orientVertBtn">⬇️ 直式書寫</button><input type="range" min="14" max="48" value="${sub.size}" id="subSizeRange" style="max-width:90px;"><input type="color" value="${sub.color}" id="subColorPick" style="width:28px; height:24px; border:none; background:none;"></div>` : ''}
+          <div class="control-row">
+            <input type="text" id="subTextInput" value="${sub ? sub.text.replace(/"/g, '"') : ''}" placeholder="${sub ? '輸入文字（直式可用 | 換行，或直接拖曳畫布調整位置）' : '請先點上方「＋ 新增字幕」或「📄 匯入 .srt」'}" ${sub ? '' : 'disabled'}>
+          </div>
+          ${sub ? `
+            <div class="sub-style-card">
+              <div class="sub-sec-label">
+                <span>1. 字幕出現動畫</span>
+                <span style="color:var(--text-muted); font-weight:400;">動畫時長 ${(sub.animDur ?? 0.35).toFixed(2)}s</span>
+              </div>
+              <div class="pill-group" style="margin-bottom:6px;">
+                ${SUBTITLE_ANIMS.map(a => `<button class="pill ${(sub.anim || 'none') === a.id ? 'active' : ''}" data-subanim="${a.id}">${a.name}</button>`).join('')}
+              </div>
+              ${(sub.anim && sub.anim !== 'none') ? `
+                <div class="control-row" style="margin-bottom:2px;">
+                  <label>動畫速度</label>
+                  <input type="range" min="0.15" max="1.2" step="0.05" value="${sub.animDur ?? 0.35}" id="subAnimDurRange">
+                  <span>${(sub.animDur ?? 0.35).toFixed(2)}s</span>
+                  <button class="chip-btn" id="previewSubAnimBtn">▶ 預覽動畫</button>
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="sub-style-card">
+              <div class="sub-sec-label"><span>2. 方向、字級與字體顏色</span></div>
+              <div class="control-row">
+                <button class="pill ${sub.orientation !== 'vertical' ? 'active' : ''}" id="orientHorizBtn">➡️ 橫式</button>
+                <button class="pill ${sub.orientation === 'vertical' ? 'active' : ''}" id="orientVertBtn">⬇️ 直式</button>
+                <label style="min-width:34px;">字級</label>
+                <input type="range" min="14" max="54" value="${sub.size}" id="subSizeRange">
+                <span>${sub.size}</span>
+              </div>
+              <div class="control-row" style="margin-bottom:2px;">
+                <label>字體顏色</label>
+                <input type="color" value="${sub.color}" id="subColorPick" style="width:32px; height:24px; border:none; background:none; cursor:pointer;">
+                ${SUB_COLOR_SWATCHES.map(hex => `<button type="button" class="swatch-dot ${sub.color.toLowerCase() === hex ? 'active' : ''}" data-subcol="${hex}" style="background:${hex};" title="${hex}"></button>`).join('')}
+              </div>
+            </div>
+
+            <div class="sub-style-card">
+              <div class="sub-sec-label"><span>3. 文字外框、陰影與背景底框</span></div>
+              <div class="control-row">
+                <button class="pill ${sub.strokeEnabled ? 'active' : ''}" id="toggleSubStrokeBtn">${sub.strokeEnabled ? '✅ 外框：開' : '⬜ 外框：關'}</button>
+                ${sub.strokeEnabled ? `
+                  <input type="color" value="${sub.stroke || '#000000'}" id="subStrokeColorPick" style="width:28px; height:24px; border:none; background:none; cursor:pointer;">
+                  <label style="min-width:34px;">粗細</label>
+                  <input type="range" min="1" max="8" step="0.5" value="${sub.strokeWidth ?? 3}" id="subStrokeWidthRange">
+                  <span>${sub.strokeWidth ?? 3}px</span>
+                ` : '<span style="color:var(--text-muted); font-size:11px;">點擊左側開啟文字描邊外框</span>'}
+              </div>
+
+              <div class="control-row">
+                <button class="pill ${sub.shadowEnabled ? 'active' : ''}" id="toggleSubShadowBtn">${sub.shadowEnabled ? '✅ 陰影：開' : '🌫️ 陰影：關'}</button>
+                ${sub.shadowEnabled ? `
+                  <input type="color" value="${sub.shadowColor || '#000000'}" id="subShadowColorPick" style="width:28px; height:24px; border:none; background:none; cursor:pointer;">
+                  <label style="min-width:34px;">大小</label>
+                  <input type="range" min="0" max="24" step="1" value="${sub.shadowBlur ?? 8}" id="subShadowBlurRange">
+                  <span>${sub.shadowBlur ?? 8}</span>
+                  <label style="min-width:34px;">偏移</label>
+                  <input type="range" min="0" max="12" step="1" value="${sub.shadowOffset ?? 3}" id="subShadowOffsetRange">
+                  <span>${sub.shadowOffset ?? 3}</span>
+                ` : '<span style="color:var(--text-muted); font-size:11px;">可切換為柔和投影、調整陰影大小</span>'}
+              </div>
+
+              <div class="control-row" style="margin-bottom:2px;">
+                <label>背景底框</label>
+                <button class="pill ${sub.bgMode === 'none' ? 'active' : ''}" data-subbg="none">無底框</button>
+                <button class="pill ${sub.bgMode === 'semi' ? 'active' : ''}" data-subbg="semi">半透明底</button>
+                <button class="pill ${sub.bgMode === 'solid' ? 'active' : ''}" data-subbg="solid">純色底</button>
+                ${sub.bgMode !== 'none' ? `<input type="color" value="${sub.bgColor || '#000000'}" id="subBgColorPick" style="width:28px; height:24px; border:none; background:none; cursor:pointer;">` : ''}
+              </div>
+            </div>
+          ` : ''}
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">4. 免費商用字體庫</div>
           <div class="pill-group">${cats.map(c => `<button class="pill ${state.fontFilter === c ? 'active' : ''}" data-cat="${c}">${c}</button>`).join('')}<button class="pill" onclick="document.getElementById('fontFileInput').click()">＋ 本機字體</button></div>
           <div class="font-grid">${filteredFonts.map(f => `<button class="font-card ${sub && sub.font === f.family ? 'active' : ''}" data-family="${f.family.replace(/"/g, '"')}"><span class="sample" style="font-family:${f.family};">${f.name}</span><span class="meta">${f.desc}</span></button>`).join('')}</div>
         `;
         document.getElementById('newSubBtn').onclick = addNewSubtitle;
         document.getElementById('importSrtBtn').onclick = () => document.getElementById('srtFileInput').click();
+        if (document.getElementById('applyAllSubStyleBtn')) {
+          document.getElementById('applyAllSubStyleBtn').onclick = () => applySubtitleStyleToAll(sub);
+        }
         if (document.getElementById('subToVoiceBtn')) document.getElementById('subToVoiceBtn').onclick = () => { state.activeTab = 'voice'; updateTabsUI(); renderDrawer(); };
         if (document.getElementById('delSubBtn')) document.getElementById('delSubBtn').onclick = () => { state.lastSelectedType = 'sub'; deleteCurrentSelected(); };
         if (sub) {
           document.getElementById('subTextInput').oninput = (e) => { sub.text = e.target.value; renderTimeline(); renderFrame(); scheduleAutoSaveDraft(); };
+
+          // 字幕動畫控制
+          container.querySelectorAll('[data-subanim]').forEach(btn => {
+            btn.onclick = () => {
+              pushUndo();
+              sub.anim = btn.dataset.subanim;
+              renderDrawer();
+              seekTo(sub.start);
+              if (sub.anim !== 'none') togglePlay(true);
+              scheduleAutoSaveDraft();
+            };
+          });
+          if (document.getElementById('subAnimDurRange')) {
+            document.getElementById('subAnimDurRange').oninput = (e) => {
+              sub.animDur = parseFloat(e.target.value);
+              renderDrawer();
+              renderFrame();
+              scheduleAutoSaveDraft();
+            };
+          }
+          if (document.getElementById('previewSubAnimBtn')) {
+            document.getElementById('previewSubAnimBtn').onclick = () => {
+              seekTo(sub.start);
+              togglePlay(true);
+            };
+          }
+
+          // 方向與字級、字色
           document.getElementById('orientHorizBtn').onclick = () => { pushUndo(); sub.orientation = 'horizontal'; renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
           document.getElementById('orientVertBtn').onclick = () => { pushUndo(); sub.orientation = 'vertical'; renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-          document.getElementById('subSizeRange').oninput = (e) => { sub.size = parseInt(e.target.value, 10); renderFrame(); scheduleAutoSaveDraft(); };
-          document.getElementById('subColorPick').oninput = (e) => { sub.color = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
+          document.getElementById('subSizeRange').oninput = (e) => { sub.size = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+          document.getElementById('subColorPick').oninput = (e) => { sub.color = e.target.value; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+          container.querySelectorAll('[data-subcol]').forEach(dot => {
+            dot.onclick = () => { pushUndo(); sub.color = dot.dataset.subcol; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+          });
+
+          // 外框控制
+          document.getElementById('toggleSubStrokeBtn').onclick = () => {
+            pushUndo();
+            sub.strokeEnabled = !sub.strokeEnabled;
+            renderDrawer(); renderFrame(); scheduleAutoSaveDraft();
+          };
+          if (document.getElementById('subStrokeColorPick')) {
+            document.getElementById('subStrokeColorPick').oninput = (e) => { sub.stroke = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
+            document.getElementById('subStrokeWidthRange').oninput = (e) => { sub.strokeWidth = parseFloat(e.target.value); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+          }
+
+          // 陰影控制
+          document.getElementById('toggleSubShadowBtn').onclick = () => {
+            pushUndo();
+            sub.shadowEnabled = !sub.shadowEnabled;
+            renderDrawer(); renderFrame(); scheduleAutoSaveDraft();
+          };
+          if (document.getElementById('subShadowColorPick')) {
+            document.getElementById('subShadowColorPick').oninput = (e) => { sub.shadowColor = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
+            document.getElementById('subShadowBlurRange').oninput = (e) => { sub.shadowBlur = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+            document.getElementById('subShadowOffsetRange').oninput = (e) => { sub.shadowOffset = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+          }
+
+          // 背景底框控制
+          container.querySelectorAll('[data-subbg]').forEach(btn => {
+            btn.onclick = () => {
+              pushUndo();
+              sub.bgMode = btn.dataset.subbg;
+              sub.bg = computeSubtitleBgCss(sub);
+              renderDrawer(); renderFrame(); scheduleAutoSaveDraft();
+            };
+          });
+          if (document.getElementById('subBgColorPick')) {
+            document.getElementById('subBgColorPick').oninput = (e) => {
+              sub.bgColor = e.target.value;
+              sub.bg = computeSubtitleBgCss(sub);
+              renderFrame(); scheduleAutoSaveDraft();
+            };
+          }
         }
         container.querySelectorAll('.pill[data-cat]').forEach(btn => { btn.onclick = () => { state.fontFilter = btn.dataset.cat; renderDrawer(); }; });
         container.querySelectorAll('.font-card').forEach(card => {
