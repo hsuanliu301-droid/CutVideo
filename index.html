@@ -234,7 +234,6 @@
         </button>
       </div>
 
-      <!-- 跨裝置開啟輕量工程檔時，引導選取原始素材 -->
       <div class="relink-box" id="relinkAssetsBox">
         <h4>🔗 請選取此工程檔使用的原始素材</h4>
         <p style="font-size:11px; color:#d1d5db; margin:0 0 6px;">偵測到此裝置尚未快取以下原始檔案，請一次框選匯入（系統會自動依檔名與時間軸分割點精準還原）：</p>
@@ -272,7 +271,7 @@
 
   <!-- Stage -->
   <div class="stage-wrap" id="stageWrap">
-    <div class="stage-hint" id="stageHint">9:16 / 16:9 / 1:1 比例預覽與匯出座標已 100% 同步對齊</div>
+    <div class="stage-hint" id="stageHint">支援 .srt 字幕匯入 · AI 配音自動對齊字幕長度</div>
     <div class="stage-top-right">
       <div class="stage-pill-box" title="切換畫布框線操作模式">
         <button class="stage-mode-btn active" id="modeTransformBtn">↔️ 拉伸/移動</button>
@@ -349,6 +348,7 @@
   <input type="file" id="audioFileInput" class="hidden-input" accept="audio/*" multiple />
   <input type="file" id="videoToAudioInput" class="hidden-input" accept="video/*" multiple />
   <input type="file" id="fontFileInput" class="hidden-input" accept=".ttf,.otf,.woff,.woff2" />
+  <input type="file" id="srtFileInput" class="hidden-input" accept=".srt,text/plain" />
   <input type="file" id="projectFileInput" class="hidden-input" accept=".cutproj,.cutpack,.json" />
   <input type="file" id="relinkAssetsInput" class="hidden-input" accept="video/*,image/*,audio/*" multiple />
 
@@ -471,7 +471,135 @@
       audioClips: []
     };
 
-    // ====== 隱藏視訊解碼池（修復播放時顯示窗畫面卡幀問題） ======
+    // ====== 標準 .srt 解析與智慧多行分段引擎 ======
+    function parseSrtTimeToSec(timeStr) {
+      const m = timeStr.trim().match(/^(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})$/);
+      if (!m) return null;
+      const hours = parseInt(m[1], 10);
+      const mins = parseInt(m[2], 10);
+      const secs = parseInt(m[3], 10);
+      const ms = parseInt(m[4].padEnd(3, '0'), 10);
+      return roundSec(hours * 3600 + mins * 60 + secs + ms / 1000);
+    }
+
+    function splitMultiLineSrtBlock(startSec, endSec, lines) {
+      const cleanLines = lines.map(l => l.trim()).filter(Boolean);
+      const totalDur = Math.max(0.5, roundSec(endSec - startSec));
+      if (cleanLines.length <= 1 || totalDur < 1.0) {
+        return [{
+          text: cleanLines.join(' ') || '字幕',
+          start: roundSec(startSec),
+          duration: totalDur
+        }];
+      }
+
+      // 依字數比例分配時間，並合併時長小於 0.5s 的過短片段以避免畫面閃爍突兀
+      const weights = cleanLines.map(l => Math.max(1, Array.from(l).length));
+      const sumW = weights.reduce((a, b) => a + b, 0);
+      const rawSegments = [];
+      let cursor = roundSec(startSec);
+
+      cleanLines.forEach((lineText, idx) => {
+        const isLast = idx === cleanLines.length - 1;
+        const segDur = isLast
+          ? roundSec(Math.max(0.5, startSec + totalDur - cursor))
+          : roundSec(totalDur * (weights[idx] / sumW));
+        rawSegments.push({ text: lineText, start: cursor, duration: segDur });
+        cursor = roundSec(cursor + segDur);
+      });
+
+      const merged = [];
+      for (const seg of rawSegments) {
+        if (seg.duration < 0.5 && merged.length > 0) {
+          const prev = merged[merged.length - 1];
+          prev.text = `${prev.text} ${seg.text}`;
+          prev.duration = roundSec(prev.duration + seg.duration);
+        } else {
+          merged.push({ ...seg });
+        }
+      }
+      if (merged.length >= 2 && merged[0].duration < 0.5) {
+        const second = merged[1];
+        second.text = `${merged[0].text} ${second.text}`;
+        second.start = merged[0].start;
+        second.duration = roundSec(second.duration + merged[0].duration);
+        merged.shift();
+      }
+      return merged;
+    }
+
+    function parseSrtContentToSubtitles(srtText) {
+      const normalized = srtText.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+      if (!normalized) return [];
+      const blocks = normalized.split(/\n{2,}/);
+      const generated = [];
+
+      blocks.forEach((block, bIdx) => {
+        const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+        if (lines.length < 2) return;
+
+        let timeLineIdx = -1;
+        for (let i = 0; i < Math.min(2, lines.length); i++) {
+          if (lines[i].includes('-->')) { timeLineIdx = i; break; }
+        }
+        if (timeLineIdx === -1) return;
+
+        const parts = lines[timeLineIdx].split('-->');
+        if (parts.length < 2) return;
+        const startSec = parseSrtTimeToSec(parts[0]);
+        const endSec = parseSrtTimeToSec(parts[1].split(/\s+/)[0]);
+        if (startSec === null || endSec === null || endSec <= startSec) return;
+
+        const textLines = lines.slice(timeLineIdx + 1);
+        const splitSubs = splitMultiLineSrtBlock(startSec, endSec, textLines);
+
+        splitSubs.forEach((item, sIdx) => {
+          generated.push({
+            id: `sub-srt-${Date.now()}-${bIdx}-${sIdx}`,
+            text: item.text,
+            orientation: 'horizontal',
+            start: item.start,
+            duration: item.duration,
+            x: 0.5,
+            y: 0.78,
+            size: 24,
+            font: "'Noto Sans TC', sans-serif",
+            color: '#ffffff',
+            stroke: '#000000',
+            bg: 'rgba(0,0,0,0.48)'
+          });
+        });
+      });
+
+      return generated;
+    }
+
+    document.getElementById('srtFileInput').onchange = async (e) => {
+      const file = e.target.files[0];
+      e.target.value = '';
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const parsedSubs = parseSrtContentToSubtitles(text);
+        if (parsedSubs.length === 0) {
+          return showToast('無法解析 .srt 時間軸，請確認檔案格式是否標準');
+        }
+        pushUndo();
+        state.subtitles = state.subtitles.concat(parsedSubs).sort((a, b) => a.start - b.start);
+        state.selectedSubId = parsedSubs[0].id;
+        state.lastSelectedType = 'sub';
+        updateDeleteButtonLabel();
+        renderTimeline();
+        renderDrawer();
+        renderFrame();
+        scheduleAutoSaveDraft();
+        showToast(`已匯入 ${parsedSubs.length} 段 .srt 字幕，可手動微調時間或按 AI 配音 ✅`);
+      } catch (_) {
+        showToast('讀取 .srt 檔案失敗');
+      }
+    };
+
+    // ====== 隱藏視訊解碼池 ======
     const videoDecodePool = document.getElementById('videoDecodePool');
 
     function mountVideoToDecodePool(vid) {
@@ -819,7 +947,7 @@
     const stageResizer = document.getElementById('stageResizer');
     const bottomDrawer = document.getElementById('bottomDrawer');
 
-    // ====== 雙軌 AI 配音引擎 ======
+    // ====== 雙軌 AI 配音引擎（依聲音唸完時間自動延長字幕條長度） ======
     let availableSystemVoices = [];
     const spokenSubIdsThisRun = new Set();
 
@@ -903,7 +1031,10 @@
             fromVideo: false, isAI: true, start: roundSec(startSec), trimStart: 0,
             duration: realDur, maxDuration: realDur, gain: 1.15, muted: false, mediaEl: audioEl
           });
-          if (linkedSub && linkedSub.duration < realDur) linkedSub.duration = realDur;
+          // 以語音唸完的時間為主，自動延長對應字幕條長度，方便後續對齊畫面
+          if (linkedSub && realDur > linkedSub.duration) {
+            linkedSub.duration = realDur;
+          }
           state.selectedAudioId = id;
           resolve(realDur);
         };
@@ -911,7 +1042,7 @@
     }
 
     async function generateVoiceFromSubtitles() {
-      if (state.subtitles.length === 0) return showToast('目前沒有字幕，請先新增字幕或使用下方「方案B」輸入講稿');
+      if (state.subtitles.length === 0) return showToast('目前沒有字幕，請先匯入 .srt、新增字幕或使用下方「方案B」輸入講稿');
       const vc = state.voiceConfig;
       pushUndo();
 
@@ -936,7 +1067,7 @@
         updateDeleteButtonLabel();
         renderTimeline(); renderDrawer(); renderFrame();
         scheduleAutoSaveDraft();
-        showToast(`已完成 ${state.subtitles.length} 段克隆配音並對齊字幕 ✅`);
+        showToast(`已完成 ${state.subtitles.length} 段配音並自動延長對應字幕條 ✅`);
       } catch (err) { showToast(err.message); }
     }
 
@@ -975,7 +1106,7 @@
           const blob = await fetchClonedVoiceBlob(line);
           const subObj = {
             id: 'sub-ai-' + Date.now() + i, text: line, orientation: 'horizontal',
-            start: cursorSec, duration: 2.0, x: 0.5, y: 0.78, size: 24,
+            start: cursorSec, duration: 1.5, x: 0.5, y: 0.78, size: 24,
             font: "'Noto Sans TC', sans-serif", color: '#ffffff', stroke: '#000000', bg: 'rgba(0,0,0,0.48)'
           };
           state.subtitles.push(subObj);
@@ -1748,7 +1879,6 @@
       document.getElementById('totTimeLabel').textContent = formatTime(getTotalDuration());
     }
 
-    // ====== 雙向即時磁吸零偏移裁切 ======
     let activeTrim = null;
 
     function formatClipLabel(clip, prefix = '') {
@@ -1858,7 +1988,6 @@
       handleEl.addEventListener('pointercancel', finishTrim);
     }
 
-    // ====== 長按片段拖曳 ======
     let longPressTimer = null, reorderState = null;
     function cancelLongPress() { if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } }
 
@@ -2128,7 +2257,7 @@
       }));
       const sTrack = document.createElement('div'); sTrack.className = 'track-row' + (isSubVis ? '' : ' track-hidden');
       if (state.subtitles.length === 0) {
-        const emptySub = document.createElement('div'); emptySub.className = 'empty-track-hint'; emptySub.textContent = '＋ 點此新增字幕（支援橫排 / 直式 / AI 配音）';
+        const emptySub = document.createElement('div'); emptySub.className = 'empty-track-hint'; emptySub.textContent = '＋ 點此新增字幕（支援 .srt 匯入 / 直橫 / AI 配音）';
         emptySub.onclick = () => { if (!timelineWasDragged) addNewSubtitle(); };
         sTrack.appendChild(emptySub);
       } else {
@@ -2239,7 +2368,6 @@
       }
     }
 
-    // ====== 畫布互動 ======
     let draggingCanvasItem = null;
     function getClipLocalTime(clip, isPip) {
       if (isPip) return Math.max(0, Math.min(clip.duration, state.currentTime - (clip.start || 0)));
@@ -2447,7 +2575,7 @@
       showToast('已從影片分離出獨立音軌（原影片已自動靜音）🎵');
     }
 
-    // ====== 底部抽屜工具面板 ======
+    // ====== 底部抽屜工具面板（含「📄 匯入 .srt」按鈕） ======
     function renderDrawer() {
       const container = document.getElementById('drawerContent');
       const selObj = getSelectedVisualClip();
@@ -2475,7 +2603,7 @@
             </div>
             <div class="pill-group">${SPEED_PRESETS.map(sp => `<button class="pill ${Math.abs(clip.speed - sp.val) < 0.01 ? 'active' : ''}" data-speed="${sp.val}">${sp.label}</button>`).join('')}</div>
             <div class="control-row"><label>無段變速</label><input type="range" min="0.25" max="4.0" step="0.05" value="${clip.speed}" id="clipSpeedRange"><span>${clip.speed.toFixed(2)}x</span></div>
-          ` : `<div style="text-align:center; padding:10px 0; color:var(--text-muted);">點右上角「匯出/工程檔」可保存跨裝置工程包或高畫質 MP4！</div>`}
+          ` : `<div style="text-align:center; padding:10px 0; color:var(--text-muted);">點「T 文字直橫 → 匯入 .srt」可自動轉字幕並微調後接續 AI 配音！</div>`}
         `;
         document.getElementById('importPipBtn').onclick = () => { window._targetPipTrackId = state.pipTracks[0]?.id; document.getElementById('pipFileInput').click(); };
         document.getElementById('addPipLayerBtn').onclick = () => {
@@ -2528,7 +2656,7 @@
               <button class="chip-btn" id="testCloneVoiceBtn">🔊 試聽克隆音</button>
             </div>
           `}
-          <div style="font-size:11px; color:#6ee7b7; font-weight:700; margin:6px 0 4px;">2. 生成配音方式（方案 A 字幕驅動 ＆ 方案 B 講稿批次生成）</div>
+          <div style="font-size:11px; color:#6ee7b7; font-weight:700; margin:6px 0 4px;">2. 生成配音方式（語音長於字幕時自動延長字幕條）</div>
           <div class="control-row"><button class="box-btn primary" style="flex:1;" id="genFromSubsBtn">🎯 方案A：依現有時間軸字幕生成配音 (${state.subtitles.length}段)</button></div>
           <div style="margin-top:4px;">
             <textarea id="voiceScriptTextarea" placeholder="方案B：在此貼上講稿（一行一句），點擊下方按鈕自動連續排好 AI 語音與對應時間的字幕...">${vc.scriptDraft || ''}</textarea>
@@ -2666,14 +2794,16 @@
         container.innerHTML = `
           <div class="control-row">
             <button class="chip-btn" style="background:var(--accent); border:none; color:#fff;" id="newSubBtn">＋ 新增字幕</button>
+            <button class="chip-btn" style="border-color:var(--cyan); color:var(--cyan);" id="importSrtBtn">📄 匯入 .srt</button>
             <input type="text" id="subTextInput" value="${sub ? sub.text : ''}" placeholder="${sub ? '輸入文字（直式可用 | 換行）' : '請先點左側＋新增字幕'}" ${sub ? '' : 'disabled'}>
             ${sub ? `<button class="chip-btn" style="border-color:var(--purple); color:#e9d5ff;" id="subToVoiceBtn">🎙️ AI配音</button><button class="chip-btn danger" id="delSubBtn">🗑️</button>` : ''}
           </div>
           ${sub ? `<div class="control-row"><label>排版方向</label><button class="pill ${sub.orientation !== 'vertical' ? 'active' : ''}" id="orientHorizBtn">➡️ 橫式排版</button><button class="pill ${sub.orientation === 'vertical' ? 'active' : ''}" id="orientVertBtn">⬇️ 直式書寫</button><input type="range" min="14" max="48" value="${sub.size}" id="subSizeRange" style="max-width:90px;"><input type="color" value="${sub.color}" id="subColorPick" style="width:28px; height:24px; border:none; background:none;"></div>` : ''}
           <div class="pill-group">${cats.map(c => `<button class="pill ${state.fontFilter === c ? 'active' : ''}" data-cat="${c}">${c}</button>`).join('')}<button class="pill" onclick="document.getElementById('fontFileInput').click()">＋ 本機字體</button></div>
-          <div class="font-grid">${filteredFonts.map(f => `<button class="font-card ${sub && sub.font === f.family ? 'active' : ''}" data-family="${f.family.replace(/"/g, '"')}"><span class="sample" style="font-family:${f.family};">${f.name}</span><span class="meta">${f.desc}</span></button>`).join('')}</div>
+          <div class="font-grid">${filteredFonts.map(f => `<button class="font-card ${sub && sub.font === f.family ? 'active' : ''}" data-family="${f.family.replace(/"/g, '&quot;')}"><span class="sample" style="font-family:${f.family};">${f.name}</span><span class="meta">${f.desc}</span></button>`).join('')}</div>
         `;
         document.getElementById('newSubBtn').onclick = addNewSubtitle;
+        document.getElementById('importSrtBtn').onclick = () => document.getElementById('srtFileInput').click();
         if (document.getElementById('subToVoiceBtn')) document.getElementById('subToVoiceBtn').onclick = () => { state.activeTab = 'voice'; updateTabsUI(); renderDrawer(); };
         if (document.getElementById('delSubBtn')) document.getElementById('delSubBtn').onclick = () => { state.lastSelectedType = 'sub'; deleteCurrentSelected(); };
         if (sub) {
@@ -2957,7 +3087,6 @@
       e.target.value = '';
     };
 
-    // ====== 播放迴圈 ======
     let lastTs = 0, exportSegmentStopTime = null, exportProgressHook = null;
 
     function checkAutoSpeakSubtitles() {
@@ -3039,7 +3168,6 @@
     }
     document.getElementById('playBtn').onclick = () => { exportSegmentStopTime = null; exportProgressHook = null; togglePlay(); };
 
-    // ====== 跨裝置專案工程檔系統（輕量 .cutproj ＆ 完整二進位封裝 .cutpack） ======
     const exportModalBackdrop = document.getElementById('exportModalBackdrop');
     const exportOptionsList = document.getElementById('exportOptionsList');
     const exportProgressBox = document.getElementById('exportProgressBox');
@@ -3194,7 +3322,6 @@
       showToast('已自動依照輕量工程檔還原所有分割與剪輯設定 🎉');
     };
 
-    // ====== 1080p 60fps / 4K 60fps 雙畫質匯出系統 ======
     function updateExportQualityUI() {
       const is4K = state.exportQuality === '4k';
       document.getElementById('qCard1080').classList.toggle('active', !is4K);
@@ -3272,9 +3399,10 @@
       exportProgressText.textContent = `正在渲染完整影片 (1 / ${totalTasks})...`;
       const usedExt = await recordTimeRangeHighQuality(0, getTotalDuration(), `CutVideo_完整影片_${qLabel}_${stamp}`, 0, totalTasks);
       for (let i = 0; i < segments.length; i++) {
-        exportProgressText.textContent = `正在分開存檔裁切片段 (${i + 2} / ${totalTasks})：${segments[i].label}`;
+        const seg = segments[i];
+        exportProgressText.textContent = `正在分開存檔裁切片段 (${i + 2} / ${totalTasks})：${seg.label}`;
         await new Promise(r => setTimeout(r, 350));
-        await recordTimeRangeHighQuality(segments[i].start, segments[i].end, `CutVideo_${segments[i].label}_${qLabel}_${stamp}`, i + 1, totalTasks);
+        await recordTimeRangeHighQuality(seg.start, seg.end, `CutVideo_${seg.label}_${qLabel}_${stamp}`, i + 1, totalTasks);
       }
 
       exportPercentBig.textContent = '100%'; exportProgressFill.style.width = '100%';
