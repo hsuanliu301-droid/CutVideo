@@ -71,6 +71,19 @@
       overflow: hidden;
     }
 
+    /* 隱藏離屏視訊解碼池：讓瀏覽器持續全速硬體解碼視訊影格 */
+    #videoDecodePool {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      width: 2px;
+      height: 2px;
+      opacity: 0.001;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: -1;
+    }
+
     /* Top Bar */
     .topbar {
       height: 44px;
@@ -1192,6 +1205,9 @@
 </head>
 <body>
 
+  <!-- 隱藏離屏視訊解碼池，確保所有影片播放時持續硬體解碼不卡幀 -->
+  <div id="videoDecodePool" aria-hidden="true"></div>
+
   <div id="toast">提示訊息</div>
 
   <!-- Export Options Modal -->
@@ -1481,6 +1497,27 @@
       subtitles: [],
       audioClips: []
     };
+
+    // ====== 隱藏視訊解碼池管理（避免瀏覽器對離屏 video 停止解碼） ======
+    const videoDecodePool = document.getElementById('videoDecodePool');
+
+    function mountVideoToDecodePool(vid) {
+      if (!vid || vid.tagName !== 'VIDEO') return;
+      if (!vid.parentNode) {
+        vid.style.width = '2px';
+        vid.style.height = '2px';
+        vid.style.objectFit = 'contain';
+        videoDecodePool.appendChild(vid);
+      }
+      if ('requestVideoFrameCallback' in vid && !vid._rvfcBound) {
+        vid._rvfcBound = true;
+        const onFrame = () => {
+          if (state.isPlaying) renderFrame();
+          if (vid.isConnected) vid.requestVideoFrameCallback(onFrame);
+        };
+        vid.requestVideoFrameCallback(onFrame);
+      }
+    }
 
     // ====== IndexedDB 大容量草稿緩存系統 ======
     const DB_NAME = 'CutVideoDraftDB';
@@ -2146,6 +2183,7 @@
       vid.playsInline = true;
       vid.setAttribute('playsinline', '');
       vid.setAttribute('webkit-playsinline', '');
+      mountVideoToDecodePool(vid);
       ensureAudioNode(vid);
 
       vid.onloadeddata = () => {
@@ -2278,6 +2316,7 @@
 
     function requestVideoSeek(vid, targetTime) {
       if (!vid || vid.tagName !== 'VIDEO') return;
+      mountVideoToDecodePool(vid);
       const dur = (vid.duration && isFinite(vid.duration)) ? vid.duration : 999;
       const clamped = Math.max(0.01, Math.min(dur - 0.01, targetTime));
 
@@ -2502,7 +2541,6 @@
       return { ...base };
     }
 
-    // 所有預覽與匯出皆等比乘上 sf（renderScaleFactor），確保 9:16、16:9、1:1 三種尺寸 100% 不跑位不裁錯
     function computeClipStageRects(clip, localT, W, H, isPipLayer) {
       const sf = state.renderScaleFactor || 1;
       const el = clip.mediaEl;
@@ -3984,13 +4022,20 @@
       const isMainVis = state.trackVisibility.main !== false;
       state.clips.forEach(c => {
         if (c.mediaEl && c.mediaEl.tagName === 'VIDEO') {
+          mountVideoToDecodePool(c.mediaEl);
           c.mediaEl.playbackRate = c.speed || 1.0;
           applyMediaAudioGain(c.mediaEl, c.muted || !isMainVis, c.audioGain ?? 1.0);
           if (state.currentTime >= acc && state.currentTime < acc + c.duration) {
             const offset = c.trimStart || 0;
             const targetT = Math.max(0.01, offset + (state.currentTime - acc) * c.speed);
-            if (immediate) requestVideoSeek(c.mediaEl, targetT);
-            else if (Math.abs(c.mediaEl.currentTime - targetT) > 0.18) c.mediaEl.currentTime = targetT;
+            if (immediate) {
+              requestVideoSeek(c.mediaEl, targetT);
+            } else if (Math.abs(c.mediaEl.currentTime - targetT) > 0.12) {
+              c.mediaEl.currentTime = targetT;
+            }
+            if (state.isPlaying && c.mediaEl.paused && !c.mediaEl.ended) {
+              c.mediaEl.play().catch(() => {});
+            }
           } else {
             if (!c.mediaEl.paused) c.mediaEl.pause();
           }
@@ -4002,14 +4047,21 @@
         const isPipVis = tr.visible !== false;
         tr.clips.forEach(pClip => {
           if (pClip.mediaEl && pClip.mediaEl.tagName === 'VIDEO') {
+            mountVideoToDecodePool(pClip.mediaEl);
             pClip.mediaEl.playbackRate = pClip.speed || 1.0;
             applyMediaAudioGain(pClip.mediaEl, pClip.muted || !isPipVis, pClip.audioGain ?? 1.0);
             const pStart = pClip.start || 0;
             if (state.currentTime >= pStart && state.currentTime < pStart + pClip.duration) {
               const offset = pClip.trimStart || 0;
               const targetT = Math.max(0.01, offset + (state.currentTime - pStart) * pClip.speed);
-              if (immediate) requestVideoSeek(pClip.mediaEl, targetT);
-              else if (Math.abs(pClip.mediaEl.currentTime - targetT) > 0.18) pClip.mediaEl.currentTime = targetT;
+              if (immediate) {
+                requestVideoSeek(pClip.mediaEl, targetT);
+              } else if (Math.abs(pClip.mediaEl.currentTime - targetT) > 0.12) {
+                pClip.mediaEl.currentTime = targetT;
+              }
+              if (state.isPlaying && pClip.mediaEl.paused && !pClip.mediaEl.ended) {
+                pClip.mediaEl.play().catch(() => {});
+              }
             } else {
               if (!pClip.mediaEl.paused) pClip.mediaEl.pause();
             }
@@ -4020,12 +4072,13 @@
       const isAudVis = state.trackVisibility.audio !== false;
       state.audioClips.forEach(aClip => {
         if (!aClip.mediaEl) return;
+        if (aClip.mediaEl.tagName === 'VIDEO') mountVideoToDecodePool(aClip.mediaEl);
         applyMediaAudioGain(aClip.mediaEl, aClip.muted || !isAudVis, aClip.gain ?? 1.0);
         const aStart = aClip.start || 0;
         if (state.currentTime >= aStart && state.currentTime < aStart + aClip.duration) {
           const offset = aClip.trimStart || 0;
           const targetT = Math.max(0.01, offset + (state.currentTime - aStart));
-          if (Math.abs(aClip.mediaEl.currentTime - targetT) > 0.18) {
+          if (Math.abs(aClip.mediaEl.currentTime - targetT) > 0.15) {
             aClip.mediaEl.currentTime = Math.min(aClip.mediaEl.duration || 999, targetT);
           }
           if (state.isPlaying && aClip.mediaEl.paused) {
@@ -4038,10 +4091,12 @@
 
       if (state.background.mode === 'custom' && state.background.mediaEl?.tagName === 'VIDEO') {
         const bgVid = state.background.mediaEl;
+        mountVideoToDecodePool(bgVid);
         bgVid.muted = true;
         const dur = bgVid.duration || 10;
         const targetT = state.currentTime % dur;
         if (immediate) requestVideoSeek(bgVid, targetT);
+        if (state.isPlaying && bgVid.paused) bgVid.play().catch(() => {});
       }
     }
 
@@ -5148,7 +5203,7 @@
           </div>
           <div class="font-grid">
             ${filteredFonts.map(f => `
-              <button class="font-card ${sub && sub.font === f.family ? 'active' : ''}" data-family="${f.family.replace(/"/g, '&quot;')}">
+              <button class="font-card ${sub && sub.font === f.family ? 'active' : ''}" data-family="${f.family.replace(/"/g, '"')}">
                 <span class="sample" style="font-family:${f.family};">${f.name}</span>
                 <span class="meta">${f.desc}</span>
               </button>
@@ -5623,6 +5678,7 @@
         vid.playsInline = true;
         vid.setAttribute('playsinline', '');
         vid.setAttribute('webkit-playsinline', '');
+        mountVideoToDecodePool(vid);
         ensureAudioNode(vid);
 
         vid.onloadeddata = () => {
@@ -5887,21 +5943,30 @@
         syncVideoElements(true);
         checkAutoSpeakSubtitles();
 
+        let acc = 0;
         const isMainVis = state.trackVisibility.main !== false;
         state.clips.forEach(c => {
           if (c.mediaEl?.tagName === 'VIDEO') {
+            mountVideoToDecodePool(c.mediaEl);
             c.mediaEl.playbackRate = c.speed || 1.0;
             applyMediaAudioGain(c.mediaEl, c.muted || !isMainVis, c.audioGain ?? 1.0);
-            c.mediaEl.play().catch(() => {});
+            if (state.currentTime >= acc && state.currentTime < acc + c.duration) {
+              c.mediaEl.play().catch(() => {});
+            }
           }
+          acc += c.duration;
         });
         state.pipTracks.forEach(tr => {
           const isPipVis = tr.visible !== false;
           tr.clips.forEach(p => {
             if (p.mediaEl?.tagName === 'VIDEO') {
+              mountVideoToDecodePool(p.mediaEl);
               p.mediaEl.playbackRate = p.speed || 1.0;
               applyMediaAudioGain(p.mediaEl, p.muted || !isPipVis, p.audioGain ?? 1.0);
-              p.mediaEl.play().catch(() => {});
+              const pStart = p.start || 0;
+              if (state.currentTime >= pStart && state.currentTime < pStart + p.duration) {
+                p.mediaEl.play().catch(() => {});
+              }
             }
           });
         });
@@ -5917,6 +5982,7 @@
           }
         });
         if (state.background.mode === 'custom' && state.background.mediaEl?.tagName === 'VIDEO') {
+          mountVideoToDecodePool(state.background.mediaEl);
           state.background.mediaEl.muted = true;
           state.background.mediaEl.play().catch(() => {});
         }
