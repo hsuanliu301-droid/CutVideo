@@ -81,6 +81,7 @@
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
+      gap: 6px;
     }
 
     .brand {
@@ -89,7 +90,7 @@
       letter-spacing: 0.5px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .brand span {
@@ -98,18 +99,15 @@
       -webkit-text-fill-color: transparent;
     }
 
-    .shortcut-badge {
-      display: none;
+    .draft-badge {
       font-size: 10px;
-      color: var(--text-muted);
-      background: var(--bg-card);
-      padding: 3px 8px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-    }
-
-    @media (min-width: 820px) {
-      .shortcut-badge { display: inline-block; }
+      color: var(--cyan);
+      background: rgba(44, 230, 195, 0.12);
+      border: 1px solid rgba(44, 230, 195, 0.35);
+      padding: 2px 7px;
+      border-radius: 99px;
+      cursor: pointer;
+      white-space: nowrap;
     }
 
     .ratio-group {
@@ -145,6 +143,7 @@
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
+      white-space: nowrap;
     }
 
     /* Export Modal Dialog */
@@ -169,7 +168,7 @@
       border: 1px solid var(--border);
       border-radius: 14px;
       width: 100%;
-      max-width: 360px;
+      max-width: 380px;
       padding: 16px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
     }
@@ -226,20 +225,38 @@
       background: #101218;
       border: 1px solid var(--cyan);
       border-radius: 10px;
-      padding: 12px;
+      padding: 14px;
       text-align: center;
       margin-top: 8px;
+    }
+
+    .export-percent-big {
+      font-size: 26px;
+      font-weight: 900;
+      color: #fff;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 4px;
+      background: linear-gradient(90deg, var(--cyan), #fff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .export-progress-box .prog-title {
       font-size: 12px;
       font-weight: 700;
       color: var(--cyan);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+    }
+
+    .export-progress-box .prog-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 8px;
     }
 
     .export-progress-bar {
-      height: 6px;
+      height: 8px;
       background: #232734;
       border-radius: 99px;
       overflow: hidden;
@@ -249,7 +266,7 @@
       height: 100%;
       width: 0%;
       background: linear-gradient(90deg, var(--cyan), var(--accent));
-      transition: width 0.2s;
+      transition: width 0.08s linear;
     }
 
     /* Stage / Preview Area */
@@ -375,7 +392,7 @@
       background: var(--accent);
     }
 
-    /* Transport & Timeline Zoom + Magnetic Snap Bar */
+    /* Transport & Undo/Redo + Timeline Zoom Bar */
     .transport {
       height: 40px;
       background: var(--bg-panel);
@@ -445,6 +462,17 @@
 
     .chip-btn:active {
       transform: scale(0.96);
+    }
+
+    .chip-btn:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .chip-btn.history-active {
+      border-color: var(--blue);
+      color: #bae6fd;
     }
 
     .chip-btn.snap-on {
@@ -517,7 +545,6 @@
       cursor: grabbing;
     }
 
-    /* 長按排序時的全局縮略小方塊模式 */
     .timeline-area.compact-reorder-mode {
       background: #161822;
       overflow-x: hidden;
@@ -528,6 +555,7 @@
     }
 
     .timeline-area.compact-reorder-mode .timeline-inner {
+      width: 100% !important;
       padding: 24px 16px 18px 16px;
       display: flex;
       flex-direction: column;
@@ -553,7 +581,6 @@
     .timeline-inner {
       position: relative;
       min-height: 100%;
-      min-width: 100%;
       padding: 24px 50vw 18px 50vw;
     }
 
@@ -1135,17 +1162,17 @@
   <div class="modal-backdrop" id="exportModalBackdrop">
     <div class="export-modal">
       <h3>
-        <span>📤 選擇匯出方式</span>
+        <span>📤 選擇匯出方式（1080p 60fps）</span>
         <button class="chip-btn" id="closeExportModalBtn">✕</button>
       </h3>
       <p class="sub">
-        所有輸出皆會自動保留調色、裁剪、關鍵幀與背景音樂＋影片原聲混音。
+        自動無損渲染至 <strong>1080p 60fps MP4</strong>，並保留調色、裁剪、關鍵幀與雙軌混音。
       </p>
 
       <div id="exportOptionsList">
         <button class="export-option-card" id="optExportFullOnly">
-          <span class="opt-title">🎬 1. 僅匯出完整影片</span>
-          <span class="opt-desc">輸出 1 支從頭到尾合成完畢的完整影片檔</span>
+          <span class="opt-title">🎬 1. 僅匯出完整影片（1080p 60fps）</span>
+          <span class="opt-desc">輸出 1 支從頭到尾合成完畢的高畫質完整影片檔</span>
         </button>
 
         <button class="export-option-card" id="optExportFullAndSplits">
@@ -1155,7 +1182,9 @@
       </div>
 
       <div class="export-progress-box" id="exportProgressBox">
+        <div class="export-percent-big" id="exportPercentBig">0%</div>
         <div class="prog-title" id="exportProgressText">正在準備渲染...</div>
+        <div class="prog-sub" id="exportProgressSub">00:00.0 / 00:00.0</div>
         <div class="export-progress-bar">
           <div class="export-progress-fill" id="exportProgressFill"></div>
         </div>
@@ -1167,7 +1196,7 @@
   <div class="topbar">
     <div class="brand">
       🎬 <span>CutVideo</span>
-      <span class="shortcut-badge">長按主軌片段自動縮成全局小方塊改順序 · 上拖轉畫中畫 · 零偏移分割</span>
+      <span class="draft-badge" id="draftStatusBadge" title="專案與素材自動快取於瀏覽器本機，重整或關閉不遺失；點擊可清除草稿">💾 自動草稿就緒</span>
     </div>
     <div class="ratio-group">
       <button class="ratio-btn active" data-ratio="9:16">9:16</button>
@@ -1179,7 +1208,7 @@
 
   <!-- Stage -->
   <div class="stage-wrap" id="stageWrap">
-    <div class="stage-hint" id="stageHint">長按片段自動縮成全局方塊改順序 · 上拖轉畫中畫 · 拖曳點點調整大小</div>
+    <div class="stage-hint" id="stageHint">支援自動草稿快取（重整不遺失）· 匯出 1080p 60fps MP4</div>
     <div class="stage-top-right">
       <div class="stage-pill-box" title="切換畫布框線操作模式">
         <button class="stage-mode-btn active" id="modeTransformBtn">↔️ 拉伸/移動</button>
@@ -1197,14 +1226,15 @@
   <!-- 手動上下拖曳調整顯示窗大小的分隔手把 -->
   <div class="stage-resizer" id="stageResizer" title="按住上下拖曳調整顯示窗高度"></div>
 
-  <!-- Transport & Timeline Zoom + Magnetic Snap Control -->
+  <!-- Transport & Undo/Redo + Timeline Zoom + Magnetic Snap Control -->
   <div class="transport">
     <div class="time-readout"><strong id="curTimeLabel">00:00.0</strong>/<span id="totTimeLabel">00:01.0</span></div>
     <button class="play-btn" id="playBtn" title="播放/暫停 (Space)">▶</button>
     <div class="quick-actions">
       <button class="chip-btn" id="splitBtn" title="分割片段/音軌 (S)">✂️ 分割</button>
       <button class="chip-btn danger" id="deleteSelectedBtn" title="刪除選取項目 (Delete)">🗑️ 刪除</button>
-      <button class="chip-btn" id="undoBtn" title="復原上一步 (Ctrl+Z)">↩️ 復原</button>
+      <button class="chip-btn" id="undoBtn" title="撤回上一步 (Ctrl+Z)" disabled>↩️ 上一步</button>
+      <button class="chip-btn" id="redoBtn" title="重做下一步 (Ctrl+Y / Cmd+Shift+Z)" disabled>↪️ 下一步</button>
       <button class="chip-btn snap-on" id="toggleSnapBtn" title="開啟或關閉軌道邊緣自動磁吸對齊">🧲 磁吸:開</button>
       <button class="chip-btn" id="clearAllBtn" title="清空全部軌道">🧹 清空</button>
     </div>
@@ -1331,6 +1361,8 @@
     }
 
     let undoStack = [];
+    let redoStack = [];
+
     const savedVoiceCfg = (() => {
       try { return JSON.parse(localStorage.getItem('cutvideo_voice_cfg') || '{}'); } catch (_) { return {}; }
     })();
@@ -1374,7 +1406,8 @@
         color2: '#2d1b4e',
         mediaEl: null,
         mediaType: null,
-        mediaName: ''
+        mediaName: '',
+        mediaFileId: null
       },
       effects: {
         particleType: 'none',
@@ -1399,6 +1432,242 @@
       subtitles: [],
       audioClips: []
     };
+
+    // ====== IndexedDB 大容量草稿緩存系統（重整或關閉瀏覽器不遺失專案與影片素材） ======
+    const DB_NAME = 'CutVideoDraftDB';
+    const DB_VERSION = 1;
+    const STORE_FILES = 'mediaFiles';
+    const STORE_PROJECT = 'projectState';
+    const memoryBlobRegistry = new Map(); // fileId -> Blob/File
+
+    function openDraftDB() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) return reject(new Error('No IndexedDB'));
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_FILES)) db.createObjectStore(STORE_FILES);
+          if (!db.objectStoreNames.contains(STORE_PROJECT)) db.createObjectStore(STORE_PROJECT);
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveMediaBlobToDB(fileId, blob) {
+      if (!fileId || !blob) return;
+      memoryBlobRegistry.set(fileId, blob);
+      try {
+        const db = await openDraftDB();
+        const tx = db.transaction(STORE_FILES, 'readwrite');
+        tx.objectStore(STORE_FILES).put(blob, fileId);
+      } catch (_) {}
+    }
+
+    async function getMediaBlobFromDB(fileId) {
+      if (!fileId) return null;
+      if (memoryBlobRegistry.has(fileId)) return memoryBlobRegistry.get(fileId);
+      try {
+        const db = await openDraftDB();
+        return await new Promise((resolve) => {
+          const tx = db.transaction(STORE_FILES, 'readonly');
+          const req = tx.objectStore(STORE_FILES).get(fileId);
+          req.onsuccess = () => {
+            if (req.result) memoryBlobRegistry.set(fileId, req.result);
+            resolve(req.result || null);
+          };
+          req.onerror = () => resolve(null);
+        });
+      } catch (_) {
+        return null;
+      }
+    }
+
+    let draftSaveTimer = null;
+    function scheduleAutoSaveDraft() {
+      const badge = document.getElementById('draftStatusBadge');
+      if (badge) badge.textContent = '💾 儲存草稿中...';
+      clearTimeout(draftSaveTimer);
+      draftSaveTimer = setTimeout(async () => {
+        try {
+          const db = await openDraftDB();
+          const serializeClip = (c) => {
+            const { mediaEl, ...rest } = cloneClipData(c);
+            return rest;
+          };
+          const payload = {
+            savedAt: Date.now(),
+            ratio: state.ratio,
+            pxPerSec: state.pxPerSec,
+            snapEnabled: state.snapEnabled,
+            snapThresholdPx: state.snapThresholdPx,
+            trackVisibility: { ...state.trackVisibility },
+            background: {
+              mode: state.background.mode,
+              color1: state.background.color1,
+              color2: state.background.color2,
+              mediaType: state.background.mediaType,
+              mediaName: state.background.mediaName,
+              mediaFileId: state.background.mediaFileId || null
+            },
+            effects: JSON.parse(JSON.stringify(state.effects)),
+            pipTracks: state.pipTracks.map(tr => ({
+              id: tr.id,
+              name: tr.name,
+              visible: tr.visible !== false,
+              clips: tr.clips.map(serializeClip)
+            })),
+            clips: state.clips.map(serializeClip),
+            subtitles: JSON.parse(JSON.stringify(state.subtitles)),
+            audioClips: state.audioClips.map(a => {
+              const { mediaEl, ...rest } = a;
+              return rest;
+            })
+          };
+
+          const tx = db.transaction(STORE_PROJECT, 'readwrite');
+          tx.objectStore(STORE_PROJECT).put(payload, 'latest_draft');
+          tx.oncomplete = () => {
+            const tStr = new Date().toTimeString().slice(0, 5);
+            if (badge) badge.textContent = `💾 草稿已存 ${tStr}`;
+          };
+        } catch (_) {
+          if (badge) badge.textContent = '💾 本機草稿';
+        }
+      }, 600);
+    }
+
+    async function clearDraftCache() {
+      try {
+        const db = await openDraftDB();
+        const tx = db.transaction([STORE_PROJECT, STORE_FILES], 'readwrite');
+        tx.objectStore(STORE_PROJECT).clear();
+        tx.objectStore(STORE_FILES).clear();
+        memoryBlobRegistry.clear();
+        const badge = document.getElementById('draftStatusBadge');
+        if (badge) badge.textContent = '💾 草稿已清空';
+        showToast('已清除本機暫存草稿 🗑️');
+      } catch (_) {}
+    }
+
+    document.getElementById('draftStatusBadge').onclick = () => {
+      if (confirm('要清除瀏覽器中自動保存的草稿快取嗎？（清除後重新整理將恢復為空白專案）')) {
+        clearDraftCache();
+      }
+    };
+
+    function recreateElementFromBlob(blob, mediaType, initialSeek = 0.01, isAudioOnly = false) {
+      return new Promise((resolve) => {
+        if (!blob) return resolve(null);
+        const url = URL.createObjectURL(blob);
+        if (mediaType === 'image') {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = url;
+        } else if (isAudioOnly && blob.type.startsWith('audio/')) {
+          const aud = new Audio(url);
+          aud.preload = 'auto';
+          ensureAudioNode(aud);
+          aud.onloadedmetadata = () => {
+            aud.currentTime = Math.max(0.01, initialSeek);
+            resolve(aud);
+          };
+          aud.onerror = () => resolve(null);
+        } else {
+          const vid = createClonedVideoElement(url, initialSeek);
+          vid.addEventListener('loadeddata', () => resolve(vid), { once: true });
+          vid.addEventListener('error', () => resolve(null), { once: true });
+        }
+      });
+    }
+
+    async function restoreDraftFromDB() {
+      try {
+        const db = await openDraftDB();
+        const saved = await new Promise((resolve) => {
+          const tx = db.transaction(STORE_PROJECT, 'readonly');
+          const req = tx.objectStore(STORE_PROJECT).get('latest_draft');
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => resolve(null);
+        });
+        if (!saved) return;
+
+        const hasItems = (saved.clips?.length > 0) ||
+          (saved.pipTracks?.some(t => t.clips?.length > 0)) ||
+          (saved.subtitles?.length > 0) ||
+          (saved.audioClips?.length > 0);
+        if (!hasItems) return;
+
+        const badge = document.getElementById('draftStatusBadge');
+        if (badge) badge.textContent = '⏳ 恢復草稿中...';
+
+        // 還原主軌片段
+        const restoredClips = [];
+        for (const c of (saved.clips || [])) {
+          const blob = await getMediaBlobFromDB(c.fileId);
+          const el = await recreateElementFromBlob(blob, c.mediaType, c.trimStart || 0.01, false);
+          if (el) restoredClips.push({ ...c, mediaEl: el });
+        }
+
+        // 還原畫中畫軌道
+        const restoredPipTracks = [];
+        for (const tr of (saved.pipTracks || [])) {
+          const pClips = [];
+          for (const p of (tr.clips || [])) {
+            const blob = await getMediaBlobFromDB(p.fileId);
+            const el = await recreateElementFromBlob(blob, p.mediaType, p.trimStart || 0.01, false);
+            if (el) pClips.push({ ...p, mediaEl: el });
+          }
+          restoredPipTracks.push({ ...tr, clips: pClips });
+        }
+
+        // 還原獨立音軌
+        const restoredAudio = [];
+        for (const a of (saved.audioClips || [])) {
+          const blob = await getMediaBlobFromDB(a.fileId);
+          const el = await recreateElementFromBlob(blob, a.fromVideo ? 'video' : 'audio', a.trimStart || 0.01, true);
+          if (el) restoredAudio.push({ ...a, mediaEl: el });
+        }
+
+        // 還原自訂底板
+        if (saved.background) {
+          state.background = { ...saved.background, mediaEl: null };
+          if (saved.background.mode === 'custom' && saved.background.mediaFileId) {
+            const bgBlob = await getMediaBlobFromDB(saved.background.mediaFileId);
+            const bgEl = await recreateElementFromBlob(bgBlob, saved.background.mediaType, 0.01, false);
+            if (bgEl) {
+              if (saved.background.mediaType === 'video') { bgEl.loop = true; bgEl.muted = true; }
+              state.background.mediaEl = bgEl;
+            }
+          }
+        }
+
+        state.clips = restoredClips;
+        state.pipTracks = restoredPipTracks.length > 0 ? restoredPipTracks : [{ id: 'pip-track-1', name: '畫中畫 L1 (頂層)', visible: true, clips: [] }];
+        state.subtitles = saved.subtitles || [];
+        state.audioClips = restoredAudio;
+        state.trackVisibility = saved.trackVisibility || { main: true, audio: true, sub: true };
+        if (saved.effects) state.effects = saved.effects;
+        if (saved.ratio) {
+          state.ratio = saved.ratio;
+          document.querySelectorAll('.ratio-btn').forEach(b => b.classList.toggle('active', b.dataset.ratio === state.ratio));
+          applyCanvasResolutionForRatio(state.ratio, false);
+        }
+        state.selectedClipId = state.clips[0]?.id || state.pipTracks[0]?.clips[0]?.id || null;
+        state.lastSelectedType = state.clips[0] ? 'clip' : (state.pipTracks[0]?.clips[0] ? 'pip' : 'clip');
+
+        updateDeleteButtonLabel();
+        renderTimeline();
+        renderDrawer();
+        syncVideoElements(true);
+        renderFrame();
+        if (badge) badge.textContent = '💾 已恢復上次草稿';
+        showToast('已自動恢復上次未完成的草稿專案 ✨');
+      } catch (err) {
+        console.warn('Draft restore skipped:', err);
+      }
+    }
 
     function saveVoiceConfig() {
       try {
@@ -1565,6 +1834,9 @@
 
     function attachAudioBlobToTimeline(blob, labelName, startSec, linkedSub = null) {
       return new Promise((resolve) => {
+        const fileId = 'file-ai-' + Date.now() + Math.random();
+        saveMediaBlobToDB(fileId, blob);
+
         const url = URL.createObjectURL(blob);
         const audioEl = new Audio(url);
         audioEl.preload = 'auto';
@@ -1575,6 +1847,7 @@
           const id = 'aud-ai-' + Date.now() + Math.random();
           state.audioClips.push({
             id,
+            fileId,
             name: labelName.slice(0, 14),
             fromVideo: false,
             isAI: true,
@@ -1622,6 +1895,7 @@
         state.lastSelectedType = 'audio';
         updateDeleteButtonLabel();
         renderTimeline(); renderDrawer(); renderFrame();
+        scheduleAutoSaveDraft();
         showToast(`已完成 ${state.subtitles.length} 段克隆配音並對齊字幕 ✅`);
       } catch (err) {
         showToast(err.message);
@@ -1660,6 +1934,7 @@
         vc.autoSyncPlayback = true;
         saveVoiceConfig();
         renderTimeline(); renderDrawer(); renderFrame();
+        scheduleAutoSaveDraft();
         showToast(`已生成 ${lines.length} 段同步字幕，按播放鍵自動朗讀 🎙️`);
         return;
       }
@@ -1688,6 +1963,7 @@
           cursorSec = roundSec(cursorSec + actualDur + 0.15);
         }
         renderTimeline(); renderDrawer(); renderFrame();
+        scheduleAutoSaveDraft();
         showToast(`已批次生成 ${lines.length} 段克隆語音與同步字幕 ✅`);
       } catch (err) {
         showToast(err.message);
@@ -1921,6 +2197,7 @@
 
     function createDefaultClipProps(overrides = {}) {
       return {
+        fileId: null,
         trimStart: 0,
         start: 0,
         duration: 5,
@@ -1989,6 +2266,7 @@
       renderDrawer();
       syncVideoElements(true);
       renderFrame();
+      scheduleAutoSaveDraft();
     }
 
     function cloneClipData(c) {
@@ -2005,8 +2283,8 @@
       };
     }
 
-    function pushUndo() {
-      const snapshot = {
+    function captureStateSnapshot() {
+      return {
         clips: state.clips.map(cloneClipData),
         pipTracks: state.pipTracks.map(tr => ({
           ...tr,
@@ -2016,36 +2294,92 @@
         subtitles: JSON.parse(JSON.stringify(state.subtitles)),
         audioClips: state.audioClips.map(a => ({ ...a })),
         trackVisibility: { ...state.trackVisibility },
+        background: { ...state.background },
+        effects: JSON.parse(JSON.stringify(state.effects)),
         selectedClipId: state.selectedClipId,
         selectedSubId: state.selectedSubId,
         selectedAudioId: state.selectedAudioId,
-        lastSelectedType: state.lastSelectedType
+        lastSelectedType: state.lastSelectedType,
+        currentTime: state.currentTime
       };
-      undoStack.push(snapshot);
-      if (undoStack.length > 25) undoStack.shift();
+    }
+
+    function applyStateSnapshot(snap) {
+      state.clips = snap.clips.map(cloneClipData);
+      state.pipTracks = snap.pipTracks.map(tr => ({
+        ...tr,
+        visible: tr.visible !== false,
+        clips: tr.clips.map(cloneClipData)
+      }));
+      state.subtitles = JSON.parse(JSON.stringify(snap.subtitles));
+      state.audioClips = snap.audioClips.map(a => ({ ...a }));
+      state.trackVisibility = snap.trackVisibility ? { ...snap.trackVisibility } : { main: true, audio: true, sub: true };
+      if (snap.background) state.background = { ...snap.background };
+      if (snap.effects) state.effects = JSON.parse(JSON.stringify(snap.effects));
+      state.selectedClipId = snap.selectedClipId;
+      state.selectedSubId = snap.selectedSubId;
+      state.selectedAudioId = snap.selectedAudioId;
+      state.lastSelectedType = snap.lastSelectedType;
+      if (typeof snap.currentTime === 'number') {
+        state.currentTime = snap.currentTime;
+        timelineScroll.scrollLeft = Math.round(state.currentTime * state.pxPerSec);
+      }
+    }
+
+    function updateHistoryButtonsUI() {
+      const uBtn = document.getElementById('undoBtn');
+      const rBtn = document.getElementById('redoBtn');
+      if (uBtn) {
+        uBtn.disabled = undoStack.length === 0;
+        uBtn.classList.toggle('history-active', undoStack.length > 0);
+      }
+      if (rBtn) {
+        rBtn.disabled = redoStack.length === 0;
+        rBtn.classList.toggle('history-active', redoStack.length > 0);
+      }
+    }
+
+    function pushUndo() {
+      undoStack.push(captureStateSnapshot());
+      if (undoStack.length > 35) undoStack.shift();
+      redoStack = [];
+      updateHistoryButtonsUI();
     }
 
     function undoLastAction() {
-      if (undoStack.length === 0) return showToast('目前沒有可復原的操作');
+      if (undoStack.length === 0) return showToast('目前沒有可撤回的上一步');
+      if (state.isPlaying) togglePlay(false);
+      redoStack.push(captureStateSnapshot());
       const prev = undoStack.pop();
-      state.clips = prev.clips;
-      state.pipTracks = prev.pipTracks;
-      state.subtitles = prev.subtitles;
-      state.audioClips = prev.audioClips;
-      state.trackVisibility = prev.trackVisibility || { main: true, audio: true, sub: true };
-      state.selectedClipId = prev.selectedClipId;
-      state.selectedSubId = prev.selectedSubId;
-      state.selectedAudioId = prev.selectedAudioId;
-      state.lastSelectedType = prev.lastSelectedType;
+      applyStateSnapshot(prev);
+      updateHistoryButtonsUI();
       updateDeleteButtonLabel();
       renderTimeline();
       renderDrawer();
       syncVideoElements(true);
       renderFrame();
-      showToast('已復原上一步 ↩️');
+      scheduleAutoSaveDraft();
+      showToast(`已返回上一步（剩餘可撤回 ${undoStack.length} 步）↩️`);
+    }
+
+    function redoNextAction() {
+      if (redoStack.length === 0) return showToast('目前已是最新編輯狀態');
+      if (state.isPlaying) togglePlay(false);
+      undoStack.push(captureStateSnapshot());
+      const next = redoStack.pop();
+      applyStateSnapshot(next);
+      updateHistoryButtonsUI();
+      updateDeleteButtonLabel();
+      renderTimeline();
+      renderDrawer();
+      syncVideoElements(true);
+      renderFrame();
+      scheduleAutoSaveDraft();
+      showToast(`已前進下一步（剩餘可重做 ${redoStack.length} 步）↪️`);
     }
 
     document.getElementById('undoBtn').onclick = undoLastAction;
+    document.getElementById('redoBtn').onclick = redoNextAction;
 
     function showToast(msg) {
       const t = document.getElementById('toast');
@@ -2729,7 +3063,7 @@
         });
       }
 
-      if (reorderState && reorderState.sourceType === 'main') {
+      if (!state.isExporting && reorderState && reorderState.sourceType === 'main') {
         ctx.save();
         ctx.fillStyle = 'rgba(255, 204, 51, 0.94)';
         ctx.beginPath();
@@ -2743,7 +3077,7 @@
         ctx.restore();
       }
 
-      if (activeTrim && (activeTrim.type === 'clip' || activeTrim.type === 'pip' || activeTrim.type === 'audio')) {
+      if (!state.isExporting && activeTrim && (activeTrim.type === 'clip' || activeTrim.type === 'pip' || activeTrim.type === 'audio')) {
         const c = activeTrim.item;
         ctx.save();
         ctx.fillStyle = activeTrim.type === 'audio' ? 'rgba(20, 184, 166, 0.92)' : 'rgba(255, 59, 127, 0.92)';
@@ -2920,13 +3254,14 @@
         renderDrawer();
         syncVideoElements(true);
         renderFrame();
+        scheduleAutoSaveDraft();
       };
 
       handleEl.addEventListener('pointerup', finishTrim);
       handleEl.addEventListener('pointercancel', finishTrim);
     }
 
-    // ====== 長按片段拖曳（主軌自動縮成全局小方塊左右排序 ＋ 上拖轉畫中畫） ======
+    // ====== 長按片段拖曳 ======
     let longPressTimer = null;
     let reorderState = null;
 
@@ -3062,6 +3397,7 @@
         renderTimeline();
         renderDrawer();
         syncVideoElements(true);
+        scheduleAutoSaveDraft();
         showToast('已對齊音軌時間位置 ✅');
         return;
       }
@@ -3122,6 +3458,7 @@
       updateDeleteButtonLabel();
       renderTimeline();
       renderDrawer();
+      scheduleAutoSaveDraft();
 
       if (wasMainReorder && !draggedClip) {
         let newStartSec = 0;
@@ -3164,15 +3501,23 @@
       return wrap;
     }
 
-    // ====== 渲染多層時間軸（支援長按主軌縮成全局小方塊改順序 ＋ 零偏移基準） ======
+    // ====== 渲染多層時間軸（動態撐開寬度，白色播放線可一路走到最後一秒不撞牆） ======
     function renderTimeline() {
       const isCompactMainReorder = Boolean(reorderState && reorderState.sourceType === 'main');
       timelineScroll.classList.toggle('compact-reorder-mode', isCompactMainReorder);
 
       const pps = state.pxPerSec;
       const total = getTotalDuration();
-      const displaySec = Math.max(total + 5, 15);
+      const displaySec = Math.max(total + 15, 20);
       const totalPx = Math.round(displaySec * pps);
+
+      const timelineInner = document.getElementById('timelineInner');
+      if (!isCompactMainReorder) {
+        timelineInner.style.width = `calc(${totalPx}px + 100vw)`;
+      } else {
+        timelineInner.style.width = '100%';
+      }
+
       const ruler = document.getElementById('ruler');
       ruler.style.width = totalPx + 'px';
       ruler.innerHTML = '';
@@ -3195,10 +3540,12 @@
       state.pipTracks.forEach((pTrack, tIdx) => {
         const isVis = pTrack.visible !== false;
         sidebar.appendChild(createTrackHeaderControl(`頂層${tIdx + 1}`, '#d8b4fe', isVis, () => {
+          pushUndo();
           pTrack.visible = !isVis;
           renderTimeline();
           syncVideoElements(true);
           renderFrame();
+          scheduleAutoSaveDraft();
           showToast(pTrack.visible ? `已顯示「頂層${tIdx + 1}」👁️` : `已暫時隱藏「頂層${tIdx + 1}」🙈`);
         }));
 
@@ -3269,13 +3616,15 @@
         container.appendChild(row);
       });
 
-      // 2. 主影片軌道（支援長按縮成全局小方塊改順序）
+      // 2. 主影片軌道
       const isMainVis = state.trackVisibility.main !== false;
       sidebar.appendChild(createTrackHeaderControl('主軌', '#93c5fd', isMainVis, () => {
+        pushUndo();
         state.trackVisibility.main = !isMainVis;
         renderTimeline();
         syncVideoElements(true);
         renderFrame();
+        scheduleAutoSaveDraft();
         showToast(state.trackVisibility.main ? '已顯示主軌畫面 👁️' : '已暫時隱藏主軌畫面 🙈');
       }));
 
@@ -3364,6 +3713,7 @@
                 showToast(`已切換轉場：${next.name}`);
                 renderTimeline();
                 renderFrame();
+                scheduleAutoSaveDraft();
               };
               el.appendChild(trBtn);
             }
@@ -3377,9 +3727,11 @@
       // 3. 獨立音訊軌道
       const isAudVis = state.trackVisibility.audio !== false;
       sidebar.appendChild(createTrackHeaderControl('音軌', '#6ee7b7', isAudVis, () => {
+        pushUndo();
         state.trackVisibility.audio = !isAudVis;
         renderTimeline();
         syncVideoElements(true);
+        scheduleAutoSaveDraft();
         showToast(state.trackVisibility.audio ? '已開啟獨立音軌聲音 👁️' : '已暫時關閉獨立音軌聲音 🙈');
       }));
 
@@ -3445,9 +3797,11 @@
       // 4. 字幕軌道
       const isSubVis = state.trackVisibility.sub !== false;
       sidebar.appendChild(createTrackHeaderControl('字幕', '#f9a8d4', isSubVis, () => {
+        pushUndo();
         state.trackVisibility.sub = !isSubVis;
         renderTimeline();
         renderFrame();
+        scheduleAutoSaveDraft();
         showToast(state.trackVisibility.sub ? '已顯示字幕軌道 👁️' : '已暫時隱藏字幕軌道 🙈');
       }));
 
@@ -3686,6 +4040,7 @@
       const sel = getSelectedVisualClip();
 
       if (state.eyedropperMode && sel) {
+        pushUndo();
         const px = ctx.getImageData(Math.round(canvasX), Math.round(canvasY), 1, 1).data;
         const hex = '#' + [px[0], px[1], px[2]].map(v => v.toString(16).padStart(2, '0')).join('');
         sel.clip.cutout.keyColor = hex;
@@ -3693,6 +4048,7 @@
         showToast(`已吸取去背顏色：${hex}`);
         renderDrawer();
         renderFrame();
+        scheduleAutoSaveDraft();
         return;
       }
 
@@ -3703,12 +4059,14 @@
         showToast(`已加入第 ${sel.clip.mask.penPoints.length} 個鋼筆錨點（滿 3 點自動裁切）`);
         renderDrawer();
         renderFrame();
+        scheduleAutoSaveDraft();
         return;
       }
 
       if (state.activeTab === 'text' && state.selectedSubId) {
         const sub = state.subtitles.find(s => s.id === state.selectedSubId);
         if (sub) {
+          pushUndo();
           draggingCanvasItem = { type: 'sub', sub };
           state.lastSelectedType = 'sub';
           updateDeleteButtonLabel();
@@ -3829,6 +4187,9 @@
     });
 
     window.addEventListener('pointerup', () => {
+      if (draggingCanvasItem) {
+        scheduleAutoSaveDraft();
+      }
       draggingCanvasItem = null;
     });
 
@@ -3851,6 +4212,7 @@
           updateDeleteButtonLabel();
           showToast('已刪除選取字幕 🗑️');
           renderTimeline(); renderDrawer(); renderFrame();
+          scheduleAutoSaveDraft();
           return;
         }
       }
@@ -3866,6 +4228,7 @@
           updateDeleteButtonLabel();
           showToast('已刪除選取音軌片段 🗑️');
           renderTimeline(); renderDrawer();
+          scheduleAutoSaveDraft();
           return;
         }
       }
@@ -3882,6 +4245,7 @@
             updateDeleteButtonLabel();
             showToast('已刪除畫中畫素材 🗑️');
             renderTimeline(); renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
             return;
           }
         }
@@ -3896,6 +4260,7 @@
         updateDeleteButtonLabel();
         showToast('已刪除影片片段 🗑️');
         renderTimeline(); renderDrawer(); renderFrame();
+        scheduleAutoSaveDraft();
         return;
       }
 
@@ -3925,7 +4290,8 @@
       renderTimeline();
       renderDrawer();
       renderFrame();
-      showToast('已清空所有軌道 🧹');
+      scheduleAutoSaveDraft();
+      showToast('已清空所有軌道（可按「↩️ 上一步」救回）🧹');
     };
 
     // ====== 電腦鍵盤快捷鍵監聽 ======
@@ -3937,9 +4303,13 @@
         e.preventDefault();
         togglePlay();
       }
-      else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
         e.preventDefault();
         undoLastAction();
+      }
+      else if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') || ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')) {
+        e.preventDefault();
+        redoNextAction();
       }
       else if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') || e.key.toLowerCase() === 's') {
         e.preventDefault();
@@ -3983,6 +4353,7 @@
       updateTabsUI();
       updateDeleteButtonLabel();
       renderTimeline(); renderDrawer(); renderFrame();
+      scheduleAutoSaveDraft();
     }
 
     function extractAudioFromClip(clip, isPip) {
@@ -4004,6 +4375,7 @@
       const id = 'aud-' + Date.now() + Math.random();
       state.audioClips.push({
         id,
+        fileId: clip.fileId || null,
         name: clip.name,
         fromVideo: true,
         start: roundSec(startSec),
@@ -4022,6 +4394,7 @@
       updateTabsUI();
       updateDeleteButtonLabel();
       renderTimeline(); renderDrawer(); syncVideoElements(true);
+      scheduleAutoSaveDraft();
       showToast('已從影片分離出獨立音軌（原影片已自動靜音）🎵');
     }
 
@@ -4067,7 +4440,7 @@
             </div>
           ` : `
             <div style="text-align:center; padding:10px 0; color:var(--text-muted);">
-              長按主軌片段會自動縮成全局小方塊改順序；往上拖可轉為畫中畫！
+              已啟用自動草稿快取（重整或重開網頁不遺失）；匯出預設為 1080p 60fps MP4！
             </div>
           `}
         `;
@@ -4076,6 +4449,7 @@
           document.getElementById('pipFileInput').click();
         };
         document.getElementById('addPipLayerBtn').onclick = () => {
+          pushUndo();
           const layerNum = state.pipTracks.length + 1;
           state.pipTracks.unshift({
             id: 'pip-track-' + Date.now(),
@@ -4084,6 +4458,7 @@
             clips: []
           });
           renderTimeline();
+          scheduleAutoSaveDraft();
           showToast(`已新增最上層畫中畫軌道 L${layerNum}`);
         };
         document.getElementById('drawerSplitBtn').onclick = splitAtPlayhead;
@@ -4094,6 +4469,7 @@
           clip.baseTransform = { scaleX: 1.0, scaleY: 1.0, x: 0, y: 0, rot: 0 };
           clip.crop = { left: 0, right: 0, top: 0, bottom: 0 };
           renderTimeline(); renderDrawer(); renderFrame();
+          scheduleAutoSaveDraft();
           showToast('已重設畫面尺寸、位置與裁剪框');
         };
 
@@ -4318,6 +4694,7 @@
               pushUndo();
               clip.fadeIn.type = btn.dataset.fi;
               renderTimeline(); renderDrawer(); renderFrame();
+              scheduleAutoSaveDraft();
             };
           });
           container.querySelectorAll('[data-fo]').forEach(btn => {
@@ -4325,22 +4702,27 @@
               pushUndo();
               clip.fadeOut.type = btn.dataset.fo;
               renderTimeline(); renderDrawer(); renderFrame();
+              scheduleAutoSaveDraft();
             };
           });
           document.getElementById('fiDurRange').oninput = (e) => {
             clip.fadeIn.dur = parseFloat(e.target.value);
             renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
           document.getElementById('foDurRange').oninput = (e) => {
             clip.fadeOut.dur = parseFloat(e.target.value);
             renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
         }
 
         container.querySelectorAll('[data-pt]').forEach(btn => {
           btn.onclick = () => {
+            pushUndo();
             fx.particleType = btn.dataset.pt;
             renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
         });
 
@@ -4348,45 +4730,56 @@
           document.getElementById('ptSizeRange').oninput = (e) => {
             fx.particleSize = parseFloat(e.target.value);
             renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
           document.getElementById('ptDensRange').oninput = (e) => {
             fx.particleDensity = parseInt(e.target.value, 10);
             renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
         }
 
         container.querySelectorAll('[data-pcol]').forEach(btn => {
           btn.onclick = () => {
+            pushUndo();
             fx.petalColor = btn.dataset.pcol;
             renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
         });
 
         document.getElementById('toggleSpotBtn').onclick = () => {
+          pushUndo();
           sp.enabled = !sp.enabled;
           renderDrawer(); renderFrame();
+          scheduleAutoSaveDraft();
         };
 
         if (sp.enabled) {
           document.getElementById('spotAngleRange').oninput = (e) => {
             sp.angle = parseInt(e.target.value, 10);
             renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
           document.getElementById('spotSpreadRange').oninput = (e) => {
             sp.spread = parseFloat(e.target.value);
             renderFrame();
+            scheduleAutoSaveDraft();
           };
           document.getElementById('spotDarkRange').oninput = (e) => {
             sp.darkness = parseFloat(e.target.value);
             renderFrame();
+            scheduleAutoSaveDraft();
           };
           document.getElementById('spotXRange').oninput = (e) => {
             sp.focusX = parseFloat(e.target.value);
             renderFrame();
+            scheduleAutoSaveDraft();
           };
           document.getElementById('spotYRange').oninput = (e) => {
             sp.focusY = parseFloat(e.target.value);
             renderFrame();
+            scheduleAutoSaveDraft();
           };
         }
       }
@@ -4430,6 +4823,7 @@
           pushUndo();
           addManualKeyframeAtCurrentTime(clip, selObj.isPip);
           renderTimeline(); renderDrawer(); renderFrame();
+          scheduleAutoSaveDraft();
           showToast(`已在 ${localT.toFixed(1)}s 手動打下關鍵幀 ◆`);
         };
         document.getElementById('clearKfBtn').onclick = () => {
@@ -4438,23 +4832,28 @@
           clip.baseTransform = { ...latestTr };
           clip.keyframes = [];
           renderTimeline(); renderDrawer(); renderFrame();
+          scheduleAutoSaveDraft();
           showToast('已清空所有關鍵幀（保留目前位置與尺寸）');
         };
         document.getElementById('kfScaleX').oninput = (e) => {
           updateClipActiveTransform(clip, localT, { scaleX: parseFloat(e.target.value) });
           renderDrawer(); renderFrame();
+          scheduleAutoSaveDraft();
         };
         document.getElementById('kfScaleY').oninput = (e) => {
           updateClipActiveTransform(clip, localT, { scaleY: parseFloat(e.target.value) });
           renderDrawer(); renderFrame();
+          scheduleAutoSaveDraft();
         };
         document.getElementById('kfX').oninput = (e) => {
           updateClipActiveTransform(clip, localT, { x: parseFloat(e.target.value) });
           renderDrawer(); renderFrame();
+          scheduleAutoSaveDraft();
         };
         document.getElementById('kfY').oninput = (e) => {
           updateClipActiveTransform(clip, localT, { y: parseFloat(e.target.value) });
           renderDrawer(); renderFrame();
+          scheduleAutoSaveDraft();
         };
       }
 
@@ -4524,6 +4923,7 @@
             clip.cutout.mode = btn.dataset.cut;
             if (clip.cutout.mode === 'ai') showToast('已啟用本地 AI 人像去背模型 🤖');
             renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
         });
 
@@ -4531,6 +4931,7 @@
           document.getElementById('keyColorPick').oninput = (e) => {
             clip.cutout.keyColor = e.target.value;
             renderFrame();
+            scheduleAutoSaveDraft();
           };
           document.getElementById('eyedropBtn').onclick = () => {
             state.eyedropperMode = !state.eyedropperMode;
@@ -4539,6 +4940,7 @@
           document.getElementById('keyTolRange').oninput = (e) => {
             clip.cutout.tolerance = parseInt(e.target.value, 10);
             renderFrame();
+            scheduleAutoSaveDraft();
           };
         }
 
@@ -4547,12 +4949,14 @@
             pushUndo();
             clip.blendMode = btn.dataset.blend;
             renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
         });
 
         document.getElementById('clipOpacityRange').oninput = (e) => {
           clip.opacity = parseFloat(e.target.value);
           renderDrawer(); renderFrame();
+          scheduleAutoSaveDraft();
         };
 
         container.querySelectorAll('[data-mask]').forEach(btn => {
@@ -4562,6 +4966,7 @@
             state.penEditMode = (clip.mask.type === 'pen');
             if (state.penEditMode) showToast('請直接在上方影片畫布點擊 3 個以上錨點勾勒形狀 ✒️');
             renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
         });
 
@@ -4569,6 +4974,7 @@
           document.getElementById('maskFeatherRange').oninput = (e) => {
             clip.mask.feather = parseInt(e.target.value, 10);
             renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
         }
 
@@ -4582,6 +4988,7 @@
             clip.mask.penPoints = [];
             state.penEditMode = true;
             renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
         }
       }
@@ -4602,8 +5009,8 @@
             <div class="control-row">
               <label>底板顏色</label>
               <input type="color" value="${bg.color1}" id="bgColor1" style="width:44px; height:28px; border:none; background:none;">
-              <button class="chip-btn" onclick="state.background.color1='#000000'; renderDrawer(); renderFrame();">重設純黑</button>
-              <button class="chip-btn" onclick="state.background.color1='#ffffff'; renderDrawer(); renderFrame();">純白</button>
+              <button class="chip-btn" onclick="pushUndo(); state.background.color1='#000000'; renderDrawer(); renderFrame(); scheduleAutoSaveDraft();">重設純黑</button>
+              <button class="chip-btn" onclick="pushUndo(); state.background.color1='#ffffff'; renderDrawer(); renderFrame(); scheduleAutoSaveDraft();">純白</button>
             </div>
           ` : ''}
           ${bg.mode === 'gradient' ? `
@@ -4625,11 +5032,13 @@
 
         container.querySelectorAll('[data-bg]').forEach(btn => {
           btn.onclick = () => {
+            pushUndo();
             state.background.mode = btn.dataset.bg;
             if (state.background.mode === 'custom' && !state.background.mediaEl) {
               document.getElementById('bgFileInput').click();
             }
             renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
         });
 
@@ -4637,16 +5046,19 @@
           document.getElementById('bgColor1').oninput = (e) => {
             state.background.color1 = e.target.value;
             renderFrame();
+            scheduleAutoSaveDraft();
           };
         }
         if (document.getElementById('bgGrad1')) {
           document.getElementById('bgGrad1').oninput = (e) => {
             state.background.color1 = e.target.value;
             renderFrame();
+            scheduleAutoSaveDraft();
           };
           document.getElementById('bgGrad2').oninput = (e) => {
             state.background.color2 = e.target.value;
             renderFrame();
+            scheduleAutoSaveDraft();
           };
         }
       }
@@ -4708,23 +5120,30 @@
           document.getElementById('subTextInput').oninput = (e) => {
             sub.text = e.target.value;
             renderTimeline(); renderFrame();
+            scheduleAutoSaveDraft();
           };
           document.getElementById('orientHorizBtn').onclick = () => {
+            pushUndo();
             sub.orientation = 'horizontal';
             renderTimeline(); renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
           document.getElementById('orientVertBtn').onclick = () => {
+            pushUndo();
             sub.orientation = 'vertical';
             renderTimeline(); renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
             showToast('已切換為傳統直式書寫（可用 | 分直行）');
           };
           document.getElementById('subSizeRange').oninput = (e) => {
             sub.size = parseInt(e.target.value, 10);
             renderFrame();
+            scheduleAutoSaveDraft();
           };
           document.getElementById('subColorPick').oninput = (e) => {
             sub.color = e.target.value;
             renderFrame();
+            scheduleAutoSaveDraft();
           };
         }
 
@@ -4738,9 +5157,11 @@
         container.querySelectorAll('.font-card').forEach(card => {
           card.onclick = () => {
             if (!sub) return showToast('請先點上方「＋ 新增字幕」');
+            pushUndo();
             sub.font = card.dataset.family;
             renderDrawer();
             renderFrame();
+            scheduleAutoSaveDraft();
             setTimeout(renderFrame, 600);
           };
         });
@@ -4785,6 +5206,7 @@
             clip.color = { b: p.b, c: p.c, s: p.s, warm: p.warm };
             showToast(`已套用濾鏡：${p.name}`);
             renderDrawer(); renderFrame();
+            scheduleAutoSaveDraft();
           };
         });
 
@@ -4796,6 +5218,7 @@
             if (id === 'colS') col.s = val;
             if (id === 'colW') col.warm = val;
             renderFrame();
+            scheduleAutoSaveDraft();
           };
         });
       }
@@ -4853,12 +5276,14 @@
             clip.muted = !clip.muted;
             applyMediaAudioGain(clip.mediaEl, clip.muted, clip.audioGain ?? 1.0);
             renderTimeline(); renderDrawer();
+            scheduleAutoSaveDraft();
             showToast(clip.muted ? '已將此影片原聲靜音 🔇' : '已恢復影片原聲 🔊');
           };
           document.getElementById('vidGainRange').oninput = (e) => {
             clip.audioGain = parseFloat(e.target.value);
             applyMediaAudioGain(clip.mediaEl, clip.muted, clip.audioGain);
             renderTimeline(); renderDrawer();
+            scheduleAutoSaveDraft();
           };
         }
 
@@ -4868,11 +5293,13 @@
             aClip.muted = !aClip.muted;
             applyMediaAudioGain(aClip.mediaEl, aClip.muted, aClip.gain ?? 1.0);
             renderTimeline(); renderDrawer();
+            scheduleAutoSaveDraft();
           };
           document.getElementById('audGainRange').oninput = (e) => {
             aClip.gain = parseFloat(e.target.value);
             applyMediaAudioGain(aClip.mediaEl, aClip.muted, aClip.gain);
             renderTimeline(); renderDrawer();
+            scheduleAutoSaveDraft();
           };
           document.getElementById('delAudClipBtn').onclick = () => {
             state.selectedAudioId = aClip.id;
@@ -4903,25 +5330,31 @@
       };
     });
 
-    // ====== 畫面比例切換 ======
+    // ====== 畫面比例與解析度切換（預覽 360p，匯出無損 1080p） ======
+    function applyCanvasResolutionForRatio(ratio, isExportMode = false) {
+      if (ratio === '9:16') {
+        canvas.width = isExportMode ? 1080 : 360;
+        canvas.height = isExportMode ? 1920 : 640;
+        canvas.style.aspectRatio = '9 / 16';
+      } else if (ratio === '16:9') {
+        canvas.width = isExportMode ? 1920 : 640;
+        canvas.height = isExportMode ? 1080 : 360;
+        canvas.style.aspectRatio = '16 / 9';
+      } else {
+        canvas.width = isExportMode ? 1080 : 480;
+        canvas.height = isExportMode ? 1080 : 480;
+        canvas.style.aspectRatio = '1 / 1';
+      }
+    }
+
     document.querySelectorAll('.ratio-btn').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.ratio = btn.dataset.ratio;
-        if (state.ratio === '9:16') {
-          canvas.width = 360; canvas.height = 640;
-          canvas.style.aspectRatio = '9 / 16';
-        }
-        if (state.ratio === '16:9') {
-          canvas.width = 640; canvas.height = 360;
-          canvas.style.aspectRatio = '16 / 9';
-        }
-        if (state.ratio === '1:1')  {
-          canvas.width = 480; canvas.height = 480;
-          canvas.style.aspectRatio = '1 / 1';
-        }
+        applyCanvasResolutionForRatio(state.ratio, false);
         renderFrame();
+        scheduleAutoSaveDraft();
       };
     });
 
@@ -4980,6 +5413,7 @@
             state.selectedAudioId = clone.id;
             renderTimeline(); renderDrawer();
             seekTo(exactCutGlobalSec);
+            scheduleAutoSaveDraft();
             showToast(`已精準在 ${exactCutGlobalSec.toFixed(2)}s 分割音軌 ✂️`);
             return;
           }
@@ -5023,6 +5457,7 @@
               updateDeleteButtonLabel();
               renderTimeline(); renderDrawer();
               seekTo(exactCutGlobalSec);
+              scheduleAutoSaveDraft();
               showToast(`已精準在 ${exactCutGlobalSec.toFixed(2)}s 分割畫中畫 ✂️`);
               return;
             }
@@ -5072,6 +5507,7 @@
             updateDeleteButtonLabel();
             renderTimeline(); renderDrawer();
             seekTo(exactCutGlobalSec);
+            scheduleAutoSaveDraft();
             showToast(`已精準在 ${exactCutGlobalSec.toFixed(2)}s 分割（無偏移）✂️`);
             return;
           }
@@ -5084,15 +5520,18 @@
 
     document.getElementById('splitBtn').onclick = splitAtPlayhead;
 
-    // ====== 檔案載入 ======
+    // ====== 檔案載入（同步寫入 IndexedDB 草稿庫） ======
     function loadMediaFile(file, onReady) {
+      const fileId = 'file-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+      saveMediaBlobToDB(fileId, file);
+
       const url = URL.createObjectURL(file);
       const isImage = file.type.startsWith('image/');
 
       if (isImage) {
         const img = new Image();
         img.onload = () => {
-          onReady({ mediaEl: img, mediaType: 'image', duration: 5.0, maxDuration: 120 });
+          onReady({ fileId, mediaEl: img, mediaType: 'image', duration: 5.0, maxDuration: 120 });
         };
         img.src = url;
       } else {
@@ -5109,7 +5548,7 @@
           vid._imported = true;
           requestVideoSeek(vid, 0.01);
           const realDur = (vid.duration && isFinite(vid.duration)) ? roundSec(vid.duration) : 10;
-          onReady({ mediaEl: vid, mediaType: 'video', duration: realDur, maxDuration: realDur });
+          onReady({ fileId, mediaEl: vid, mediaType: 'video', duration: realDur, maxDuration: realDur });
         };
 
         vid.onseeked = () => {
@@ -5131,10 +5570,11 @@
       const files = Array.from(e.target.files);
       if (files.length > 0) pushUndo();
       files.forEach(file => {
-        loadMediaFile(file, ({ mediaEl, mediaType, duration, maxDuration }) => {
+        loadMediaFile(file, ({ fileId, mediaEl, mediaType, duration, maxDuration }) => {
           const id = 'clip-' + Date.now() + Math.random();
           state.clips.push(createDefaultClipProps({
             id,
+            fileId,
             name: file.name.slice(0, 12),
             duration,
             maxDuration,
@@ -5145,7 +5585,8 @@
           state.lastSelectedType = 'clip';
           updateDeleteButtonLabel();
           renderTimeline(); renderDrawer(); renderFrame();
-          showToast(`已匯入主軌：${file.name}`);
+          scheduleAutoSaveDraft();
+          showToast(`已匯入主軌並自動儲存草稿：${file.name}`);
         });
       });
       e.target.value = '';
@@ -5156,10 +5597,11 @@
       if (files.length > 0) pushUndo();
       const targetTrack = state.pipTracks.find(t => t.id === window._targetPipTrackId) || state.pipTracks[0];
       files.forEach(file => {
-        loadMediaFile(file, ({ mediaEl, mediaType, duration, maxDuration }) => {
+        loadMediaFile(file, ({ fileId, mediaEl, mediaType, duration, maxDuration }) => {
           const id = 'pip-' + Date.now() + Math.random();
           targetTrack.clips.push(createDefaultClipProps({
             id,
+            fileId,
             name: file.name.slice(0, 12),
             start: roundSec(state.currentTime),
             duration,
@@ -5171,6 +5613,7 @@
           state.lastSelectedType = 'pip';
           updateDeleteButtonLabel();
           renderTimeline(); renderDrawer(); renderFrame();
+          scheduleAutoSaveDraft();
           showToast(`已匯入畫中畫（頂層）：${file.name}`);
         });
       });
@@ -5180,7 +5623,8 @@
     document.getElementById('bgFileInput').onchange = (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      loadMediaFile(file, ({ mediaEl, mediaType }) => {
+      pushUndo();
+      loadMediaFile(file, ({ fileId, mediaEl, mediaType }) => {
         if (mediaType === 'video') {
           mediaEl.loop = true;
           mediaEl.muted = true;
@@ -5189,7 +5633,9 @@
         state.background.mediaEl = mediaEl;
         state.background.mediaType = mediaType;
         state.background.mediaName = file.name;
+        state.background.mediaFileId = fileId;
         renderDrawer(); renderFrame();
+        scheduleAutoSaveDraft();
         showToast(`已套用自訂底板：${file.name}`);
       });
       e.target.value = '';
@@ -5199,6 +5645,9 @@
       const files = Array.from(e.target.files);
       if (files.length > 0) pushUndo();
       files.forEach(file => {
+        const fileId = 'file-aud-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+        saveMediaBlobToDB(fileId, file);
+
         const url = URL.createObjectURL(file);
         const audioEl = new Audio(url);
         audioEl.preload = 'auto';
@@ -5209,6 +5658,7 @@
           const realDur = (audioEl.duration && isFinite(audioEl.duration)) ? roundSec(audioEl.duration) : 15;
           state.audioClips.push({
             id,
+            fileId,
             name: file.name.slice(0, 14),
             fromVideo: false,
             start: roundSec(state.currentTime),
@@ -5223,6 +5673,7 @@
           state.lastSelectedType = 'audio';
           updateDeleteButtonLabel();
           renderTimeline(); renderDrawer();
+          scheduleAutoSaveDraft();
           showToast(`已插入音樂音軌：${file.name} 🎵`);
         };
       });
@@ -5233,6 +5684,9 @@
       const files = Array.from(e.target.files);
       if (files.length > 0) pushUndo();
       files.forEach(file => {
+        const fileId = 'file-v2a-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+        saveMediaBlobToDB(fileId, file);
+
         const url = URL.createObjectURL(file);
         const vidAud = createClonedVideoElement(url, 0.01);
 
@@ -5241,6 +5695,7 @@
           const realDur = (vidAud.duration && isFinite(vidAud.duration)) ? roundSec(vidAud.duration) : 15;
           state.audioClips.push({
             id,
+            fileId,
             name: file.name.slice(0, 14),
             fromVideo: true,
             start: roundSec(state.currentTime),
@@ -5255,6 +5710,7 @@
           state.lastSelectedType = 'audio';
           updateDeleteButtonLabel();
           renderTimeline(); renderDrawer();
+          scheduleAutoSaveDraft();
           showToast(`已將影片轉成獨立音軌：${file.name} 🎬➡️🎵`);
         };
       });
@@ -5276,15 +5732,20 @@
         desc: '本機匯入自訂字體'
       });
       const sub = state.subtitles.find(s => s.id === state.selectedSubId);
-      if (sub) sub.font = `'${fontName}', sans-serif`;
+      if (sub) {
+        pushUndo();
+        sub.font = `'${fontName}', sans-serif`;
+      }
       renderDrawer(); renderFrame();
+      scheduleAutoSaveDraft();
       showToast('自訂字體載入成功！');
       e.target.value = '';
     };
 
-    // ====== 播放迴圈 ======
+    // ====== 播放迴圈（同步即時更新匯出百分比進度條） ======
     let lastTs = 0;
     let exportSegmentStopTime = null;
+    let exportProgressHook = null;
 
     function checkAutoSpeakSubtitles() {
       if (!state.isPlaying || state.isExporting) return;
@@ -5309,6 +5770,10 @@
 
       state.currentTime = roundSec(state.currentTime + dt);
       const targetStop = exportSegmentStopTime !== null ? exportSegmentStopTime : getTotalDuration();
+
+      if (exportProgressHook) {
+        exportProgressHook(state.currentTime);
+      }
 
       if (state.currentTime >= targetStop) {
         if (exportSegmentStopTime !== null) {
@@ -5388,15 +5853,42 @@
 
     document.getElementById('playBtn').onclick = () => {
       exportSegmentStopTime = null;
+      exportProgressHook = null;
       togglePlay();
     };
 
-    // ====== 匯出系統 ======
+    // ====== 1080p 60fps MP4 高畫質匯出系統 ＋ 即時百分比進度條 ======
     const exportModalBackdrop = document.getElementById('exportModalBackdrop');
     const exportOptionsList = document.getElementById('exportOptionsList');
     const exportProgressBox = document.getElementById('exportProgressBox');
+    const exportPercentBig = document.getElementById('exportPercentBig');
     const exportProgressText = document.getElementById('exportProgressText');
+    const exportProgressSub = document.getElementById('exportProgressSub');
     const exportProgressFill = document.getElementById('exportProgressFill');
+
+    function detectBestExportFormat() {
+      const mp4Candidates = [
+        'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+        'video/mp4;codecs=avc1,mp4a.40.2',
+        'video/mp4'
+      ];
+      for (const mime of mp4Candidates) {
+        if (MediaRecorder.isTypeSupported(mime)) {
+          return { mimeType: mime, ext: 'mp4' };
+        }
+      }
+      const webmCandidates = [
+        'video/webm;codecs=vp9,opus',
+        'video/webm;codecs=vp8,opus',
+        'video/webm'
+      ];
+      for (const mime of webmCandidates) {
+        if (MediaRecorder.isTypeSupported(mime)) {
+          return { mimeType: mime, ext: 'webm' };
+        }
+      }
+      return { mimeType: '', ext: 'webm' };
+    }
 
     function collectEditableSegments() {
       const list = [];
@@ -5423,35 +5915,46 @@
       return list;
     }
 
-    function recordTimeRangeToWebm(startSec, endSec, filename) {
+    function recordTimeRangeHighQuality(startSec, endSec, baseFilename, taskIndex, totalTasks) {
       return new Promise((resolve) => {
         getAudioCtx();
-        const videoStream = canvas.captureStream(30);
+        // 60fps 高流暢度擷取
+        const videoStream = canvas.captureStream(60);
         const combinedStream = new MediaStream();
         videoStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
         if (exportMixDest && exportMixDest.stream) {
           exportMixDest.stream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
         }
 
-        let mimeType = 'video/webm';
-        if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) {
-          mimeType = 'video/webm;codecs=vp9,opus';
-        } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
-          mimeType = 'video/webm;codecs=vp8,opus';
-        }
+        const fmt = detectBestExportFormat();
+        const recOptions = {
+          videoBitsPerSecond: 16000000 // 16 Mbps 1080p 高畫質碼率
+        };
+        if (fmt.mimeType) recOptions.mimeType = fmt.mimeType;
 
-        const recorder = new MediaRecorder(combinedStream, { mimeType });
+        const recorder = new MediaRecorder(combinedStream, recOptions);
         const chunks = [];
         recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
         recorder.onstop = () => {
-          const blob = new Blob(chunks, { type: 'video/webm' });
+          const blob = new Blob(chunks, { type: fmt.mimeType || 'video/mp4' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = filename;
+          a.download = `${baseFilename}.${fmt.ext}`;
           a.click();
           setTimeout(() => URL.revokeObjectURL(url), 5000);
-          resolve();
+          resolve(fmt.ext);
+        };
+
+        const segDur = Math.max(0.1, endSec - startSec);
+        exportProgressHook = (curT) => {
+          const localElapsed = Math.max(0, Math.min(segDur, curT - startSec));
+          const segRatio = localElapsed / segDur;
+          const overallPct = Math.min(99, Math.round(((taskIndex + segRatio) / totalTasks) * 100));
+          exportPercentBig.textContent = `${overallPct}%`;
+          exportProgressFill.style.width = `${overallPct}%`;
+          exportProgressSub.textContent =
+            `本段進度：${formatTime(localElapsed)} / ${formatTime(segDur)}（1080p · 60fps · ${fmt.ext.toUpperCase()}）`;
         };
 
         state.currentTime = startSec;
@@ -5468,10 +5971,11 @@
             if (!state.isPlaying) {
               clearInterval(checkStop);
               exportSegmentStopTime = null;
+              exportProgressHook = null;
               if (recorder.state !== 'inactive') recorder.stop();
             }
-          }, 120);
-        }, 120);
+          }, 100);
+        }, 140);
       });
     }
 
@@ -5481,23 +5985,28 @@
       exportOptionsList.style.display = 'none';
       exportProgressBox.style.display = 'block';
 
+      // 切換為 1080p 高解析度畫布進行渲染
+      applyCanvasResolutionForRatio(state.ratio, true);
+
       const stamp = new Date().toISOString().slice(11, 19).replace(/:/g, '');
       const segments = includeSplits ? collectEditableSegments() : [];
       const totalTasks = 1 + segments.length;
 
       exportProgressText.textContent = `正在渲染完整影片 (1 / ${totalTasks})...`;
-      exportProgressFill.style.width = `${Math.round((1 / (totalTasks + 1)) * 100)}%`;
-      await recordTimeRangeToWebm(0, getTotalDuration(), `CutVideo_完整影片_${stamp}.webm`);
+      const usedExt = await recordTimeRangeHighQuality(0, getTotalDuration(), `CutVideo_完整影片_1080p60_${stamp}`, 0, totalTasks);
 
       for (let i = 0; i < segments.length; i++) {
         const seg = segments[i];
         exportProgressText.textContent = `正在分開存檔裁切片段 (${i + 2} / ${totalTasks})：${seg.label}`;
-        exportProgressFill.style.width = `${Math.round(((i + 2) / (totalTasks + 1)) * 100)}%`;
         await new Promise(r => setTimeout(r, 350));
-        await recordTimeRangeToWebm(seg.start, seg.end, `CutVideo_${seg.label}_${stamp}.webm`);
+        await recordTimeRangeHighQuality(seg.start, seg.end, `CutVideo_${seg.label}_1080p60_${stamp}`, i + 1, totalTasks);
       }
 
+      exportPercentBig.textContent = '100%';
       exportProgressFill.style.width = '100%';
+
+      // 恢復為流暢預覽解析度
+      applyCanvasResolutionForRatio(state.ratio, false);
       state.isExporting = false;
       state.currentTime = 0;
       timelineScroll.scrollLeft = 0;
@@ -5507,8 +6016,8 @@
       exportOptionsList.style.display = 'block';
       exportProgressBox.style.display = 'none';
       showToast(includeSplits
-        ? `全部匯出完成！共下載 1 支完整影片 ＋ ${segments.length} 個裁切分段 📦`
-        : '完整影片匯出完成！已開始下載 🎬🔊');
+        ? `1080p 60fps ${usedExt.toUpperCase()} 全部匯出完成（共 ${totalTasks} 支檔案）📦`
+        : `1080p 60fps ${usedExt.toUpperCase()} 完整影片匯出完成！🎬🔊`);
     }
 
     document.getElementById('exportBtn').onclick = () => {
@@ -5523,7 +6032,7 @@
 
       const segs = collectEditableSegments();
       document.getElementById('splitCountDesc').textContent =
-        `同時下載 1 支完整影片 ＋ 目前已裁切的 ${segs.length} 份獨立編輯片段，方便素材二次利用`;
+        `同時下載 1 支完整影片 ＋ 目前已裁切的 ${segs.length} 份獨立編輯片段（皆為 1080p 60fps）`;
 
       exportOptionsList.style.display = 'block';
       exportProgressBox.style.display = 'none';
@@ -5531,18 +6040,20 @@
     };
 
     document.getElementById('closeExportModalBtn').onclick = () => {
-      if (state.isExporting) return showToast('正在渲染匯出中，請稍候完成');
+      if (state.isExporting) return showToast('正在渲染 1080p 60fps 影片中，請稍候完成');
       exportModalBackdrop.classList.remove('open');
     };
 
     document.getElementById('optExportFullOnly').onclick = () => runBatchExport(false);
     document.getElementById('optExportFullAndSplits').onclick = () => runBatchExport(true);
 
-    // 初始化啟動
+    // 初始化啟動並嘗試自動還原上次未完成的草稿
+    updateHistoryButtonsUI();
     updateDeleteButtonLabel();
     renderTimeline();
     renderDrawer();
     renderFrame();
+    restoreDraftFromDB();
   </script>
 </body>
 </html>
