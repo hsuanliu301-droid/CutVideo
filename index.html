@@ -161,6 +161,7 @@
 
     .control-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 6px; flex-wrap: wrap; }
     .control-row label { color: var(--text-muted); font-size: 11px; min-width: 56px; }
+    .control-row .val-badge { font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 700; color: #e5e7eb; min-width: 40px; text-align: right; flex-shrink: 0; }
     input[type="range"] { flex: 1; accent-color: var(--accent); min-width: 60px; }
     input[type="text"], input[type="password"], select, textarea { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); padding: 6px 8px; border-radius: 6px; font-size: 12px; flex: 1; user-select: text; min-width: 0; font-family: inherit; }
     textarea { width: 100%; resize: none; height: 52px; line-height: 1.4; }
@@ -395,12 +396,12 @@
     const SUB_COLOR_SWATCHES = ['#ffffff', '#ffeb3b', '#2ce6c3', '#ff7eb3', '#38bdf8', '#111827'];
 
     const FILTER_PRESETS = [
-      { id: 'none', name: '原圖', b: 100, c: 100, s: 100, warm: 0 },
-      { id: 'dance', name: '練舞室高對比', b: 105, c: 122, s: 112, warm: -5 },
-      { id: 'vlog', name: '日系清新 Vlog', b: 108, c: 94, s: 92, warm: 10 },
-      { id: 'warm', name: '暖陽微光', b: 104, c: 105, s: 115, warm: 22 },
-      { id: 'film', name: '復古膠片', b: 96, c: 114, s: 82, warm: 14 },
-      { id: 'bw', name: '黑白極簡', b: 105, c: 125, s: 0, warm: 0 }
+      { id: 'none', name: '原圖', b: 100, c: 100, s: 100, warm: 0, sharp: 0 },
+      { id: 'dance', name: '練舞室高對比', b: 105, c: 122, s: 112, warm: -5, sharp: 28 },
+      { id: 'vlog', name: '日系清新 Vlog', b: 108, c: 94, s: 92, warm: 10, sharp: 12 },
+      { id: 'warm', name: '暖陽微光', b: 104, c: 105, s: 115, warm: 22, sharp: 10 },
+      { id: 'film', name: '復古膠片', b: 96, c: 114, s: 82, warm: 14, sharp: 15 },
+      { id: 'bw', name: '黑白極簡', b: 105, c: 125, s: 0, warm: 0, sharp: 22 }
     ];
 
     const TRANSITIONS = [
@@ -695,11 +696,9 @@
       });
       if (!isFinite(minMemberOrigStart)) minMemberOrigStart = 0;
 
-      // 1. 左側撞牆邊界：群組裡最左邊的素材碰到 0 秒時，整包停止往左推
       const minAllowedDelta = roundSec(-minMemberOrigStart);
       let delta = roundSec(Math.max(minAllowedDelta, rawDeltaSec));
 
-      // 2. 磁吸判定：以滑鼠正在按住拖曳的領頭素材（左右兩側邊緣）去吸附外部素材邊緣
       if (state.snapEnabled && state.snapThresholdPx > 0) {
         const thresholdSec = state.snapThresholdPx / state.pxPerSec;
         const targets = collectSnapTargetsMulti(excludeIds);
@@ -733,7 +732,7 @@
       return roundSec(Math.max(minAllowedDelta, delta));
     }
 
-    // ====== 標準 .srt 解析與智慧多行分段引擎（支援 UTF-8 BOM / Big5 自動解碼與高容錯空行/時間軸識別） ======
+    // ====== 標準 .srt 解析與智慧多行分段引擎 ======
     async function decodeSubtitleFileSmart(file) {
       const buf = await file.arrayBuffer();
       let text = '';
@@ -1075,7 +1074,8 @@
         const el = await recreateElementFromBlob(blob, c.mediaType, c.trimStart || 0.01, false);
         if (el) {
           const startVal = (typeof c.start === 'number' && isFinite(c.start)) ? roundSec(c.start) : roundSec(mainAcc);
-          restoredClips.push({ ...c, groupId: c.groupId || null, start: startVal, mediaEl: el });
+          const colorObj = { b: 100, c: 100, s: 100, warm: 0, sharp: 0, ...(c.color || {}) };
+          restoredClips.push({ ...c, color: colorObj, groupId: c.groupId || null, start: startVal, mediaEl: el });
           mainAcc = startVal + (c.duration || 5);
         }
       }
@@ -1086,7 +1086,10 @@
         for (const p of (tr.clips || [])) {
           const blob = await resolveBlob(p.fileId);
           const el = await recreateElementFromBlob(blob, p.mediaType, p.trimStart || 0.01, false);
-          if (el) pClips.push({ ...p, groupId: p.groupId || null, mediaEl: el });
+          if (el) {
+            const colorObj = { b: 100, c: 100, s: 100, warm: 0, sharp: 0, ...(p.color || {}) };
+            pClips.push({ ...p, color: colorObj, groupId: p.groupId || null, mediaEl: el });
+          }
         }
         restoredPipTracks.push({ ...tr, clips: pClips });
       }
@@ -1246,7 +1249,7 @@
     const stageResizer = document.getElementById('stageResizer');
     const bottomDrawer = document.getElementById('bottomDrawer');
 
-    // ====== 雙軌 AI 配音引擎（依聲音唸完時間自動延長字幕條長度） ======
+    // ====== 雙軌 AI 配音引擎 ======
     let availableSystemVoices = [];
     const spokenSubIdsThisRun = new Set();
 
@@ -1529,8 +1532,62 @@
 
     const offCanvas = document.createElement('canvas');
     const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+    const sharpCanvas = document.createElement('canvas');
+    const sharpCtx = sharpCanvas.getContext('2d', { willReadFrequently: true });
     const maskCanvas = document.createElement('canvas');
     const maskCtx = maskCanvas.getContext('2d');
+
+    // ====== Unsharp Mask 數位銳利度卷積引擎（保留 Alpha 透明度與去背遮罩） ======
+    function applySharpenToSource(sourceEl, srcW, srcH, sharpVal) {
+      const amount = Math.max(0, Math.min(100, sharpVal || 0)) / 100;
+      if (amount <= 0.005) return sourceEl;
+
+      const maxDim = state.isExporting ? 1440 : 640;
+      const scale = Math.min(1, maxDim / Math.max(srcW, srcH));
+      const w = Math.max(4, Math.round(srcW * scale));
+      const h = Math.max(4, Math.round(srcH * scale));
+
+      sharpCanvas.width = w;
+      sharpCanvas.height = h;
+      sharpCtx.clearRect(0, 0, w, h);
+      sharpCtx.drawImage(sourceEl, 0, 0, w, h);
+
+      const imgData = sharpCtx.getImageData(0, 0, w, h);
+      const src = imgData.data;
+      const out = new Uint8ClampedArray(src);
+      const strength = amount * 1.35;
+      const rowStride = w * 4;
+
+      for (let y = 1; y < h - 1; y++) {
+        let idx = y * rowStride + 4;
+        for (let x = 1; x < w - 1; x++) {
+          const a = src[idx + 3];
+          if (a > 0) {
+            const up = idx - rowStride;
+            const down = idx + rowStride;
+            const left = idx - 4;
+            const right = idx + 4;
+
+            const r = src[idx];
+            const g = src[idx + 1];
+            const b = src[idx + 2];
+
+            const blurR = (src[up] + src[down] + src[left] + src[right]) * 0.25;
+            const blurG = (src[up + 1] + src[down + 1] + src[left + 1] + src[right + 1]) * 0.25;
+            const blurB = (src[up + 2] + src[down + 2] + src[left + 2] + src[right + 2]) * 0.25;
+
+            out[idx]     = r + (r - blurR) * strength;
+            out[idx + 1] = g + (g - blurG) * strength;
+            out[idx + 2] = b + (b - blurB) * strength;
+          }
+          idx += 4;
+        }
+      }
+
+      imgData.data.set(out);
+      sharpCtx.putImageData(imgData, 0, 0);
+      return sharpCanvas;
+    }
 
     let selfieSeg = null, latestSegMask = null, segBusy = false;
     function initAISegmentation() {
@@ -1625,7 +1682,7 @@
         fileId: null, origFileName: '', trimStart: 0, start: 0, duration: 5, maxDuration: 60,
         speed: 1.0, muted: false, audioGain: 1.0, transitionAfter: 'none',
         fadeIn: { type: 'none', dur: 0.8 }, fadeOut: { type: 'none', dur: 0.8 },
-        opacity: 1.0, blendMode: 'source-over', color: { b: 100, c: 100, s: 100, warm: 0 },
+        opacity: 1.0, blendMode: 'source-over', color: { b: 100, c: 100, s: 100, warm: 0, sharp: 0 },
         cutout: { mode: 'none', keyColor: '#00ff00', tolerance: 65, smoothness: 15 },
         mask: { type: 'none', feather: 12, penPoints: [] },
         baseTransform: { scaleX: 1.0, scaleY: 1.0, x: 0, y: 0, rot: 0 },
@@ -1644,7 +1701,6 @@
       vid.currentTime = clamped;
     }
 
-    // 匯出專用的安全尋址等待函式：確保影片切換至新時間點且畫面幀解碼完畢後才進行下一幀繪製
     function seekMediaAndWaitReady(vid, targetTime, timeoutMs = 350) {
       return new Promise((resolve) => {
         if (!vid || vid.tagName !== 'VIDEO') return resolve();
@@ -1709,7 +1765,8 @@
         baseTransform: { ...(c.baseTransform || { scaleX: 1.0, scaleY: 1.0, x: 0, y: 0, rot: 0 }) },
         crop: { ...(c.crop || { left: 0, right: 0, top: 0, bottom: 0 }) },
         keyframes: JSON.parse(JSON.stringify(c.keyframes || [])),
-        color: { ...c.color }, cutout: { ...c.cutout },
+        color: { b: 100, c: 100, s: 100, warm: 0, sharp: 0, ...(c.color || {}) },
+        cutout: { ...c.cutout },
         mask: { ...c.mask, penPoints: JSON.parse(JSON.stringify(c.mask.penPoints || [])) }
       };
     }
@@ -1920,6 +1977,13 @@
         }
       }
 
+      const col = { b: 100, c: 100, s: 100, warm: 0, sharp: 0, ...(clip.color || {}) };
+      if (col.sharp > 0) {
+        const curW = drawSource.width || drawSource.videoWidth || drawSource.naturalWidth || srcW;
+        const curH = drawSource.height || drawSource.videoHeight || drawSource.naturalHeight || srcH;
+        drawSource = applySharpenToSource(drawSource, curW, curH, col.sharp);
+      }
+
       const rects = computeClipStageRects(clip, localT, W, H, isPipLayer);
       const { dispW, dispH, cx, cy, tr, crop } = rects;
       const sf = state.renderScaleFactor || 1;
@@ -1932,7 +1996,6 @@
       targetCtx.translate(cx, cy);
       targetCtx.rotate(((tr.rot || 0) * Math.PI) / 180);
 
-      const col = clip.color || { b: 100, c: 100, s: 100, warm: 0 };
       targetCtx.filter = `brightness(${col.b}%) contrast(${col.c}%) saturate(${col.s}%) sepia(${col.warm > 0 ? col.warm * 0.6 : 0}%) hue-rotate(${col.warm < 0 ? col.warm * 0.8 : 0}deg)`;
 
       const isEditingCrop = (!state.isPlaying && !state.isExporting && state.canvasBoxMode === 'crop' && clip.id === state.selectedClipId);
@@ -3578,7 +3641,7 @@
               <strong style="color:${clip.speed > 1 ? 'var(--cyan)' : (clip.speed < 1 ? 'var(--gold)' : '#fff')}">${clip.speed}x</strong>
             </div>
             <div class="pill-group">${SPEED_PRESETS.map(sp => `<button class="pill ${Math.abs(clip.speed - sp.val) < 0.01 ? 'active' : ''}" data-speed="${sp.val}">${sp.label}</button>`).join('')}</div>
-            <div class="control-row"><label>無段變速</label><input type="range" min="0.25" max="4.0" step="0.05" value="${clip.speed}" id="clipSpeedRange"><span>${clip.speed.toFixed(2)}x</span></div>
+            <div class="control-row"><label>無段變速</label><input type="range" min="0.25" max="4.0" step="0.05" value="${clip.speed}" id="clipSpeedRange"><span class="val-badge" id="clipSpeedVal">${clip.speed.toFixed(2)}x</span></div>
           ` : `<div style="text-align:center; padding:10px 0; color:var(--text-muted);">點「T 文字直橫 → 匯入 .srt」可自動轉字幕並微調後接續 AI 配音！</div>`}
         `;
         document.getElementById('importPipBtn').onclick = () => { window._targetPipTrackId = state.pipTracks[0]?.id; document.getElementById('pipFileInput').click(); };
@@ -3618,7 +3681,7 @@
               <button class="chip-btn" id="testSysVoiceBtn">🔊 試聽</button>
             </div>
             <div class="control-row">
-              <label>語速倍率</label><input type="range" min="0.6" max="1.6" step="0.05" value="${vc.rate}" id="voiceRateRange"><span>${vc.rate.toFixed(2)}x</span>
+              <label>語速倍率</label><input type="range" min="0.6" max="1.6" step="0.05" value="${vc.rate}" id="voiceRateRange"><span class="val-badge">${vc.rate.toFixed(2)}x</span>
               <button class="pill ${vc.autoSyncPlayback ? 'active' : ''}" id="toggleAutoSpeakBtn">${vc.autoSyncPlayback ? '✅ 播放時自動唸字幕' : '⏸️ 暫停朗讀字幕'}</button>
             </div>
           ` : `
@@ -3663,17 +3726,17 @@
         container.innerHTML = `
           ${clip ? `
             <div style="font-size:11px; color:#fda4af; font-weight:700; margin-bottom:4px;">1. 片頭/片尾出入畫動畫（針對：${clip.name}）</div>
-            <div class="control-row"><label>片頭進場</label><button class="pill ${fadeIn.type === 'none' ? 'active' : ''}" data-fi="none">無</button><button class="pill ${fadeIn.type === 'black' ? 'active' : ''}" data-fi="black">⬛ 漸黑</button><button class="pill ${fadeIn.type === 'white' ? 'active' : ''}" data-fi="white">⬜ 漸白</button><input type="range" min="0.2" max="3.0" step="0.1" value="${fadeIn.dur}" id="fiDurRange" style="max-width:75px;"><span>${fadeIn.dur.toFixed(1)}s</span></div>
-            <div class="control-row"><label>片尾出場</label><button class="pill ${fadeOut.type === 'none' ? 'active' : ''}" data-fo="none">無</button><button class="pill ${fadeOut.type === 'black' ? 'active' : ''}" data-fo="black">⬛ 漸黑</button><button class="pill ${fadeOut.type === 'white' ? 'active' : ''}" data-fo="white">⬜ 漸白</button><input type="range" min="0.2" max="3.0" step="0.1" value="${fadeOut.dur}" id="foDurRange" style="max-width:75px;"><span>${fadeOut.dur.toFixed(1)}s</span></div>
+            <div class="control-row"><label>片頭進場</label><button class="pill ${fadeIn.type === 'none' ? 'active' : ''}" data-fi="none">無</button><button class="pill ${fadeIn.type === 'black' ? 'active' : ''}" data-fi="black">⬛ 漸黑</button><button class="pill ${fadeIn.type === 'white' ? 'active' : ''}" data-fi="white">⬜ 漸白</button><input type="range" min="0.2" max="3.0" step="0.1" value="${fadeIn.dur}" id="fiDurRange" style="max-width:75px;"><span class="val-badge">${fadeIn.dur.toFixed(1)}s</span></div>
+            <div class="control-row"><label>片尾出場</label><button class="pill ${fadeOut.type === 'none' ? 'active' : ''}" data-fo="none">無</button><button class="pill ${fadeOut.type === 'black' ? 'active' : ''}" data-fo="black">⬛ 漸黑</button><button class="pill ${fadeOut.type === 'white' ? 'active' : ''}" data-fo="white">⬜ 漸白</button><input type="range" min="0.2" max="3.0" step="0.1" value="${fadeOut.dur}" id="foDurRange" style="max-width:75px;"><span class="val-badge">${fadeOut.dur.toFixed(1)}s</span></div>
           ` : ''}
           <div style="font-size:11px; color:#93c5fd; font-weight:700; margin:6px 0 4px;">2. 動態粒子特效（下雪 ＆ 飄花瓣）</div>
           <div class="pill-group"><button class="pill ${fx.particleType === 'none' ? 'active' : ''}" data-pt="none">無粒子</button><button class="pill ${fx.particleType === 'snow' ? 'active' : ''}" data-pt="snow">❄️ 下雪特效</button><button class="pill ${fx.particleType === 'petal' ? 'active' : ''}" data-pt="petal">🌸 飄花瓣特效</button></div>
           ${fx.particleType !== 'none' ? `
-            <div class="control-row"><label>粒子大小</label><input type="range" min="2" max="18" step="0.5" value="${fx.particleSize}" id="ptSizeRange"><span>${fx.particleSize}</span><label style="min-width:34px;">密度</label><input type="range" min="10" max="150" step="5" value="${fx.particleDensity}" id="ptDensRange"><span>${fx.particleDensity}</span></div>
+            <div class="control-row"><label>粒子大小</label><input type="range" min="2" max="18" step="0.5" value="${fx.particleSize}" id="ptSizeRange"><span class="val-badge">${fx.particleSize}</span><label style="min-width:34px;">密度</label><input type="range" min="10" max="150" step="5" value="${fx.particleDensity}" id="ptDensRange"><span class="val-badge">${fx.particleDensity}</span></div>
             ${fx.particleType === 'petal' ? `<div class="pill-group">${PETAL_COLORS.map(pc => `<button class="pill ${fx.petalColor === pc.hex ? 'active' : ''}" data-pcol="${pc.hex}">${pc.name}</button>`).join('')}</div>` : ''}
           ` : ''}
           <div style="font-size:11px; color:#ffcc33; font-weight:700; margin:6px 0 4px;">3. 舞台聚光燈效果</div>
-          <div class="control-row"><button class="pill ${sp.enabled ? 'active' : ''}" id="toggleSpotBtn">${sp.enabled ? '🔦 聚光燈：開啟中' : '🔦 開啟舞台聚光燈'}</button>${sp.enabled ? `<label style="min-width:52px;">打光角度</label><input type="range" min="-60" max="60" step="2" value="${sp.angle}" id="spotAngleRange"><span>${sp.angle}°</span>` : ''}</div>
+          <div class="control-row"><button class="pill ${sp.enabled ? 'active' : ''}" id="toggleSpotBtn">${sp.enabled ? '🔦 聚光燈：開啟中' : '🔦 開啟舞台聚光燈'}</button>${sp.enabled ? `<label style="min-width:52px;">打光角度</label><input type="range" min="-60" max="60" step="2" value="${sp.angle}" id="spotAngleRange"><span class="val-badge">${sp.angle}°</span>` : ''}</div>
           ${sp.enabled ? `
             <div class="control-row"><label>光圈寬度</label><input type="range" min="0.15" max="0.75" step="0.02" value="${sp.spread}" id="spotSpreadRange"><label style="min-width:52px;">環境暗度</label><input type="range" min="0.2" max="0.95" step="0.05" value="${sp.darkness}" id="spotDarkRange"></div>
             <div class="control-row"><label>焦點左右</label><input type="range" min="0.05" max="0.95" step="0.02" value="${sp.focusX}" id="spotXRange"><label style="min-width:52px;">焦點上下</label><input type="range" min="0.1" max="0.95" step="0.02" value="${sp.focusY}" id="spotYRange"></div>
@@ -3708,8 +3771,8 @@
             <span style="color:#ffcc33; font-weight:700;">◆ 關鍵幀（已設 ${kfCount} 點）</span>
             <div style="display:flex; gap:5px;"><button class="chip-btn" style="background:rgba(255,204,51,0.2); border-color:#ffcc33; color:#ffcc33;" id="addKfBtn">＋ 打關鍵幀</button><button class="chip-btn danger" id="clearKfBtn">清空關鍵幀</button></div>
           </div>
-          <div class="control-row"><label>水平寬度</label><input type="range" min="0.1" max="3.0" step="0.05" value="${curTr.scaleX ?? 1}" id="kfScaleX"><span>${(curTr.scaleX ?? 1).toFixed(2)}x</span><label style="min-width:52px;">垂直高度</label><input type="range" min="0.1" max="3.0" step="0.05" value="${curTr.scaleY ?? 1}" id="kfScaleY"><span>${(curTr.scaleY ?? 1).toFixed(2)}x</span></div>
-          <div class="control-row"><label>左右位移</label><input type="range" min="-600" max="600" step="4" value="${curTr.x}" id="kfX"><span>${Math.round(curTr.x)}</span><label style="min-width:52px;">上下位移</label><input type="range" min="-800" max="800" step="4" value="${curTr.y}" id="kfY"><span>${Math.round(curTr.y)}</span></div>
+          <div class="control-row"><label>水平寬度</label><input type="range" min="0.1" max="3.0" step="0.05" value="${curTr.scaleX ?? 1}" id="kfScaleX"><span class="val-badge">${(curTr.scaleX ?? 1).toFixed(2)}x</span><label style="min-width:52px;">垂直高度</label><input type="range" min="0.1" max="3.0" step="0.05" value="${curTr.scaleY ?? 1}" id="kfScaleY"><span class="val-badge">${(curTr.scaleY ?? 1).toFixed(2)}x</span></div>
+          <div class="control-row"><label>左右位移</label><input type="range" min="-600" max="600" step="4" value="${curTr.x}" id="kfX"><span class="val-badge">${Math.round(curTr.x)}</span><label style="min-width:52px;">上下位移</label><input type="range" min="-800" max="800" step="4" value="${curTr.y}" id="kfY"><span class="val-badge">${Math.round(curTr.y)}</span></div>
         `;
         document.getElementById('addKfBtn').onclick = () => { pushUndo(); addManualKeyframeAtCurrentTime(clip, selObj.isPip); renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); showToast(`已在 ${localT.toFixed(1)}s 手動打下關鍵幀 ◆`); };
         document.getElementById('clearKfBtn').onclick = () => { pushUndo(); clip.baseTransform = { ...getInterpolatedTransform(clip, localT) }; clip.keyframes = []; renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); showToast('已清空所有關鍵幀'); };
@@ -3727,10 +3790,10 @@
           ${cut.mode === 'chroma' ? `<div class="control-row"><label>去背顏色</label><input type="color" value="${cut.keyColor}" id="keyColorPick" style="width:32px; height:24px; border:none; background:none;"><button class="chip-btn" id="eyedropBtn">${state.eyedropperMode ? '🎯 請點畫布取色...' : '💉 畫布滴管取色'}</button><label style="min-width:32px;">容差</label><input type="range" min="10" max="180" value="${cut.tolerance}" id="keyTolRange"></div>` : ''}
           <div style="font-size:11px; color:#93c5fd; font-weight:700; margin:6px 0 4px;">2. 畫中畫融合模式 ＆ 不透明度</div>
           <div class="pill-group">${BLEND_MODES.map(bm => `<button class="pill ${clip.blendMode === bm.id ? 'active' : ''}" data-blend="${bm.id}">${bm.name}</button>`).join('')}</div>
-          <div class="control-row"><label>不透明度</label><input type="range" min="0" max="1" step="0.05" value="${clip.opacity ?? 1}" id="clipOpacityRange"><span>${Math.round((clip.opacity ?? 1) * 100)}%</span></div>
+          <div class="control-row"><label>不透明度</label><input type="range" min="0" max="1" step="0.05" value="${clip.opacity ?? 1}" id="clipOpacityRange"><span class="val-badge">${Math.round((clip.opacity ?? 1) * 100)}%</span></div>
           <div style="font-size:11px; color:#ffcc33; font-weight:700; margin:6px 0 4px;">3. 遮罩形狀 ＆ 鋼筆自訂路徑</div>
           <div class="pill-group">${MASK_TYPES.map(mt => `<button class="pill ${msk.type === mt.id ? 'active' : ''}" data-mask="${mt.id}">${mt.name}</button>`).join('')}</div>
-          ${msk.type === 'feather' ? `<div class="control-row"><label>羽化柔邊</label><input type="range" min="2" max="60" value="${msk.feather || 20}" id="maskFeatherRange"><span>${msk.feather || 20}</span></div>` : ''}
+          ${msk.type === 'feather' ? `<div class="control-row"><label>羽化柔邊</label><input type="range" min="2" max="60" value="${msk.feather || 20}" id="maskFeatherRange"><span class="val-badge">${msk.feather || 20}</span></div>` : ''}
           ${msk.type === 'pen' ? `<div class="control-row"><button class="chip-btn" style="border-color:var(--gold); color:var(--gold);" id="togglePenBtn">${state.penEditMode ? '✅ 完成鋼筆點選' : '✒️ 繼續點選畫布錨點'}</button><button class="chip-btn danger" id="clearPenBtn">🗑️ 清除路徑 (${(msk.penPoints || []).length}點)</button></div>` : ''}
         `;
         container.querySelectorAll('[data-cut]').forEach(btn => { btn.onclick = () => { pushUndo(); clip.cutout.mode = btn.dataset.cut; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); }; });
@@ -3790,7 +3853,7 @@
                 <div class="control-row" style="margin-bottom:2px;">
                   <label>動畫速度</label>
                   <input type="range" min="0.15" max="1.2" step="0.05" value="${sub.animDur ?? 0.35}" id="subAnimDurRange">
-                  <span>${(sub.animDur ?? 0.35).toFixed(2)}s</span>
+                  <span class="val-badge">${(sub.animDur ?? 0.35).toFixed(2)}s</span>
                   <button class="chip-btn" id="previewSubAnimBtn">▶ 預覽動畫</button>
                 </div>
               ` : ''}
@@ -3803,7 +3866,7 @@
                 <button class="pill ${sub.orientation === 'vertical' ? 'active' : ''}" id="orientVertBtn">⬇️ 直式</button>
                 <label style="min-width:34px;">字級</label>
                 <input type="range" min="14" max="54" value="${sub.size}" id="subSizeRange">
-                <span>${sub.size}</span>
+                <span class="val-badge">${sub.size}</span>
               </div>
               <div class="control-row" style="margin-bottom:2px;">
                 <label>字體顏色</label>
@@ -3820,7 +3883,7 @@
                   <input type="color" value="${sub.stroke || '#000000'}" id="subStrokeColorPick" style="width:28px; height:24px; border:none; background:none; cursor:pointer;">
                   <label style="min-width:34px;">粗細</label>
                   <input type="range" min="1" max="8" step="0.5" value="${sub.strokeWidth ?? 3}" id="subStrokeWidthRange">
-                  <span>${sub.strokeWidth ?? 3}px</span>
+                  <span class="val-badge">${sub.strokeWidth ?? 3}px</span>
                 ` : '<span style="color:var(--text-muted); font-size:11px;">點擊左側開啟文字描邊外框</span>'}
               </div>
 
@@ -3830,10 +3893,10 @@
                   <input type="color" value="${sub.shadowColor || '#000000'}" id="subShadowColorPick" style="width:28px; height:24px; border:none; background:none; cursor:pointer;">
                   <label style="min-width:34px;">大小</label>
                   <input type="range" min="0" max="24" step="1" value="${sub.shadowBlur ?? 8}" id="subShadowBlurRange">
-                  <span>${sub.shadowBlur ?? 8}</span>
+                  <span class="val-badge">${sub.shadowBlur ?? 8}</span>
                   <label style="min-width:34px;">偏移</label>
                   <input type="range" min="0" max="12" step="1" value="${sub.shadowOffset ?? 3}" id="subShadowOffsetRange">
-                  <span>${sub.shadowOffset ?? 3}</span>
+                  <span class="val-badge">${sub.shadowOffset ?? 3}</span>
                 ` : '<span style="color:var(--text-muted); font-size:11px;">可切換為柔和投影、調整陰影大小</span>'}
               </div>
 
@@ -3900,7 +3963,7 @@
           };
           if (document.getElementById('subStrokeColorPick')) {
             document.getElementById('subStrokeColorPick').oninput = (e) => { sub.stroke = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
-            document.getElementById('subStrokeWidthRange').oninput = (e) => { sub.strokeWidth = parseFloat(e.target.value); renderFrame(); scheduleAutoSaveDraft(); };
+            document.getElementById('subStrokeWidthRange').oninput = (e) => { sub.strokeWidth = parseFloat(e.target.value); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
           }
 
           document.getElementById('toggleSubShadowBtn').onclick = () => {
@@ -3910,8 +3973,8 @@
           };
           if (document.getElementById('subShadowColorPick')) {
             document.getElementById('subShadowColorPick').oninput = (e) => { sub.shadowColor = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
-            document.getElementById('subShadowBlurRange').oninput = (e) => { sub.shadowBlur = parseInt(e.target.value, 10); renderFrame(); scheduleAutoSaveDraft(); };
-            document.getElementById('subShadowOffsetRange').oninput = (e) => { sub.shadowOffset = parseInt(e.target.value, 10); renderFrame(); scheduleAutoSaveDraft(); };
+            document.getElementById('subShadowBlurRange').oninput = (e) => { sub.shadowBlur = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+            document.getElementById('subShadowOffsetRange').oninput = (e) => { sub.shadowOffset = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
           }
 
           container.querySelectorAll('[data-subbg]').forEach(btn => {
@@ -3936,23 +3999,54 @@
         });
       }
       else if (state.activeTab === 'color') {
-        if (!clip) { container.innerHTML = `<p style="color:var(--text-muted); text-align:center; margin-top:20px;">請先匯入並選取主影片或畫中畫，再調整調色濾鏡 🎨</p>`; return; }
+        if (!clip) { container.innerHTML = `<p style="color:var(--text-muted); text-align:center; margin-top:20px;">請先匯入並選取主影片或畫中畫，再調整調色與銳利度 🎨</p>`; return; }
+        if (!clip.color) clip.color = { b: 100, c: 100, s: 100, warm: 0, sharp: 0 };
+        if (typeof clip.color.sharp !== 'number') clip.color.sharp = 0;
         const col = clip.color;
         container.innerHTML = `
-          <div class="pill-group">${FILTER_PRESETS.map(p => `<button class="pill" data-preset="${p.id}">${p.name}</button>`).join('')}</div>
-          <div class="control-row"><label>亮度</label><input type="range" min="60" max="150" value="${col.b}" id="colB"><span>${col.b}%</span></div>
-          <div class="control-row"><label>對比度</label><input type="range" min="60" max="160" value="${col.c}" id="colC"><span>${col.c}%</span></div>
-          <div class="control-row"><label>飽和度</label><input type="range" min="0" max="180" value="${col.s}" id="colS"><span>${col.s}%</span></div>
-          <div class="control-row"><label>色溫冷暖</label><input type="range" min="-40" max="40" value="${col.warm}" id="colW"><span>${col.warm}</span></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:6px;">
+            <div class="pill-group" style="margin-bottom:0; flex:1;">${FILTER_PRESETS.map(p => `<button class="pill" data-preset="${p.id}">${p.name}</button>`).join('')}</div>
+            <button class="chip-btn" id="resetColorBtn" title="將所有調色與銳利度恢復為預設值">🔄 重設</button>
+          </div>
+          <div class="control-row"><label>亮度</label><input type="range" min="0" max="200" step="1" value="${col.b}" id="colB"><span class="val-badge" id="colBVal">${col.b}%</span></div>
+          <div class="control-row"><label>對比度</label><input type="range" min="0" max="200" step="1" value="${col.c}" id="colC"><span class="val-badge" id="colCVal">${col.c}%</span></div>
+          <div class="control-row"><label>飽和度</label><input type="range" min="0" max="200" step="1" value="${col.s}" id="colS"><span class="val-badge" id="colSVal">${col.s}%</span></div>
+          <div class="control-row"><label>色溫冷暖</label><input type="range" min="-50" max="50" step="1" value="${col.warm}" id="colW"><span class="val-badge" id="colWVal">${col.warm > 0 ? '+' + col.warm : col.warm}</span></div>
+          <div class="control-row"><label>銳利度</label><input type="range" min="0" max="100" step="1" value="${col.sharp}" id="colSharp"><span class="val-badge" id="colSharpVal">${col.sharp}%</span></div>
         `;
         container.querySelectorAll('[data-preset]').forEach(btn => {
-          btn.onclick = () => { pushUndo(); const p = FILTER_PRESETS.find(x => x.id === btn.dataset.preset); clip.color = { b: p.b, c: p.c, s: p.s, warm: p.warm }; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+          btn.onclick = () => {
+            pushUndo();
+            const p = FILTER_PRESETS.find(x => x.id === btn.dataset.preset);
+            clip.color = { b: p.b, c: p.c, s: p.s, warm: p.warm, sharp: p.sharp ?? 0 };
+            renderDrawer(); renderFrame(); scheduleAutoSaveDraft();
+          };
         });
-        ['colB', 'colC', 'colS', 'colW'].forEach(id => {
-          document.getElementById(id).oninput = (e) => {
+        document.getElementById('resetColorBtn').onclick = () => {
+          pushUndo();
+          clip.color = { b: 100, c: 100, s: 100, warm: 0, sharp: 0 };
+          renderDrawer(); renderFrame(); scheduleAutoSaveDraft();
+          showToast('已重設所有調色與銳利度數值');
+        };
+        const colorSliderDefs = [
+          { id: 'colB', valId: 'colBVal', key: 'b', fmt: v => `${v}%` },
+          { id: 'colC', valId: 'colCVal', key: 'c', fmt: v => `${v}%` },
+          { id: 'colS', valId: 'colSVal', key: 's', fmt: v => `${v}%` },
+          { id: 'colW', valId: 'colWVal', key: 'warm', fmt: v => (v > 0 ? `+${v}` : `${v}`) },
+          { id: 'colSharp', valId: 'colSharpVal', key: 'sharp', fmt: v => `${v}%` }
+        ];
+        colorSliderDefs.forEach(({ id, valId, key, fmt }) => {
+          const inp = document.getElementById(id);
+          const badge = document.getElementById(valId);
+          let undoSaved = false;
+          inp.addEventListener('pointerdown', () => { undoSaved = false; });
+          inp.oninput = (e) => {
+            if (!undoSaved) { pushUndo(); undoSaved = true; }
             const val = parseInt(e.target.value, 10);
-            if (id === 'colB') col.b = val; if (id === 'colC') col.c = val; if (id === 'colS') col.s = val; if (id === 'colW') col.warm = val;
-            renderFrame(); scheduleAutoSaveDraft();
+            col[key] = val;
+            if (badge) badge.textContent = fmt(val);
+            renderFrame();
+            scheduleAutoSaveDraft();
           };
         });
       }
@@ -3966,11 +4060,11 @@
           </div>
           ${hasVideoClip ? `
             <div style="font-size:11px; color:#93c5fd; font-weight:700; margin:4px 0;">🎞️ 影片原聲控制（${clip.name}）</div>
-            <div class="control-row"><button class="chip-btn ${clip.muted ? 'danger' : ''}" id="toggleVidMuteBtn">${clip.muted ? '🔇 原聲已靜音' : '🔊 原聲開啟中'}</button><label style="min-width:52px;">原聲增益</label><input type="range" min="0" max="3" step="0.05" value="${clip.audioGain ?? 1}" id="vidGainRange" ${clip.muted ? 'disabled' : ''}><span>${Math.round((clip.audioGain ?? 1) * 100)}%</span></div>
+            <div class="control-row"><button class="chip-btn ${clip.muted ? 'danger' : ''}" id="toggleVidMuteBtn">${clip.muted ? '🔇 原聲已靜音' : '🔊 原聲開啟中'}</button><label style="min-width:52px;">原聲增益</label><input type="range" min="0" max="3" step="0.05" value="${clip.audioGain ?? 1}" id="vidGainRange" ${clip.muted ? 'disabled' : ''}><span class="val-badge">${Math.round((clip.audioGain ?? 1) * 100)}%</span></div>
           ` : ''}
           ${aClip ? `
             <div style="font-size:11px; color:#6ee7b7; font-weight:700; margin:6px 0 4px;">🎵 獨立音軌片段控制（${aClip.name}）</div>
-            <div class="control-row"><button class="chip-btn ${aClip.muted ? 'danger' : ''}" id="toggleAudMuteBtn">${aClip.muted ? '🔇 音軌已靜音' : '🔊 音軌開啟'}</button><label style="min-width:52px;">音軌增益</label><input type="range" min="0" max="3" step="0.05" value="${aClip.gain ?? 1}" id="audGainRange" ${aClip.muted ? 'disabled' : ''}><span>${Math.round((aClip.gain ?? 1) * 100)}%</span><button class="chip-btn danger" id="delAudClipBtn">🗑️</button></div>
+            <div class="control-row"><button class="chip-btn ${aClip.muted ? 'danger' : ''}" id="toggleAudMuteBtn">${aClip.muted ? '🔇 音軌已靜音' : '🔊 音軌開啟'}</button><label style="min-width:52px;">音軌增益</label><input type="range" min="0" max="3" step="0.05" value="${aClip.gain ?? 1}" id="audGainRange" ${aClip.muted ? 'disabled' : ''}><span class="val-badge">${Math.round((aClip.gain ?? 1) * 100)}%</span><button class="chip-btn danger" id="delAudClipBtn">🗑️</button></div>
           ` : `<p style="color:var(--text-muted); font-size:11px; text-align:center; margin:8px 0 0;">支援直接匯入音樂、AI 配音或「匯入影片轉音軌」，匯出時自動混音。</p>`}
         `;
         if (document.getElementById('extractCurVidBtn') && hasVideoClip) document.getElementById('extractCurVidBtn').onclick = () => extractAudioFromClip(clip, selObj.isPip);
@@ -4485,7 +4579,7 @@
       return list;
     }
 
-    // ====== 逐幀同步＋音訊即時對齊的高穩定性匯出引擎（解決切段時畫面卡住只剩字幕在動的問題） ======
+    // ====== 逐幀同步＋音訊即時對齊的高穩定性匯出引擎 ======
     async function prepareAndSyncAllMediaForExportTime(tSec, isPlayingAudio) {
       ensureMainClipsTimelineStarts();
       const seekPromises = [];
