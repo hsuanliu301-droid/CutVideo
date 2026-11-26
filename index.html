@@ -90,6 +90,7 @@
     .chip-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); font-size: 11px; font-weight: 600; padding: 4px 7px; border-radius: 6px; cursor: pointer; white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 2px; }
     .chip-btn:disabled { opacity: 0.38; cursor: not-allowed; }
     .chip-btn.history-active { border-color: var(--blue); color: #bae6fd; }
+    .chip-btn.marquee-active { border-color: var(--cyan); background: rgba(44, 230, 195, 0.22); color: var(--cyan); box-shadow: 0 0 8px rgba(44, 230, 195, 0.25); }
     .chip-btn.group-ready { border-color: var(--gold); background: rgba(255, 204, 51, 0.16); color: #fef08a; }
     .chip-btn.group-linked { border-color: var(--purple); background: rgba(168, 85, 247, 0.22); color: #e9d5ff; }
     .chip-btn.snap-on { background: rgba(44, 230, 195, 0.16); border-color: var(--cyan); color: var(--cyan); }
@@ -100,8 +101,9 @@
     @media (min-width: 768px) { .zoom-box input[type="range"] { width: 85px; } }
 
     .timeline-shell { position: relative; flex: 1; min-height: 95px; display: flex; flex-direction: column; overflow: hidden; }
-    .timeline-area { flex: 1; min-height: 95px; background: #121419; position: relative; overflow-x: auto; overflow-y: auto; border-bottom: 1px solid var(--border); cursor: crosshair; touch-action: pan-y; }
+    .timeline-area { flex: 1; min-height: 95px; background: #121419; position: relative; overflow-x: auto; overflow-y: auto; border-bottom: 1px solid var(--border); cursor: grab; touch-action: pan-y; }
     .timeline-area.grabbing { cursor: grabbing; }
+    .timeline-area.marquee-mode { cursor: crosshair !important; }
     .timeline-area.compact-reorder-mode { background: #161822; overflow-x: hidden; }
     .timeline-area.compact-reorder-mode .ruler { opacity: 0.15; }
     .timeline-area.compact-reorder-mode .timeline-inner { width: 100% !important; padding: 24px 16px 18px 16px; display: flex; flex-direction: column; align-items: center; }
@@ -283,7 +285,7 @@
 
   <!-- Stage -->
   <div class="stage-wrap" id="stageWrap">
-    <div class="stage-hint" id="stageHint">直接拖曳畫面可移動 · 時間軸空白處拖曳可框選多軌同步平移</div>
+    <div class="stage-hint" id="stageHint">直接拖曳畫面可移動 · 時間軸拖曳可即時預覽時間（點「框選模式」切換多選）</div>
     <div class="stage-top-right">
       <div class="stage-pill-box" title="切換畫布框線操作模式">
         <button class="stage-mode-btn active" id="modeTransformBtn">↔️ 拉伸/移動</button>
@@ -306,6 +308,7 @@
     <button class="play-btn" id="playBtn" title="播放/暫停 (Space)">▶</button>
     <div class="quick-actions">
       <button class="chip-btn" id="splitBtn" title="分割片段/音軌 (S)">✂️ 分割</button>
+      <button class="chip-btn" id="toggleMarqueeBtn" title="開啟框選模式（鼠標變十字），可一次框選多軌同步平移">⬚ 框選模式:關</button>
       <button class="chip-btn" id="groupLinkBtn" title="框選或 Shift 多選後點擊可鎖定為群組連動，再次點擊可解除群組 (Ctrl+G)">🔗 群組/連結</button>
       <button class="chip-btn danger" id="deleteSelectedBtn" title="刪除選取項目 (Delete)">🗑️ 刪除</button>
       <button class="chip-btn" id="undoBtn" title="撤回上一步 (Ctrl+Z)" disabled>↩️ 上一步</button>
@@ -515,6 +518,7 @@
       pxPerSec: 55,
       snapEnabled: true,
       snapThresholdPx: 14,
+      marqueeMode: false,
       ratio: '9:16',
       exportQuality: '1080p',
       renderScaleFactor: 1,
@@ -552,6 +556,35 @@
       clips: [],
       subtitles: [],
       audioClips: []
+    };
+
+    // ====== 框選模式切換（預設關閉：時間軸空白處保持原本按住拖動播放時間；開啟後鼠標變十字可拉出選取框） ======
+    function setMarqueeMode(enabled) {
+      state.marqueeMode = Boolean(enabled);
+      const btn = document.getElementById('toggleMarqueeBtn');
+      const area = document.getElementById('timelineScroll');
+      if (btn) {
+        btn.textContent = state.marqueeMode ? '✚ 框選模式:開' : '⬚ 框選模式:關';
+        btn.classList.toggle('marquee-active', state.marqueeMode);
+      }
+      if (area) {
+        area.classList.toggle('marquee-mode', state.marqueeMode);
+      }
+    }
+
+    document.getElementById('toggleMarqueeBtn').onclick = () => {
+      const next = !state.marqueeMode;
+      setMarqueeMode(next);
+      if (!next && state.multiSelectedIds.length > 0) {
+        state.multiSelectedIds = [];
+        updateDeleteButtonLabel();
+        updateGroupButtonUI();
+        renderTimeline();
+      }
+      showToast(next
+        ? '已開啟框選模式（鼠標已變十字）：在時間軸空白處拖曳框選多軌素材 ✚'
+        : '已切回時間軸拖動預覽模式（按住空白處左右拖動播放時間）🖐️'
+      );
     };
 
     // ====== 主軌時間起點定位與重疊防護（支援多選平移擠出中間空檔） ======
@@ -651,7 +684,7 @@
       const ids = getCurrentEffectiveSelectedIds();
       const entities = ids.map(id => findTimelineEntityById(id)).filter(Boolean);
       if (entities.length === 0) {
-        return showToast('請先在時間軸空白處拖曳框選（或按住 Shift 點選）多個素材');
+        return showToast('請先開啟「框選模式」（或按住 Shift 點選）多個素材');
       }
 
       const groupSet = new Set(entities.map(e => e.item.groupId).filter(Boolean));
@@ -678,6 +711,7 @@
       const newGroupId = 'grp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
       entities.forEach(ent => { ent.item.groupId = newGroupId; });
       state.multiSelectedIds = entities.map(e => e.id);
+      if (state.marqueeMode) setMarqueeMode(false);
       updateGroupButtonUI();
       renderTimeline();
       scheduleAutoSaveDraft();
@@ -3066,7 +3100,7 @@
       if (sidebar) sidebar.style.transform = `translateY(${-timelineScroll.scrollTop}px)`;
     }, { passive: true });
 
-    // ====== 時間軸空白處滑鼠左鍵框選多重平移（Marquee Selection）＋ 標尺拖曳尋址 ======
+    // ====== 時間軸空白處預設按住左右拖動播放時間（並即時同步顯示窗）＋ 切換「框選模式」後可十字框選 ======
     let isDraggingTimeline = false, timelineWasDragged = false, dragStartX = 0, dragStartY = 0, dragStartScrollLeft = 0;
     let marqueeSelectState = null;
     const marqueeBoxEl = document.getElementById('marqueeBox');
@@ -3090,17 +3124,8 @@
 
       if (state.isPlaying) togglePlay(false);
 
-      if (e.target.closest('#ruler')) {
-        isDraggingTimeline = true;
-        timelineWasDragged = false;
-        dragStartX = e.clientX;
-        dragStartY = e.clientY;
-        dragStartScrollLeft = timelineScroll.scrollLeft;
-        timelineScroll.classList.add('grabbing');
-        return;
-      }
-
-      if (e.button === 0) {
+      // 只有在明確開啟「框選模式」（且非點擊上方時間尺規）時，才啟動十字框選多軌素材
+      if (state.marqueeMode && !e.target.closest('#ruler') && e.button === 0) {
         e.preventDefault();
         const pt = getTimelineInnerCoords(e.clientX, e.clientY);
         marqueeSelectState = {
@@ -3115,7 +3140,16 @@
         marqueeBoxEl.style.width = '0px';
         marqueeBoxEl.style.height = '0px';
         marqueeBoxEl.style.display = 'block';
+        return;
       }
+
+      // 預設模式：在時間軸空白處或尺規按住左右拖動，即時滾動時間軸並同步更新顯示窗畫面
+      isDraggingTimeline = true;
+      timelineWasDragged = false;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      dragStartScrollLeft = timelineScroll.scrollLeft;
+      timelineScroll.classList.add('grabbing');
     });
 
     window.addEventListener('pointermove', (e) => {
