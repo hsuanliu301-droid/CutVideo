@@ -29,9 +29,7 @@
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
     body { margin: 0; background: var(--bg-dark); color: var(--text-main); font-family: 'Noto Sans TC', sans-serif; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-    
-    /* ✨ 修復：避免解碼池完全隱藏導致瀏覽器硬體加速中斷 */
-    #videoDecodePool { position: absolute; top: 0; left: 0; width: 10px; height: 10px; opacity: 0.05; pointer-events: none; overflow: hidden; z-index: -999; }
+    #videoDecodePool { position: fixed; bottom: 0; right: 0; width: 2px; height: 2px; opacity: 0.001; pointer-events: none; overflow: hidden; z-index: -1; }
 
     .topbar { height: 44px; padding: 0 12px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 6px; }
     .brand { font-weight: 900; font-size: 16px; display: flex; align-items: center; gap: 6px; }
@@ -346,7 +344,7 @@
     let state = {
       pxPerSec: 55, snapEnabled: true, snapThresholdPx: 14, ratio: '9:16', exportQuality: '1080p', renderScaleFactor: 1, currentTime: 0, isPlaying: false, isExporting: false,
       activeTab: 'media', drawerCollapsed: false, canvasBoxMode: 'transform',
-      marqueeMode: false, multiSelectedItems: [],
+      marqueeMode: false, multiSelectedItems: [], // Array of { id, type }
       lastSelectedType: 'clip', selectedClipId: null, selectedSubId: null, selectedAudioId: null, fontFilter: '全部', penEditMode: false, eyedropperMode: false,
       trackVisibility: { main: true, audio: true, sub: true },
       voiceConfig: { engine: savedVoiceCfg.engine || 'browser', browserVoiceURI: savedVoiceCfg.browserVoiceURI || '', rate: savedVoiceCfg.rate || 1.0, autoSyncPlayback: savedVoiceCfg.autoSyncPlayback !== false, provider: savedVoiceCfg.provider || 'elevenlabs', apiKey: savedVoiceCfg.apiKey || '', voiceId: savedVoiceCfg.voiceId || '', scriptDraft: '' },
@@ -537,22 +535,7 @@
       const badge = document.getElementById('draftStatusBadge'); if (badge) badge.textContent = '💾 儲存草稿中...';
       clearTimeout(draftSaveTimer);
       draftSaveTimer = setTimeout(async () => {
-        try { 
-          const db = await openDraftDB(), payload = buildSerializableProjectPayload(), tx = db.transaction(STORE_PROJECT, 'readwrite'); 
-          tx.objectStore(STORE_PROJECT).put(payload, 'latest_draft'); 
-          
-          tx.oncomplete = () => { if (badge) badge.textContent = `💾 草稿已存 ${new Date().toTimeString().slice(0, 5)}`; }; 
-          
-          // ✨ 錯誤攔截：跳出容量不足警告
-          tx.onerror = (e) => {
-            console.warn('草稿寫入失敗', e);
-            if (badge) badge.textContent = '⚠️ 空間不足';
-            if (!window._toastQuotaWarned) {
-              showToast('瀏覽器儲存空間不足，請使用右上角「匯出/工程檔」備份專案進度！');
-              window._toastQuotaWarned = true;
-            }
-          };
-        } catch (_) { if (badge) badge.textContent = '💾 本機草稿'; }
+        try { const db = await openDraftDB(), payload = buildSerializableProjectPayload(), tx = db.transaction(STORE_PROJECT, 'readwrite'); tx.objectStore(STORE_PROJECT).put(payload, 'latest_draft'); tx.oncomplete = () => { if (badge) badge.textContent = `💾 草稿已存 ${new Date().toTimeString().slice(0, 5)}`; }; } catch (_) { if (badge) badge.textContent = '💾 本機草稿'; }
       }, 600);
     }
     async function clearDraftCache() { try { const db = await openDraftDB(), tx = db.transaction([STORE_PROJECT, STORE_FILES], 'readwrite'); tx.objectStore(STORE_PROJECT).clear(); tx.objectStore(STORE_FILES).clear(); memoryBlobRegistry.clear(); const badge = document.getElementById('draftStatusBadge'); if (badge) badge.textContent = '💾 草稿已清空'; showToast('已清除本機暫存草稿 🗑️'); } catch (_) {} }
@@ -568,39 +551,18 @@
     }
 
     async function applyDeserializedProject(saved, customBlobMap = null) {
-      const missingRefs = [];
-      const resolveBlob = async (fileId, fallbackName, mediaType) => {
-        if (customBlobMap && customBlobMap.has(fileId)) { const b = customBlobMap.get(fileId); await saveMediaBlobToDB(fileId, b); return b; }
-        const blob = await getMediaBlobFromDB(fileId);
-        if (!blob && fileId) missingRefs.push({ fileId, origFileName: fallbackName, mediaType });
-        return blob;
-      };
-
-      // ✨ 修復：即使找不到影片 blob (el = null)，一樣將剪輯斷點資料推入時間軸保留
-      const restoredClips = []; for (const c of (saved.clips || [])) { const blob = await resolveBlob(c.fileId, c.origFileName || c.name, c.mediaType), el = await recreateElementFromBlob(blob, c.mediaType, c.trimStart || 0.01, false); restoredClips.push({ ...c, mediaEl: el }); }
-      const restoredPipTracks = []; for (const tr of (saved.pipTracks || [])) { const pClips = []; for (const p of (tr.clips || [])) { const blob = await resolveBlob(p.fileId, p.origFileName || p.name, p.mediaType), el = await recreateElementFromBlob(blob, p.mediaType, p.trimStart || 0.01, false); pClips.push({ ...p, mediaEl: el }); } restoredPipTracks.push({ ...tr, clips: pClips }); }
-      const restoredAudio = []; for (const a of (saved.audioClips || [])) { const blob = await resolveBlob(a.fileId, a.origFileName || a.name, a.fromVideo ? 'video' : 'audio'), el = await recreateElementFromBlob(blob, a.fromVideo ? 'video' : 'audio', a.trimStart || 0.01, true); restoredAudio.push({ ...a, mediaEl: el }); }
-      if (saved.background) { state.background = { ...saved.background, mediaEl: null }; if (saved.background.mode === 'custom' && saved.background.mediaFileId) { const bgBlob = await resolveBlob(saved.background.mediaFileId, saved.background.mediaName, saved.background.mediaType), bgEl = await recreateElementFromBlob(bgBlob, saved.background.mediaType, 0.01, false); if (bgEl) { if (saved.background.mediaType === 'video') { bgEl.loop = true; bgEl.muted = true; } state.background.mediaEl = bgEl; } } }
-      
+      const resolveBlob = async (fileId) => { if (customBlobMap && customBlobMap.has(fileId)) { const b = customBlobMap.get(fileId); await saveMediaBlobToDB(fileId, b); return b; } return await getMediaBlobFromDB(fileId); };
+      const restoredClips = []; for (const c of (saved.clips || [])) { const blob = await resolveBlob(c.fileId), el = await recreateElementFromBlob(blob, c.mediaType, c.trimStart || 0.01, false); if (el) restoredClips.push({ ...c, mediaEl: el }); }
+      const restoredPipTracks = []; for (const tr of (saved.pipTracks || [])) { const pClips = []; for (const p of (tr.clips || [])) { const blob = await resolveBlob(p.fileId), el = await recreateElementFromBlob(blob, p.mediaType, p.trimStart || 0.01, false); if (el) pClips.push({ ...p, mediaEl: el }); } restoredPipTracks.push({ ...tr, clips: pClips }); }
+      const restoredAudio = []; for (const a of (saved.audioClips || [])) { const blob = await resolveBlob(a.fileId), el = await recreateElementFromBlob(blob, a.fromVideo ? 'video' : 'audio', a.trimStart || 0.01, true); if (el) restoredAudio.push({ ...a, mediaEl: el }); }
+      if (saved.background) { state.background = { ...saved.background, mediaEl: null }; if (saved.background.mode === 'custom' && saved.background.mediaFileId) { const bgBlob = await resolveBlob(saved.background.mediaFileId), bgEl = await recreateElementFromBlob(bgBlob, saved.background.mediaType, 0.01, false); if (bgEl) { if (saved.background.mediaType === 'video') { bgEl.loop = true; bgEl.muted = true; } state.background.mediaEl = bgEl; } } }
       state.clips = restoredClips; state.pipTracks = restoredPipTracks.length > 0 ? restoredPipTracks : [{ id: 'pip-track-1', name: '畫中畫 L1 (頂層)', visible: true, clips: [] }]; state.subtitles = saved.subtitles || []; state.audioClips = restoredAudio; state.trackVisibility = saved.trackVisibility || { main: true, audio: true, sub: true };
       if (saved.effects) state.effects = saved.effects; if (saved.exportQuality) state.exportQuality = saved.exportQuality;
       if (saved.ratio) { state.ratio = saved.ratio; document.querySelectorAll('.ratio-btn').forEach(b => b.classList.toggle('active', b.dataset.ratio === state.ratio)); applyCanvasResolutionForRatio(state.ratio, null); }
       clearSelection();
       state.selectedClipId = state.clips[0]?.id || state.pipTracks[0]?.clips[0]?.id || null; state.lastSelectedType = state.clips[0] ? 'clip' : (state.pipTracks[0]?.clips[0] ? 'pip' : 'clip');
       state.currentTime = 0; timelineScroll.scrollLeft = 0;
-
-      updateDeleteButtonLabel(); renderTimeline(); renderDrawer(); syncVideoElements(true); renderFrame(); scheduleAutoSaveDraft();
-
-      // ✨ 若因容量爆滿導致快取遺失，自動觸發重新連結原始素材視窗
-      if (missingRefs.length > 0) {
-        pendingRelinkProject = saved;
-        pendingMissingRefs = missingRefs;
-        document.getElementById('relinkMissingList').innerHTML = missingRefs.map(m => `<li><strong>${m.origFileName || m.fileId}</strong></li>`).join('');
-        document.getElementById('exportModalBackdrop').classList.add('open');
-        document.getElementById('exportOptionsList').style.display = 'none';
-        document.getElementById('relinkAssetsBox').style.display = 'block';
-        showToast('部分大型素材無法從本機快取還原，請依照畫面提示重新選取 🔗');
-      }
+      updateGroupButtons(); renderTimeline(); renderDrawer(); syncVideoElements(true); renderFrame(); scheduleAutoSaveDraft();
     }
 
     async function restoreDraftFromDB() {
@@ -608,9 +570,7 @@
         const db = await openDraftDB(), saved = await new Promise((resolve) => { const tx = db.transaction(STORE_PROJECT, 'readonly'), req = tx.objectStore(STORE_PROJECT).get('latest_draft'); req.onsuccess = () => resolve(req.result || null); req.onerror = () => resolve(null); });
         if (!saved || (!(saved.clips?.length > 0) && !(saved.pipTracks?.some(t => t.clips?.length > 0)) && !(saved.subtitles?.length > 0) && !(saved.audioClips?.length > 0))) return;
         const badge = document.getElementById('draftStatusBadge'); if (badge) badge.textContent = '⏳ 恢復草稿中...';
-        await applyDeserializedProject(saved, null);
-        if (badge && pendingMissingRefs.length === 0) badge.textContent = '💾 已恢復上次草稿';
-        else if (badge) badge.textContent = '⚠️ 需重新連結';
+        await applyDeserializedProject(saved, null); if (badge) badge.textContent = '💾 已恢復上次草稿'; showToast('已自動恢復上次未完成的草稿專案 ✨');
       } catch (err) { console.warn('Draft restore skipped:', err); }
     }
 
@@ -672,9 +632,7 @@
         const url = URL.createObjectURL(blob), audioEl = new Audio(url); audioEl.preload = 'auto'; ensureAudioNode(audioEl);
         audioEl.onloadedmetadata = () => {
           const realDur = (audioEl.duration && isFinite(audioEl.duration)) ? roundSec(audioEl.duration) : 2.5, id = 'aud-ai-' + Date.now() + Math.random();
-          state.audioClips.push({
-            id, fileId, origFileName: labelName.slice(0, 14) + '.mp3', groupId: linkedSub?.groupId || null, name: labelName.slice(0, 14), fromVideo: false, isAI: true, start: roundSec(startSec), trimStart: 0, duration: realDur, maxDuration: realDur, gain: 1.15, muted: false, mediaEl: audioEl
-          });
+          state.audioClips.push({ id, fileId, origFileName: labelName.slice(0, 14) + '.mp3', groupId: linkedSub?.groupId || null, name: labelName.slice(0, 14), fromVideo: false, isAI: true, start: roundSec(startSec), trimStart: 0, duration: realDur, maxDuration: realDur, gain: 1.15, muted: false, mediaEl: audioEl });
           if (linkedSub && realDur > linkedSub.duration) linkedSub.duration = realDur;
           clearSelection(); state.selectedAudioId = id; resolve(realDur);
         };
@@ -901,7 +859,7 @@
           maskCanvas.width = Math.max(10, Math.round(dispW)); maskCanvas.height = Math.max(10, Math.round(dispH)); maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height); maskCtx.drawImage(drawSource, 0, 0, maskCanvas.width, maskCanvas.height);
           const fPx = Math.min(maskCanvas.width * 0.4, (mask.feather || 20) * 1.8 * sf); maskCtx.globalCompositeOperation = 'destination-in';
           const gradH = maskCtx.createLinearGradient(0, 0, maskCanvas.width, 0); gradH.addColorStop(0, 'rgba(0,0,0,0)'); gradH.addColorStop(Math.min(0.49, fPx / maskCanvas.width), 'rgba(0,0,0,1)'); gradH.addColorStop(Math.max(0.51, 1 - fPx / maskCanvas.width), 'rgba(0,0,0,1)'); gradH.addColorStop(1, 'rgba(0,0,0,0)'); maskCtx.fillStyle = gradH; maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
-          const gradV = maskCtx.createLinearGradient(0, 0, 0, maskCanvas.height); gradV.addColorStop(0, 'rgba(0,0,0,0)'); gradV.addColorStop(Math.min(0.49, fPx / maskCanvas.height), 'rgba(0,0,0,1)'); gradV.addColorStop(Math.max(0.51, 1 - fPx / maskCanvas.height), 'rgba(0,0,0,1)'); gradV.addColorStop(1, 'rgba(0,0,0,0)'); maskCtx.globalCompositeOperation = 'destination-in'; maskCtx.fillStyle = gradV; maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height); maskCtx.globalCompositeOperation = 'source-over'; drawSource = maskCanvas;
+          const gradV = maskCtx.createLinearGradient(0, 0, 0, maskCanvas.height); gradV.addColorStop(0, 'rgba(0,0,0,0)'); gradV.addColorStop(Math.min(0.49, fPx / maskCanvas.height), 'rgba(0,0,0,1)'); gradV.addColorStop(Math.max(0.51, 1 - fPx / maskCanvas.height), 'rgba(0,0,0,1)'); gradV.addColorStop(1, 'rgba(0,0,0,0)'); maskCtx.fillStyle = gradV; maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height); maskCtx.globalCompositeOperation = 'source-over'; drawSource = maskCanvas;
         }
         else if (mask.type === 'pen' && mask.penPoints && mask.penPoints.length >= 3) {
           mask.penPoints.forEach((pt, idx) => { const px = (pt.x - 0.5) * dispW, py = (pt.y - 0.5) * dispH; if (idx === 0) targetCtx.moveTo(px, py); else targetCtx.lineTo(px, py); }); targetCtx.closePath(); targetCtx.clip();
@@ -977,7 +935,6 @@
     function renderFrame() {
       const W = canvas.width, H = canvas.height, sf = state.renderScaleFactor || 1;
       ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; ctx.clearRect(0, 0, W, H);
-
       const bg = state.background;
       if (bg.mode === 'solid') { ctx.fillStyle = bg.color1 || '#000000'; ctx.fillRect(0, 0, W, H); }
       else if (bg.mode === 'gradient') { const grad = ctx.createLinearGradient(0, 0, W, H); grad.addColorStop(0, bg.color1 || '#1e1b4b'); grad.addColorStop(1, bg.color2 || '#4c1d95'); ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H); }
@@ -1100,7 +1057,7 @@
       handleEl.addEventListener('pointerup', finishTrim); handleEl.addEventListener('pointercancel', finishTrim);
     }
 
-    // ====== 增強版長按拖曳（支援多選、群組與維持時間相對差） ======
+    // ====== 增強版長按拖曳（支援多選、群組與維持時間相對差，並加入撞牆防呆） ======
     let longPressTimer = null, reorderState = null;
     function cancelLongPress() { if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } }
     
@@ -1149,9 +1106,9 @@
         };
 
         if (sourceType === 'main') {
-          showToast(`全局排序：左右拖改主影片順序（底下綁定素材會自動跟隨），往上拖轉畫中畫 ↔️↕️`);
+          showToast(`全局排序：左右拖改順序（群組素材將自動跟隨），往上拖轉畫中畫 ↔️↕️`);
         } else {
-          showToast('已啟動群組/多選移動：左右拖曳將同步平移所有選中素材 ↔️');
+          showToast('已啟動多重/群組平移：左右拖曳將同步移動，遇0秒會自動卡住防呆 ↔️');
         }
         if (navigator.vibrate) navigator.vibrate(25);
         renderTimeline(); renderFrame();
@@ -1164,8 +1121,18 @@
 
       if (reorderState.sourceType !== 'main') {
         const dxSec = (e.clientX - reorderState.startX) / state.pxPerSec;
-        const newAnchorStart = snapTimeValue(reorderState.anchorOrigStart + dxSec, reorderState.anchorId);
-        const actualDelta = newAnchorStart - reorderState.anchorOrigStart;
+        
+        // ✨ 左側撞牆防呆計算：找出整組最靠左的素材
+        const minOrigStart = Math.min(...reorderState.movingItems.map(m => m.origStart));
+        const minDelta = -minOrigStart;
+
+        // ✨ 智慧磁吸：以使用者拖拉的那個素材邊緣去觸發 Snap
+        let newAnchorStart = snapTimeValue(reorderState.anchorOrigStart + dxSec, reorderState.anchorId);
+        let actualDelta = newAnchorStart - reorderState.anchorOrigStart;
+        
+        if (actualDelta < minDelta) {
+          actualDelta = minDelta; // 撞到 0 秒邊界，停止向左平移
+        }
 
         reorderState.movingItems.forEach(m => {
           if (m.type !== 'clip') {
@@ -1220,6 +1187,7 @@
             mainDraggedToPip = true;
           }
         } else {
+          // 主軌重排完成，計算時間差並同步應用給跟著他的所有群組子素材
           const newAnchorStart = getMainClipAbsoluteStart(anchorId);
           const timeShift = newAnchorStart - reorderState.anchorOrigStart;
           reorderState.movingItems.forEach(m => {
@@ -1230,7 +1198,7 @@
 
       reorderState = null; updateDeleteButtonLabel(); renderTimeline(); renderDrawer(); scheduleAutoSaveDraft();
       if (wasMainReorder && !mainDraggedToPip) {
-        seekTo(getMainClipAbsoluteStart(anchorId)); showToast('已完成片段與綁定群組的同步順序調整 ✅');
+        seekTo(getMainClipAbsoluteStart(anchorId)); showToast('已完成片段與群組連動的同步順序調整 ✅');
       } else { syncVideoElements(true); renderFrame(); }
     };
     window.addEventListener('pointerup', endReorder); window.addEventListener('pointercancel', endReorder);
@@ -1265,7 +1233,7 @@
           pTrack.clips.forEach(pClip => {
             const isSel = isItemSelected(pClip.id), el = document.createElement('div');
             const isMoving = reorderState && reorderState.movingItems.some(m => m.itemRef.id === pClip.id);
-            el.className = 'clip-block pip-clip' + (isSel ? ' selected' : '') + (isMoving ? ' reordering' : '');
+            el.className = 'clip-block pip-clip' + (isSel ? ' selected multi-selected' : '') + (isMoving ? ' reordering' : '');
             el.dataset.clipId = pClip.id; el.style.left = Math.round((pClip.start || 0) * pps) + 'px'; el.style.width = Math.round(pClip.duration * pps) + 'px';
             if (pClip.groupId) el.innerHTML += `<span class="group-badge">🔗</span>`;
             const lh = document.createElement('div'); lh.className = 'trim-handle left'; const lb = document.createElement('span'); lb.className = 'clip-label'; lb.textContent = formatClipLabel(pClip); const rh = document.createElement('div'); rh.className = 'trim-handle right';
@@ -1297,7 +1265,7 @@
             el.className = 'clip-block compact-card' + (isMoving ? ' reordering' : ''); el.dataset.clipId = clip.id; el.style.width = compactW + 'px'; el.innerHTML = `<span class="compact-num">#${idx + 1}</span><span class="compact-sub">${clip.duration.toFixed(1)}s</span>`;
             if (clip.groupId) el.innerHTML += `<span class="group-badge" style="top:5px;right:5px;">🔗</span>`;
           } else {
-            el.className = 'clip-block' + (isSel ? ' selected' : '') + (isMoving ? ' reordering' : ''); el.dataset.clipId = clip.id; el.style.width = Math.round(clip.duration * pps) + 'px';
+            el.className = 'clip-block' + (isSel ? ' selected multi-selected' : '') + (isMoving ? ' reordering' : ''); el.dataset.clipId = clip.id; el.style.width = Math.round(clip.duration * pps) + 'px';
             if (clip.groupId) el.innerHTML += `<span class="group-badge">🔗</span>`;
             const lh = document.createElement('div'); lh.className = 'trim-handle left'; const lb = document.createElement('span'); lb.className = 'clip-label'; lb.textContent = formatClipLabel(clip, `#${idx + 1} `); const rh = document.createElement('div'); rh.className = 'trim-handle right';
             attachTrimEvents(lh, 'clip', clip, 'left', el, lb, false); attachTrimEvents(rh, 'clip', clip, 'right', el, lb, false); el.appendChild(lh); el.appendChild(lb); el.appendChild(rh);
@@ -1372,7 +1340,6 @@
 
     timelineScroll.addEventListener('scroll', () => { const sidebar = document.getElementById('trackSidebarOverlay'); if (sidebar) sidebar.style.transform = `translateY(${-timelineScroll.scrollTop}px)`; }, { passive: true });
 
-    // ====== 滑鼠框選多重平移 (Marquee Selection) ======
     let isDraggingTimeline = false, timelineWasDragged = false, dragStartX = 0, dragStartY = 0, dragStartScrollLeft = 0;
     let isMarqueeing = false, marqueeOriginX = 0, marqueeOriginY = 0;
     const marqueeBox = document.getElementById('marqueeBox');
@@ -1395,12 +1362,12 @@
       if (state.isPlaying) togglePlay(false);
 
       if (e.target.closest('.clip-block') || e.target.closest('.audio-clip-block') || e.target.closest('.sub-block')) {
-        return; // 若點在片段上，由 clip 的 mousedown/click 處理
+        return;
       }
 
       const rect = document.getElementById('timelineInner').getBoundingClientRect();
       if (e.shiftKey || state.marqueeMode) {
-        if (!e.shiftKey) clearSelection(); // 如果不是按著Shift加選，就先清空
+        if (!e.shiftKey) clearSelection();
         isMarqueeing = true;
         marqueeOriginX = e.clientX - rect.left; marqueeOriginY = e.clientY - rect.top;
         marqueeBox.style.left = marqueeOriginX + 'px'; marqueeBox.style.top = marqueeOriginY + 'px';
@@ -1437,7 +1404,7 @@
 
     function syncVideoElements(immediate = false) {
       if (activeTrim) return; let acc = 0; const isMainVis = state.trackVisibility.main !== false;
-      const syncTol = state.isExporting ? 1.5 : 0.15; // ✨ 修復：匯出時放寬同步容忍度，避免強制 seek 導致卡幀死結
+      const syncTol = state.isExporting ? 1.5 : 0.15;
 
       state.clips.forEach(c => {
         if (c.mediaEl?.tagName === 'VIDEO') {
@@ -1606,13 +1573,13 @@
         if (document.getElementById('bgGrad1')) { document.getElementById('bgGrad1').oninput = (e) => { state.background.color1 = e.target.value; renderFrame(); scheduleAutoSaveDraft(); }; document.getElementById('bgGrad2').oninput = (e) => { state.background.color2 = e.target.value; renderFrame(); scheduleAutoSaveDraft(); }; }
       }
       else if (state.activeTab === 'text') {
-        const cats = ['全部', '現代', '手寫', '圓體', '古典', '特色'], filteredFonts = state.fontFilter === '全部' ? FREE_FONTS : FREE_FONTS.filter(f => f.cat === state.fontFilter);
+        const cats = ['全部', '現代', '手寫', '圓體', '古典', '特色'];
+        const filteredFonts = state.fontFilter === '全部' ? FREE_FONTS : FREE_FONTS.filter(f => f.cat === state.fontFilter);
         container.innerHTML = `
           <div class="control-row">
             <button class="chip-btn" style="background:var(--accent); border:none; color:#fff;" id="newSubBtn">＋ 新增字幕</button>
             <button class="chip-btn" style="border-color:var(--cyan); color:var(--cyan);" id="importSrtBtn">📄 匯入 .srt</button>
-            <input type="text" id="subTextInput" value="${sub ? sub.text : ''}" placeholder="${sub ? '輸入文字（直式可用 | 換行）' : '請先點左側＋新增字幕'}" ${sub ? '' : 'disabled'}>
-            ${sub ? `<button class="chip-btn" style="border-color:var(--purple); color:#e9d5ff;" id="subToVoiceBtn">🎙️ AI配音</button>` : ''}
+            ${sub ? `<button class="chip-btn" style="border-color:var(--purple); color:#e9d5ff;" id="subToVoiceBtn">🎙️ AI配音</button><button class="chip-btn danger" id="delSubBtn">🗑️</button>` : ''}
           </div>
           ${sub ? `<div class="control-row"><label>排版方向</label><button class="pill ${sub.orientation !== 'vertical' ? 'active' : ''}" id="orientHorizBtn">➡️ 橫排</button><button class="pill ${sub.orientation === 'vertical' ? 'active' : ''}" id="orientVertBtn">⬇️ 直排</button><input type="range" min="14" max="48" value="${sub.size}" id="subSizeRange" style="max-width:90px;"><input type="color" value="${sub.color}" id="subColorPick" style="width:28px; height:24px; border:none; background:none;"></div>` : ''}
           <div class="pill-group">${cats.map(c => `<button class="pill ${state.fontFilter === c ? 'active' : ''}" data-cat="${c}">${c}</button>`).join('')}<button class="pill" onclick="document.getElementById('fontFileInput').click()">＋ 本機字體</button></div>
@@ -1621,6 +1588,7 @@
         document.getElementById('newSubBtn').onclick = addNewSubtitle;
         document.getElementById('importSrtBtn').onclick = () => document.getElementById('srtFileInput').click();
         if (document.getElementById('subToVoiceBtn')) document.getElementById('subToVoiceBtn').onclick = () => { state.activeTab = 'voice'; updateTabsUI(); renderDrawer(); };
+        if (document.getElementById('delSubBtn')) document.getElementById('delSubBtn').onclick = () => { state.lastSelectedType = 'sub'; deleteCurrentSelected(); };
         if (sub) {
           document.getElementById('subTextInput').oninput = (e) => { sub.text = e.target.value; renderTimeline(); renderFrame(); scheduleAutoSaveDraft(); };
           document.getElementById('orientHorizBtn').onclick = () => { pushUndo(); sub.orientation = 'horizontal'; renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
@@ -1642,7 +1610,7 @@
           <div class="control-row"><label>色溫冷暖</label><input type="range" min="-40" max="40" value="${col.warm}" id="colW"><span>${col.warm}</span></div>
         `;
         container.querySelectorAll('[data-preset]').forEach(btn => {
-          btn.onclick = () => { pushUndo(); const p = FILTER_PRESETS.find(x => x.id === btn.dataset.preset); clip.color = { b: p.b, c: p.c, s: p.s, warm: p.warm }; showToast(`已套用濾鏡：${p.name}`); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+          btn.onclick = () => { pushUndo(); const p = FILTER_PRESETS.find(x => x.id === btn.dataset.preset); clip.color = { b: p.b, c: p.c, s: p.s, warm: p.warm }; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
         });
         ['colB', 'colC', 'colS', 'colW'].forEach(id => {
           document.getElementById(id).oninput = (e) => {
@@ -1657,7 +1625,7 @@
         container.innerHTML = `
           <div class="action-grid" style="margin-bottom:8px;"><button class="box-btn cyan" onclick="document.getElementById('audioFileInput').click()">🎵 插入音樂檔</button><button class="box-btn primary" onclick="document.getElementById('videoToAudioInput').click()">🎬 匯入影片轉音軌</button><button class="box-btn" id="extractCurVidBtn" ${hasVideoClip ? '' : 'disabled style="opacity:0.4;"'}>📤 分離目前影片音軌</button></div>
           ${hasVideoClip ? `<div style="font-size:11px; color:#93c5fd; font-weight:700; margin:4px 0;">🎞️ 影片原聲控制（${clip.name}）</div><div class="control-row"><button class="chip-btn ${clip.muted ? 'danger' : ''}" id="toggleVidMuteBtn">${clip.muted ? '🔇 原聲已靜音' : '🔊 原聲開啟中'}</button><label style="min-width:52px;">原聲增益</label><input type="range" min="0" max="3" step="0.05" value="${clip.audioGain ?? 1}" id="vidGainRange" ${clip.muted ? 'disabled' : ''}><span>${Math.round((clip.audioGain ?? 1) * 100)}%</span></div>` : ''}
-          ${aClip ? `<div style="font-size:11px; color:#6ee7b7; font-weight:700; margin:6px 0 4px;">🎵 獨立音軌控制（${aClip.name}）</div><div class="control-row"><button class="chip-btn ${aClip.muted ? 'danger' : ''}" id="toggleAudMuteBtn">${aClip.muted ? '🔇 音軌已靜音' : '🔊 音軌開啟'}</button><label style="min-width:52px;">音軌增益</label><input type="range" min="0" max="3" step="0.05" value="${aClip.gain ?? 1}" id="audGainRange" ${aClip.muted ? 'disabled' : ''}><span>${Math.round((aClip.gain ?? 1) * 100)}%</span></div>` : `<p style="color:var(--text-muted); font-size:11px; text-align:center; margin:8px 0 0;">支援直接匯入音樂、AI 配音或「匯入影片轉音軌」，匯出時自動混音。</p>`}
+          ${aClip ? `<div style="font-size:11px; color:#6ee7b7; font-weight:700; margin:6px 0 4px;">🎵 獨立音軌片段控制（${aClip.name}）</div><div class="control-row"><button class="chip-btn ${aClip.muted ? 'danger' : ''}" id="toggleAudMuteBtn">${aClip.muted ? '🔇 音軌已靜音' : '🔊 音軌開啟'}</button><label style="min-width:52px;">音軌增益</label><input type="range" min="0" max="3" step="0.05" value="${aClip.gain ?? 1}" id="audGainRange" ${aClip.muted ? 'disabled' : ''}><span>${Math.round((aClip.gain ?? 1) * 100)}%</span></div>` : `<p style="color:var(--text-muted); font-size:11px; text-align:center; margin:8px 0 0;">支援直接匯入音樂、AI 配音或「匯入影片轉音軌」，匯出時自動混音。</p>`}
         `;
         if (document.getElementById('extractCurVidBtn') && hasVideoClip) document.getElementById('extractCurVidBtn').onclick = () => extractAudioFromClip(clip, selObj.isPip);
         if (hasVideoClip) {
