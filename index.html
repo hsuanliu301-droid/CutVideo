@@ -67,7 +67,7 @@
     .export-progress-bar { height: 8px; background: #232734; border-radius: 99px; overflow: hidden; }
     .export-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--accent)); transition: width 0.08s linear; }
 
-    .stage-wrap { height: var(--stage-height); min-height: 120px; max-height: 68dvh; display: flex; align-items: center; justify-content: center; background: #08090c; position: relative; padding: 10px; overflow: hidden; flex-shrink: 0; }
+    .stage-wrap { height: var(--stage-height); min-height: 120px; max-height: 68dvh; width: 100%; display: flex; align-items: center; justify-content: center; background: #08090c; position: relative; padding: 10px; overflow: hidden; flex-shrink: 0; }
     canvas#previewCanvas { background: #000; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.85); border-radius: 6px; border: 1px solid #2b2f3b; height: 100%; width: auto; max-width: 100%; max-height: 100%; object-fit: contain; touch-action: none; cursor: grab; }
     canvas#previewCanvas:active { cursor: grabbing; }
     .stage-hint { position: absolute; top: 6px; left: 10px; background: rgba(0, 0, 0, 0.72); color: #d1d5db; font-size: 10px; padding: 3px 9px; border-radius: 99px; pointer-events: none; max-width: 54%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -85,7 +85,7 @@
     .time-readout { font-variant-numeric: tabular-nums; font-size: 11px; color: var(--text-muted); white-space: nowrap; }
     .time-readout strong { color: var(--text-main); }
     .play-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--text-main); color: var(--bg-dark); font-size: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-    .quick-actions { display: flex; align-items: center; gap: 4px; overflow-x: auto; padding: 2px 0; }
+    .quick-actions { display: flex; align-items: center; gap: 4px; overflow-x: auto; padding: 2px 0; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
     .quick-actions::-webkit-scrollbar { display: none; }
     .chip-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); font-size: 11px; font-weight: 600; padding: 4px 7px; border-radius: 6px; cursor: pointer; white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 2px; }
     .chip-btn:disabled { opacity: 0.38; cursor: not-allowed; }
@@ -155,8 +155,9 @@
     .drawer.collapsed { height: 48px; }
     .drawer.collapsed .drawer-content { display: none; }
     .drawer-content { flex: 1; padding: 9px 12px; overflow-y: auto; font-size: 12px; }
-    .nav-tabs { height: 48px; background: #121318; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; flex-shrink: 0; overflow-x: auto; }
-    .nav-tab { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; cursor: pointer; padding: 4px 5px; white-space: nowrap; }
+    .nav-tabs { height: 48px; background: #121318; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; flex-shrink: 0; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tab { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; cursor: pointer; padding: 4px 5px; white-space: nowrap; flex-shrink: 0; }
     .nav-tab.active { color: var(--accent); font-weight: 700; }
     .nav-tab span.icon { font-size: 15px; }
     .drawer-toggle-tab { position: sticky; right: 0; z-index: 10; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; color: var(--cyan); font-size: 10px; font-weight: 700; padding: 4px 7px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px; flex-shrink: 0; margin-right: 4px; }
@@ -167,9 +168,9 @@
     input[type="range"] { flex: 1; accent-color: var(--accent); min-width: 60px; }
     input[type="text"], input[type="password"], select, textarea { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); padding: 6px 8px; border-radius: 6px; font-size: 12px; flex: 1; user-select: text; min-width: 0; font-family: inherit; }
     textarea { width: 100%; resize: none; height: 52px; line-height: 1.4; }
-    .pill-group { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px; }
+    .pill-group { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
     .pill-group::-webkit-scrollbar { display: none; }
-    .pill { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); padding: 4px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+    .pill { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); padding: 4px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; white-space: nowrap; cursor: pointer; flex-shrink: 0; }
     .pill.active { background: var(--accent-soft); border-color: var(--accent); color: #fff; }
     .swatch-dot { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.45); cursor: pointer; flex-shrink: 0; padding: 0; }
     .swatch-dot.active { border: 2px solid var(--cyan); transform: scale(1.15); }
@@ -190,6 +191,41 @@
     .box-btn.danger { border-color: var(--danger); background: var(--danger-soft); color: #fca5a5; }
     .hidden-input { display: none; }
     #toast { position: fixed; top: 52px; left: 50%; transform: translateX(-50%); background: rgba(24, 26, 32, 0.96); border: 1px solid var(--accent); color: #fff; padding: 6px 14px; border-radius: 99px; font-size: 12px; z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.25s; white-space: nowrap; }
+
+    /* 任務三：手機版面 UI/UX 適配 */
+    @media (max-width: 768px) {
+      .topbar { padding: 0 8px; gap: 4px; }
+      .brand { font-size: 14px; gap: 4px; }
+      .draft-badge { max-width: 96px; overflow: hidden; text-overflow: ellipsis; padding: 2px 6px; }
+      .ratio-btn { padding: 5px 7px; min-height: 28px; }
+      .btn-export { padding: 6px 10px; min-height: 30px; }
+
+      .stage-wrap { width: 100%; max-width: 100vw; padding: 6px 8px; }
+      canvas#previewCanvas { max-width: calc(100vw - 16px); max-height: 100%; width: auto; height: 100%; }
+      .stage-hint { max-width: 44%; font-size: 9.5px; left: 8px; }
+      .stage-top-right { right: 8px; gap: 3px; }
+      .stage-mode-btn, .stage-size-btn { padding: 4px 6px; min-height: 24px; }
+
+      .transport { height: 46px; padding: 0 6px; gap: 4px; }
+      .play-btn { width: 34px; height: 34px; font-size: 13px; }
+      .quick-actions { flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; gap: 5px; }
+      .quick-actions::-webkit-scrollbar { display: none; }
+      .chip-btn { min-height: 32px; padding: 5px 9px; font-size: 11.5px; }
+      .zoom-box { min-height: 32px; padding: 2px 5px; }
+      .zoom-box input[type="range"] { width: 40px; }
+
+      .drawer { height: 245px; }
+      .drawer.collapsed { height: 54px; }
+      .nav-tabs { height: 54px; justify-content: flex-start; padding: 0 6px; gap: 2px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
+      .nav-tabs::-webkit-scrollbar { display: none; }
+      .nav-tab { min-width: 56px; min-height: 44px; padding: 5px 7px; font-size: 10.5px; justify-content: center; }
+      .drawer-toggle-tab { min-height: 42px; padding: 5px 9px; justify-content: center; }
+
+      .pill-group { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; gap: 6px; }
+      .pill-group::-webkit-scrollbar { display: none; }
+      .pill { min-height: 32px; padding: 6px 11px; font-size: 11.5px; display: inline-flex; align-items: center; }
+      .box-btn { min-height: 38px; padding: 9px 6px; font-size: 11.5px; display: flex; align-items: center; justify-content: center; }
+    }
   </style>
 </head>
 <body>
@@ -550,7 +586,7 @@
       background: { mode: 'solid', color1: '#000000', color2: '#2d1b4e', mediaEl: null, mediaType: null, mediaName: '', mediaFileId: null },
       effects: {
         particleType: 'none', particleSize: 6, particleDensity: 45, particleSpeed: 1.0, petalColor: '#ffb7c5',
-        spotlight: { enabled: false, angle: 0, focusX: 0.5, focusY: 0.55, spread: 0.34, darkness: 0.72, color: '#fff8e7' }
+        spotlight: { enabled: false, angle: 0, focusX: 0.5, focusY: 0.55, spread: 0.34, darkness: 0.72, blurRadius: 14, intensity: 1.25, color: '#fff8e7' }
       },
       pipTracks: [{ id: 'pip-track-1', name: '畫中畫 L1 (頂層)', visible: true, clips: [] }],
       clips: [],
@@ -1152,7 +1188,14 @@
       state.subtitles = (saved.subtitles || []).map(s => normalizeSubtitleObject({ ...s }));
       state.audioClips = restoredAudio;
       state.trackVisibility = saved.trackVisibility || { main: true, audio: true, sub: true };
-      if (saved.effects) state.effects = saved.effects;
+      if (saved.effects) {
+        state.effects = saved.effects;
+        if (typeof state.effects.particleSpeed !== 'number') state.effects.particleSpeed = 1.0;
+        if (state.effects.spotlight) {
+          if (typeof state.effects.spotlight.blurRadius !== 'number') state.effects.spotlight.blurRadius = 14;
+          if (typeof state.effects.spotlight.intensity !== 'number') state.effects.spotlight.intensity = 1.25;
+        }
+      }
       if (saved.exportQuality) state.exportQuality = saved.exportQuality;
       if (saved.ratio) {
         state.ratio = saved.ratio;
@@ -1560,6 +1603,8 @@
     const PARTICLE_SEEDS = Array.from({ length: 150 }, (_, i) => ({
       x0: ((i * 73) % 100) / 100, y0: ((i * 37) % 100) / 100,
       speedMul: 0.65 + ((i * 19) % 70) / 100, sizeMul: 0.6 + ((i * 29) % 80) / 100,
+      gravityMul: 0.7 + ((i * 41) % 60) / 100,
+      windDir: (i % 2 === 0 ? 1 : -1) * (0.4 + ((i * 23) % 60) / 100),
       phase: (i * 1.7) % (Math.PI * 2), swayAmp: 0.02 + ((i * 13) % 40) / 1000,
       rotSpeed: ((i % 2 === 0 ? 1 : -1) * (1.2 + (i % 5) * 0.4))
     }));
@@ -1570,6 +1615,8 @@
     const sharpCtx = sharpCanvas.getContext('2d', { willReadFrequently: true });
     const maskCanvas = document.createElement('canvas');
     const maskCtx = maskCanvas.getContext('2d');
+    const spotBlurCanvas = document.createElement('canvas');
+    const spotBlurCtx = spotBlurCanvas.getContext('2d');
 
     // ====== Unsharp Mask 數位銳利度卷積引擎（保留 Alpha 透明度與去背遮罩） ======
     function applySharpenToSource(sourceEl, srcW, srcH, sharpVal) {
@@ -1978,12 +2025,13 @@
       if (isVideo && (el.error || el.readyState < 1 || el.videoWidth === 0)) return;
       if (!isVideo && (!el.complete || el.naturalWidth === 0)) return;
 
+      const isFastPlay = state.isPlaying && !state.isExporting;
       const srcW = isVideo ? el.videoWidth : el.naturalWidth;
       const srcH = isVideo ? el.videoHeight : el.naturalHeight;
       let drawSource = el;
 
       if (clip.cutout && clip.cutout.mode !== 'none') {
-        const procW = Math.min(480, srcW), procH = Math.round(procW * (srcH / srcW));
+        const procW = Math.min(isFastPlay ? 320 : 480, srcW), procH = Math.round(procW * (srcH / srcW));
         offCanvas.width = procW; offCanvas.height = procH;
         offCtx.clearRect(0, 0, procW, procH);
         offCtx.drawImage(el, 0, 0, procW, procH);
@@ -2012,7 +2060,7 @@
       }
 
       const col = { b: 100, c: 100, s: 100, warm: 0, sharp: 0, ...(clip.color || {}) };
-      if (col.sharp > 0) {
+      if (col.sharp > 0 && !isFastPlay) {
         const curW = drawSource.width || drawSource.videoWidth || drawSource.naturalWidth || srcW;
         const curH = drawSource.height || drawSource.videoHeight || drawSource.naturalHeight || srcH;
         drawSource = applySharpenToSource(drawSource, curW, curH, col.sharp);
@@ -2023,14 +2071,47 @@
       const sf = state.renderScaleFactor || 1;
 
       targetCtx.save();
-      targetCtx.imageSmoothingEnabled = true;
-      targetCtx.imageSmoothingQuality = 'high';
+      targetCtx.imageSmoothingEnabled = !isFastPlay;
+      if (!isFastPlay) targetCtx.imageSmoothingQuality = 'high';
       targetCtx.globalAlpha = clip.opacity !== undefined ? clip.opacity : 1.0;
       targetCtx.globalCompositeOperation = clip.blendMode || 'source-over';
       targetCtx.translate(cx, cy);
       targetCtx.rotate(((tr.rot || 0) * Math.PI) / 180);
 
-      targetCtx.filter = `brightness(${col.b}%) contrast(${col.c}%) saturate(${col.s}%) sepia(${col.warm > 0 ? col.warm * 0.6 : 0}%) hue-rotate(${col.warm < 0 ? col.warm * 0.8 : 0}deg)`;
+      // ====== 任務五：進出場動畫（漸亮/漸暗曝光控制、漸霧/失焦模糊控制）計算 ======
+      const fadeIn = clip.fadeIn || { type: 'none', dur: 0.8 };
+      const fadeOut = clip.fadeOut || { type: 'none', dur: 0.8 };
+      const timeRemaining = clip.duration - localT;
+
+      let animBrightnessMul = 1.0;
+      let animContrastMul = 1.0;
+      let animBlurPx = 0;
+
+      if (fadeIn.type !== 'none' && localT < fadeIn.dur) {
+        const progress = Math.max(0, Math.min(1, localT / Math.max(0.05, fadeIn.dur)));
+        const inv = 1 - progress;
+        if (fadeIn.type === 'exposure-up') {
+          animBrightnessMul *= (1 + inv * 2.2);
+          animContrastMul *= (1 - inv * 0.45);
+        } else if (fadeIn.type === 'blur-focus') {
+          animBlurPx += inv * 24 * sf;
+        }
+      }
+
+      if (fadeOut.type !== 'none' && timeRemaining < fadeOut.dur) {
+        const progress = Math.max(0, Math.min(1, 1 - (timeRemaining / Math.max(0.05, fadeOut.dur))));
+        if (fadeOut.type === 'exposure-down') {
+          animBrightnessMul *= Math.max(0, 1 - progress);
+          animContrastMul *= (1 + progress * 0.35);
+        } else if (fadeOut.type === 'blur-defocus') {
+          animBlurPx += progress * 24 * sf;
+        }
+      }
+
+      const finalB = Math.max(0, col.b * animBrightnessMul);
+      const finalC = Math.max(0, col.c * animContrastMul);
+      const blurPart = animBlurPx > 0.05 ? ` blur(${animBlurPx.toFixed(1)}px)` : '';
+      targetCtx.filter = `brightness(${finalB.toFixed(1)}%) contrast(${finalC.toFixed(1)}%) saturate(${col.s}%) sepia(${col.warm > 0 ? col.warm * 0.6 : 0}%) hue-rotate(${col.warm < 0 ? col.warm * 0.8 : 0}deg)${blurPart}`;
 
       const isEditingCrop = (!state.isPlaying && !state.isExporting && state.canvasBoxMode === 'crop' && clip.id === state.selectedClipId);
       if (isEditingCrop) {
@@ -2082,17 +2163,14 @@
 
       targetCtx.drawImage(drawSource, -dispW / 2, -dispH / 2, dispW, dispH);
 
-      const fadeIn = clip.fadeIn || { type: 'none', dur: 0.8 };
-      if (fadeIn.type !== 'none' && localT < fadeIn.dur) {
+      if ((fadeIn.type === 'black' || fadeIn.type === 'white') && localT < fadeIn.dur) {
         const alpha = Math.max(0, Math.min(1, 1 - (localT / Math.max(0.05, fadeIn.dur))));
         targetCtx.filter = 'none';
         targetCtx.fillStyle = fadeIn.type === 'white' ? `rgba(255,255,255,${alpha})` : `rgba(0,0,0,${alpha})`;
         targetCtx.fillRect(-dispW / 2, -dispH / 2, dispW, dispH);
       }
 
-      const fadeOut = clip.fadeOut || { type: 'none', dur: 0.8 };
-      const timeRemaining = clip.duration - localT;
-      if (fadeOut.type !== 'none' && timeRemaining < fadeOut.dur) {
+      if ((fadeOut.type === 'black' || fadeOut.type === 'white') && timeRemaining < fadeOut.dur) {
         const alpha = Math.max(0, Math.min(1, 1 - (timeRemaining / Math.max(0.05, fadeOut.dur))));
         targetCtx.filter = 'none';
         targetCtx.fillStyle = fadeOut.type === 'white' ? `rgba(255,255,255,${alpha})` : `rgba(0,0,0,${alpha})`;
@@ -2175,56 +2253,123 @@
       targetCtx.restore();
     }
 
+    // ====== 任務四：擬真舞台聚光燈（光圈外景深失焦霧化 ＋ 曝光光束）與物理粒子特效 ======
     function renderAtmosphereEffects(targetCtx, W, H, t) {
       const fx = state.effects, sf = state.renderScaleFactor || 1;
+      const isFastPlay = state.isPlaying && !state.isExporting;
+
       if (fx.spotlight && fx.spotlight.enabled) {
-        const sp = fx.spotlight, fxPx = sp.focusX * W, fyPx = sp.focusY * H;
-        const beamTopX = fxPx - Math.tan((sp.angle * Math.PI) / 180) * fyPx, spreadHalfW = W * sp.spread;
+        const sp = fx.spotlight;
+        const fxPx = sp.focusX * W;
+        const fyPx = sp.focusY * H;
+        const beamTopX = fxPx - Math.tan((sp.angle * Math.PI) / 180) * fyPx;
+        const spreadHalfW = W * sp.spread;
+        const blurPx = (sp.blurRadius ?? 14) * sf;
+        const intensity = sp.intensity ?? 1.25;
+        const darkness = sp.darkness ?? 0.72;
+
+        // 1. 產生光圈外的「失焦霧化＋環境壓暗」離屏畫布
+        spotBlurCanvas.width = W;
+        spotBlurCanvas.height = H;
+        spotBlurCtx.clearRect(0, 0, W, H);
+        spotBlurCtx.save();
+        if (blurPx > 0.5) {
+          const effectiveBlur = isFastPlay ? Math.min(8 * sf, blurPx * 0.65) : blurPx;
+          spotBlurCtx.filter = `blur(${effectiveBlur.toFixed(1)}px) brightness(${Math.max(0.15, 1 - darkness * 0.78).toFixed(2)})`;
+        } else {
+          spotBlurCtx.filter = `brightness(${Math.max(0.15, 1 - darkness * 0.78).toFixed(2)})`;
+        }
+        spotBlurCtx.drawImage(targetCtx.canvas, 0, 0, W, H);
+        spotBlurCtx.restore();
+
+        // 2. 利用 destination-out 在失焦霧化層挖出光錐與焦點清晰區域
+        spotBlurCtx.save();
+        spotBlurCtx.globalCompositeOperation = 'destination-out';
+
+        const beamGrad = spotBlurCtx.createLinearGradient(beamTopX, 0, fxPx, fyPx + spreadHalfW);
+        beamGrad.addColorStop(0, 'rgba(0,0,0,0.94)');
+        beamGrad.addColorStop(0.75, 'rgba(0,0,0,0.88)');
+        beamGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        spotBlurCtx.fillStyle = beamGrad;
+        spotBlurCtx.beginPath();
+        spotBlurCtx.moveTo(beamTopX - spreadHalfW * 0.25, 0);
+        spotBlurCtx.lineTo(beamTopX + spreadHalfW * 0.25, 0);
+        spotBlurCtx.lineTo(fxPx + spreadHalfW * 1.25, fyPx + spreadHalfW * 0.4);
+        spotBlurCtx.lineTo(fxPx - spreadHalfW * 1.25, fyPx + spreadHalfW * 0.4);
+        spotBlurCtx.closePath();
+        spotBlurCtx.fill();
+
+        const spotGrad = spotBlurCtx.createRadialGradient(fxPx, fyPx, spreadHalfW * 0.16, fxPx, fyPx, spreadHalfW * 1.28);
+        spotGrad.addColorStop(0, 'rgba(0,0,0,1)');
+        spotGrad.addColorStop(0.62, 'rgba(0,0,0,0.86)');
+        spotGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        spotBlurCtx.fillStyle = spotGrad;
+        spotBlurCtx.beginPath();
+        spotBlurCtx.arc(fxPx, fyPx, spreadHalfW * 1.28, 0, Math.PI * 2);
+        spotBlurCtx.fill();
+        spotBlurCtx.restore();
+
+        // 3. 將外圍景深失焦層疊加回主畫布
         targetCtx.save();
-        maskCanvas.width = W; maskCanvas.height = H;
-        maskCtx.clearRect(0, 0, W, H);
-        maskCtx.fillStyle = `rgba(0, 0, 0, ${sp.darkness})`;
-        maskCtx.fillRect(0, 0, W, H);
-        maskCtx.globalCompositeOperation = 'destination-out';
-        const beamGrad = maskCtx.createLinearGradient(beamTopX, 0, fxPx, fyPx + spreadHalfW);
-        beamGrad.addColorStop(0, 'rgba(0,0,0,0.95)'); beamGrad.addColorStop(0.75, 'rgba(0,0,0,0.9)'); beamGrad.addColorStop(1, 'rgba(0,0,0,0)');
-        maskCtx.fillStyle = beamGrad;
-        maskCtx.beginPath();
-        maskCtx.moveTo(beamTopX - spreadHalfW * 0.25, 0); maskCtx.lineTo(beamTopX + spreadHalfW * 0.25, 0);
-        maskCtx.lineTo(fxPx + spreadHalfW * 1.25, fyPx + spreadHalfW * 0.4); maskCtx.lineTo(fxPx - spreadHalfW * 1.25, fyPx + spreadHalfW * 0.4);
-        maskCtx.closePath(); maskCtx.fill();
-        const spotGrad = maskCtx.createRadialGradient(fxPx, fyPx, spreadHalfW * 0.15, fxPx, fyPx, spreadHalfW * 1.25);
-        spotGrad.addColorStop(0, 'rgba(0,0,0,1)'); spotGrad.addColorStop(0.6, 'rgba(0,0,0,0.85)'); spotGrad.addColorStop(1, 'rgba(0,0,0,0)');
-        maskCtx.fillStyle = spotGrad; maskCtx.beginPath(); maskCtx.arc(fxPx, fyPx, spreadHalfW * 1.25, 0, Math.PI * 2); maskCtx.fill();
-        maskCtx.globalCompositeOperation = 'source-over';
-        targetCtx.drawImage(maskCanvas, 0, 0);
-        targetCtx.globalCompositeOperation = 'screen';
-        const tintGrad = targetCtx.createRadialGradient(fxPx, fyPx, 5, fxPx, fyPx, spreadHalfW * 1.15);
-        tintGrad.addColorStop(0, sp.color + '44'); tintGrad.addColorStop(1, 'rgba(0,0,0,0)');
-        targetCtx.fillStyle = tintGrad; targetCtx.fillRect(0, 0, W, H);
+        targetCtx.drawImage(spotBlurCanvas, 0, 0);
+
+        // 4. 疊加光線強度（曝光提亮光暈與空氣光束感）
+        const expAlpha = Math.min(0.85, Math.max(0, (intensity - 0.6) * 0.42));
+        if (expAlpha > 0.01) {
+          targetCtx.globalCompositeOperation = 'screen';
+          const tintGrad = targetCtx.createRadialGradient(fxPx, fyPx, 4 * sf, fxPx, fyPx, spreadHalfW * 1.22);
+          tintGrad.addColorStop(0, `rgba(255, 250, 232, ${expAlpha.toFixed(2)})`);
+          tintGrad.addColorStop(0.55, `rgba(255, 245, 215, ${(expAlpha * 0.45).toFixed(2)})`);
+          tintGrad.addColorStop(1, 'rgba(0,0,0,0)');
+          targetCtx.fillStyle = tintGrad;
+          targetCtx.fillRect(0, 0, W, H);
+        }
         targetCtx.restore();
       }
+
       if (fx.particleType !== 'none') {
-        const count = Math.min(150, fx.particleDensity || 45), baseSize = (fx.particleSize || 6) * sf, spd = fx.particleSpeed || 1.0;
+        const count = Math.min(150, fx.particleDensity || 45);
+        const baseSize = (fx.particleSize || 6) * sf;
+        const spd = fx.particleSpeed || 1.0;
+
         targetCtx.save();
         for (let i = 0; i < count; i++) {
           const p = PARTICLE_SEEDS[i];
-          const py = (((p.y0 + t * 0.16 * spd * p.speedMul) % 1.15) - 0.08) * H;
-          const sway = Math.sin(t * 2.1 * p.speedMul + p.phase) * p.swayAmp * W;
-          const px = (((p.x0 * W + sway + (t * 0.03 * spd * (i % 3 - 1)) * W) % W) + W) % W;
+          const grav = p.gravityMul || 1.0;
+          // Y 軸真實重力加速度（隨下落循環週期逐步加速，並受落下速度倍率控制）
+          const cycleProgress = ((p.y0 + t * 0.14 * spd * p.speedMul) % 1.15 + 1.15) % 1.15;
+          const accelCurve = cycleProgress * (0.68 + 0.42 * grav * cycleProgress);
+          const py = (accelCurve - 0.08) * H;
+
+          // X 軸雙頻隨機風力微動 ＋ 持續微風側向飄移
+          const primaryGust = Math.sin(t * 1.85 * spd * p.speedMul + p.phase) * p.swayAmp * W;
+          const microTurbulence = Math.cos(t * 3.7 * p.speedMul + p.phase * 1.9) * (p.swayAmp * 0.48) * W;
+          const windDrift = t * 0.032 * spd * (p.windDir || 0.5) * W;
+          const px = (((p.x0 * W + primaryGust + microTurbulence + windDrift) % W) + W) % W;
           const r = baseSize * p.sizeMul;
+
           if (fx.particleType === 'snow') {
             const snowGrad = targetCtx.createRadialGradient(px, py, 0, px, py, r);
-            snowGrad.addColorStop(0, 'rgba(255,255,255,0.95)'); snowGrad.addColorStop(0.6, 'rgba(255,255,255,0.55)'); snowGrad.addColorStop(1, 'rgba(255,255,255,0)');
-            targetCtx.fillStyle = snowGrad; targetCtx.beginPath(); targetCtx.arc(px, py, r, 0, Math.PI * 2); targetCtx.fill();
+            snowGrad.addColorStop(0, 'rgba(255,255,255,0.95)');
+            snowGrad.addColorStop(0.6, 'rgba(255,255,255,0.55)');
+            snowGrad.addColorStop(1, 'rgba(255,255,255,0)');
+            targetCtx.fillStyle = snowGrad;
+            targetCtx.beginPath();
+            targetCtx.arc(px, py, r, 0, Math.PI * 2);
+            targetCtx.fill();
           } else if (fx.particleType === 'petal') {
-            targetCtx.save(); targetCtx.translate(px, py); targetCtx.rotate(t * p.rotSpeed + p.phase);
+            targetCtx.save();
+            targetCtx.translate(px, py);
+            targetCtx.rotate(t * p.rotSpeed * Math.max(0.5, spd * 0.85) + p.phase);
             targetCtx.scale(1, 0.45 + 0.55 * Math.abs(Math.cos(t * 2.5 + p.phase)));
-            targetCtx.fillStyle = fx.petalColor || '#ffb7c5'; targetCtx.globalAlpha = 0.88;
-            targetCtx.beginPath(); targetCtx.moveTo(0, -r);
+            targetCtx.fillStyle = fx.petalColor || '#ffb7c5';
+            targetCtx.globalAlpha = 0.88;
+            targetCtx.beginPath();
+            targetCtx.moveTo(0, -r);
             targetCtx.bezierCurveTo(r * 0.9, -r * 0.6, r * 0.9, r * 0.7, 0, r);
             targetCtx.bezierCurveTo(-r * 0.9, r * 0.7, -r * 0.9, -r * 0.6, 0, -r);
-            targetCtx.fill(); targetCtx.restore();
+            targetCtx.fill();
+            targetCtx.restore();
           }
         }
         targetCtx.restore();
@@ -2297,7 +2442,10 @@
     function renderFrame() {
       ensureMainClipsTimelineStarts();
       const W = canvas.width, H = canvas.height, sf = state.renderScaleFactor || 1;
-      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      const isFastPlay = state.isPlaying && !state.isExporting;
+      // 任務二：動態畫質降級（播放中關閉平滑插值降低負擔，暫停或匯出時恢復高畫質）
+      ctx.imageSmoothingEnabled = !isFastPlay;
+      if (!isFastPlay) ctx.imageSmoothingQuality = 'high';
       ctx.clearRect(0, 0, W, H);
 
       const bg = state.background;
@@ -2338,7 +2486,7 @@
       if (bg.mode === 'blur' && activeMainClip && activeMainClip.mediaEl) {
         const el = activeMainClip.mediaEl, sw = el.tagName === 'VIDEO' ? el.videoWidth : el.naturalWidth, sh = el.tagName === 'VIDEO' ? el.videoHeight : el.naturalHeight;
         if (sw > 0 && sh > 0) {
-          ctx.save(); ctx.filter = `blur(${18 * sf}px) brightness(0.65)`;
+          ctx.save(); ctx.filter = `blur(${(isFastPlay ? 10 : 18) * sf}px) brightness(0.65)`;
           const r = Math.max(W / sw, H / sh) * 1.15;
           ctx.drawImage(el, (W - sw * r) / 2, (H - sh * r) / 2, sw * r, sh * r);
           ctx.restore();
@@ -3124,7 +3272,6 @@
 
       if (state.isPlaying) togglePlay(false);
 
-      // 只有在明確開啟「框選模式」（且非點擊上方時間尺規）時，才啟動十字框選多軌素材
       if (state.marqueeMode && !e.target.closest('#ruler') && e.button === 0) {
         e.preventDefault();
         const pt = getTimelineInnerCoords(e.clientX, e.clientY);
@@ -3143,7 +3290,6 @@
         return;
       }
 
-      // 預設模式：在時間軸空白處或尺規按住左右拖動，即時滾動時間軸並同步更新顯示窗畫面
       isDraggingTimeline = true;
       timelineWasDragged = false;
       dragStartX = e.clientX;
@@ -3235,9 +3381,11 @@
     });
     timelineScroll.addEventListener('wheel', (e) => { if (!reorderState && e.shiftKey) { e.preventDefault(); timelineScroll.scrollLeft += e.deltaY; } }, { passive: false });
 
+    // ====== 任務二：軟同步機制（播放中放寬容差至 > 0.35s 才強制 seek，讓手機硬體解碼順暢運作） ======
     function syncVideoElements(immediate = false) {
       if (activeTrim) return;
       ensureMainClipsTimelineStarts();
+      const syncTolerance = state.isPlaying ? 0.35 : 0.12;
       const isMainVis = state.trackVisibility.main !== false;
       state.clips.forEach(c => {
         if (c.mediaEl?.tagName === 'VIDEO') {
@@ -3248,7 +3396,7 @@
           if (state.currentTime >= cStart && state.currentTime < cStart + c.duration) {
             const targetT = Math.max(0.01, (c.trimStart || 0) + (state.currentTime - cStart) * c.speed);
             if (immediate) requestVideoSeek(c.mediaEl, targetT);
-            else if (Math.abs(c.mediaEl.currentTime - targetT) > 0.12) c.mediaEl.currentTime = targetT;
+            else if (Math.abs(c.mediaEl.currentTime - targetT) > syncTolerance) c.mediaEl.currentTime = targetT;
             if (state.isPlaying && c.mediaEl.paused && !c.mediaEl.ended) c.mediaEl.play().catch(() => {});
           } else { if (!c.mediaEl.paused) c.mediaEl.pause(); }
         }
@@ -3265,7 +3413,7 @@
             if (state.currentTime >= pStart && state.currentTime < pStart + pClip.duration) {
               const targetT = Math.max(0.01, (pClip.trimStart || 0) + (state.currentTime - pStart) * pClip.speed);
               if (immediate) requestVideoSeek(pClip.mediaEl, targetT);
-              else if (Math.abs(pClip.mediaEl.currentTime - targetT) > 0.12) pClip.mediaEl.currentTime = targetT;
+              else if (Math.abs(pClip.mediaEl.currentTime - targetT) > syncTolerance) pClip.mediaEl.currentTime = targetT;
               if (state.isPlaying && pClip.mediaEl.paused && !pClip.mediaEl.ended) pClip.mediaEl.play().catch(() => {});
             } else { if (!pClip.mediaEl.paused) pClip.mediaEl.pause(); }
           }
@@ -3273,6 +3421,7 @@
       });
 
       const isAudVis = state.trackVisibility.audio !== false;
+      const audTolerance = state.isPlaying ? 0.35 : 0.15;
       state.audioClips.forEach(aClip => {
         if (!aClip.mediaEl) return;
         if (aClip.mediaEl.tagName === 'VIDEO') mountVideoToDecodePool(aClip.mediaEl);
@@ -3280,7 +3429,7 @@
         const aStart = aClip.start || 0;
         if (state.currentTime >= aStart && state.currentTime < aStart + aClip.duration) {
           const targetT = Math.max(0.01, (aClip.trimStart || 0) + (state.currentTime - aStart));
-          if (Math.abs(aClip.mediaEl.currentTime - targetT) > 0.15) aClip.mediaEl.currentTime = Math.min(aClip.mediaEl.duration || 999, targetT);
+          if (Math.abs(aClip.mediaEl.currentTime - targetT) > audTolerance) aClip.mediaEl.currentTime = Math.min(aClip.mediaEl.duration || 999, targetT);
           if (state.isPlaying && aClip.mediaEl.paused) aClip.mediaEl.play().catch(() => {});
         } else { if (!aClip.mediaEl.paused) aClip.mediaEl.pause(); }
       });
@@ -3647,9 +3796,10 @@
       showToast('已從影片分離出獨立音軌（原影片已自動靜音）🎵');
     }
 
-    // ====== 底部抽屜工具面板 ======
+    // ====== 底部抽屜工具面板（任務一：全面補齊 DOM 元素防呆判斷） ======
     function renderDrawer() {
       const container = document.getElementById('drawerContent');
+      if (!container) return;
       const selObj = getSelectedVisualClip();
       const clip = selObj?.clip || null;
       const rawSub = state.subtitles.find(s => s.id === state.selectedSubId) || state.subtitles[0];
@@ -3678,15 +3828,20 @@
             <div class="control-row"><label>無段變速</label><input type="range" min="0.25" max="4.0" step="0.05" value="${clip.speed}" id="clipSpeedRange"><span class="val-badge" id="clipSpeedVal">${clip.speed.toFixed(2)}x</span></div>
           ` : `<div style="text-align:center; padding:10px 0; color:var(--text-muted);">點「T 文字直橫 → 匯入 .srt」可自動轉字幕並微調後接續 AI 配音！</div>`}
         `;
-        document.getElementById('importPipBtn').onclick = () => { window._targetPipTrackId = state.pipTracks[0]?.id; document.getElementById('pipFileInput').click(); };
-        document.getElementById('addPipLayerBtn').onclick = () => {
+        const importPipBtn = document.getElementById('importPipBtn');
+        if (importPipBtn) importPipBtn.onclick = () => { window._targetPipTrackId = state.pipTracks[0]?.id; document.getElementById('pipFileInput').click(); };
+        const addPipLayerBtn = document.getElementById('addPipLayerBtn');
+        if (addPipLayerBtn) addPipLayerBtn.onclick = () => {
           pushUndo(); const layerNum = state.pipTracks.length + 1;
           state.pipTracks.unshift({ id: 'pip-track-' + Date.now(), name: `畫中畫 L${layerNum} (最頂層)`, visible: true, clips: [] });
           renderTimeline(); scheduleAutoSaveDraft(); showToast(`已新增最上層畫中畫軌道 L${layerNum}`);
         };
-        document.getElementById('drawerSplitBtn').onclick = splitAtPlayhead;
-        document.getElementById('delClipBtn').onclick = deleteCurrentSelected;
-        document.getElementById('resetCropBtn').onclick = () => {
+        const drawerSplitBtn = document.getElementById('drawerSplitBtn');
+        if (drawerSplitBtn) drawerSplitBtn.onclick = splitAtPlayhead;
+        const delClipBtn = document.getElementById('delClipBtn');
+        if (delClipBtn) delClipBtn.onclick = deleteCurrentSelected;
+        const resetCropBtn = document.getElementById('resetCropBtn');
+        if (resetCropBtn) resetCropBtn.onclick = () => {
           if (!clip) return; pushUndo();
           clip.baseTransform = { scaleX: 1.0, scaleY: 1.0, x: 0, y: 0, rot: 0 }; clip.crop = { left: 0, right: 0, top: 0, bottom: 0 };
           renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); showToast('已重設畫面尺寸、位置與裁剪框');
@@ -3694,9 +3849,11 @@
         if (clip) {
           container.querySelectorAll('.pill[data-speed]').forEach(btn => { btn.onclick = () => { const spd = parseFloat(btn.dataset.speed); applyClipSpeed(clip, spd, true); showToast(`已切換為 ${spd}x 速度`); }; });
           const speedSlider = document.getElementById('clipSpeedRange');
-          let sliderUndoSaved = false;
-          speedSlider.addEventListener('pointerdown', () => { sliderUndoSaved = false; });
-          speedSlider.oninput = (e) => { applyClipSpeed(clip, parseFloat(e.target.value), !sliderUndoSaved); sliderUndoSaved = true; };
+          if (speedSlider) {
+            let sliderUndoSaved = false;
+            speedSlider.addEventListener('pointerdown', () => { sliderUndoSaved = false; });
+            speedSlider.oninput = (e) => { applyClipSpeed(clip, parseFloat(e.target.value), !sliderUndoSaved); sliderUndoSaved = true; };
+          }
         }
       }
       else if (state.activeTab === 'voice') {
@@ -3738,63 +3895,134 @@
         `;
         container.querySelectorAll('[data-vengine]').forEach(btn => { btn.onclick = () => { vc.engine = btn.dataset.vengine; saveVoiceConfig(); renderDrawer(); }; });
         if (vc.engine === 'browser') {
-          document.getElementById('sysVoiceSelect').onchange = (e) => { vc.browserVoiceURI = e.target.value; saveVoiceConfig(); };
-          document.getElementById('testSysVoiceBtn').onclick = () => speakWithBrowserTTS(sub ? sub.text : '你好，這是 CutVideo 的免費內建語音旁白測試。');
-          document.getElementById('voiceRateRange').oninput = (e) => { vc.rate = parseFloat(e.target.value); saveVoiceConfig(); renderDrawer(); };
-          document.getElementById('toggleAutoSpeakBtn').onclick = () => { vc.autoSyncPlayback = !vc.autoSyncPlayback; saveVoiceConfig(); renderDrawer(); };
+          const sysVoiceSelect = document.getElementById('sysVoiceSelect');
+          if (sysVoiceSelect) sysVoiceSelect.onchange = (e) => { vc.browserVoiceURI = e.target.value; saveVoiceConfig(); };
+          const testSysVoiceBtn = document.getElementById('testSysVoiceBtn');
+          if (testSysVoiceBtn) testSysVoiceBtn.onclick = () => speakWithBrowserTTS(sub ? sub.text : '你好，這是 CutVideo 的免費內建語音旁白測試。');
+          const voiceRateRange = document.getElementById('voiceRateRange');
+          if (voiceRateRange) voiceRateRange.oninput = (e) => { vc.rate = parseFloat(e.target.value); saveVoiceConfig(); renderDrawer(); };
+          const toggleAutoSpeakBtn = document.getElementById('toggleAutoSpeakBtn');
+          if (toggleAutoSpeakBtn) toggleAutoSpeakBtn.onclick = () => { vc.autoSyncPlayback = !vc.autoSyncPlayback; saveVoiceConfig(); renderDrawer(); };
         } else {
-          document.getElementById('cloneProviderSel').onchange = (e) => { vc.provider = e.target.value; saveVoiceConfig(); };
-          document.getElementById('cloneApiKeyInp').oninput = (e) => { vc.apiKey = e.target.value; saveVoiceConfig(); };
-          document.getElementById('cloneVoiceIdInp').oninput = (e) => { vc.voiceId = e.target.value; saveVoiceConfig(); };
-          document.getElementById('testCloneVoiceBtn').onclick = async () => {
+          const cloneProviderSel = document.getElementById('cloneProviderSel');
+          if (cloneProviderSel) cloneProviderSel.onchange = (e) => { vc.provider = e.target.value; saveVoiceConfig(); };
+          const cloneApiKeyInp = document.getElementById('cloneApiKeyInp');
+          if (cloneApiKeyInp) cloneApiKeyInp.oninput = (e) => { vc.apiKey = e.target.value; saveVoiceConfig(); };
+          const cloneVoiceIdInp = document.getElementById('cloneVoiceIdInp');
+          if (cloneVoiceIdInp) cloneVoiceIdInp.oninput = (e) => { vc.voiceId = e.target.value; saveVoiceConfig(); };
+          const testCloneVoiceBtn = document.getElementById('testCloneVoiceBtn');
+          if (testCloneVoiceBtn) testCloneVoiceBtn.onclick = async () => {
             try { showToast('正在合成克隆聲音試聽...'); const blob = await fetchClonedVoiceBlob(sub ? sub.text : '哈囉，這是我的專屬 AI 克隆聲音測試！'); new Audio(URL.createObjectURL(blob)).play(); }
             catch (err) { showToast(err.message); }
           };
         }
-        document.getElementById('voiceScriptTextarea').oninput = (e) => { vc.scriptDraft = e.target.value; };
-        document.getElementById('genFromSubsBtn').onclick = generateVoiceFromSubtitles;
-        document.getElementById('genFromScriptBtn').onclick = generateVoiceAndSubtitlesFromScript;
+        const voiceScriptTextarea = document.getElementById('voiceScriptTextarea');
+        if (voiceScriptTextarea) voiceScriptTextarea.oninput = (e) => { vc.scriptDraft = e.target.value; };
+        const genFromSubsBtn = document.getElementById('genFromSubsBtn');
+        if (genFromSubsBtn) genFromSubsBtn.onclick = generateVoiceFromSubtitles;
+        const genFromScriptBtn = document.getElementById('genFromScriptBtn');
+        if (genFromScriptBtn) genFromScriptBtn.onclick = generateVoiceAndSubtitlesFromScript;
       }
       else if (state.activeTab === 'fx') {
-        const fx = state.effects, sp = fx.spotlight, fadeIn = clip?.fadeIn || { type: 'none', dur: 0.8 }, fadeOut = clip?.fadeOut || { type: 'none', dur: 0.8 };
+        const fx = state.effects;
+        const sp = fx.spotlight;
+        if (typeof sp.blurRadius !== 'number') sp.blurRadius = 14;
+        if (typeof sp.intensity !== 'number') sp.intensity = 1.25;
+        if (typeof fx.particleSpeed !== 'number') fx.particleSpeed = 1.0;
+
+        const fadeIn = clip?.fadeIn || { type: 'none', dur: 0.8 };
+        const fadeOut = clip?.fadeOut || { type: 'none', dur: 0.8 };
+
         container.innerHTML = `
           ${clip ? `
             <div style="font-size:11px; color:#fda4af; font-weight:700; margin-bottom:4px;">1. 片頭/片尾出入畫動畫（針對：${clip.name}）</div>
-            <div class="control-row"><label>片頭進場</label><button class="pill ${fadeIn.type === 'none' ? 'active' : ''}" data-fi="none">無</button><button class="pill ${fadeIn.type === 'black' ? 'active' : ''}" data-fi="black">⬛ 漸黑</button><button class="pill ${fadeIn.type === 'white' ? 'active' : ''}" data-fi="white">⬜ 漸白</button><input type="range" min="0.2" max="3.0" step="0.1" value="${fadeIn.dur}" id="fiDurRange" style="max-width:75px;"><span class="val-badge">${fadeIn.dur.toFixed(1)}s</span></div>
-            <div class="control-row"><label>片尾出場</label><button class="pill ${fadeOut.type === 'none' ? 'active' : ''}" data-fo="none">無</button><button class="pill ${fadeOut.type === 'black' ? 'active' : ''}" data-fo="black">⬛ 漸黑</button><button class="pill ${fadeOut.type === 'white' ? 'active' : ''}" data-fo="white">⬜ 漸白</button><input type="range" min="0.2" max="3.0" step="0.1" value="${fadeOut.dur}" id="foDurRange" style="max-width:75px;"><span class="val-badge">${fadeOut.dur.toFixed(1)}s</span></div>
+            <div class="control-row">
+              <label>片頭進場</label>
+              <div class="pill-group" style="margin-bottom:0; flex:1;">
+                <button class="pill ${fadeIn.type === 'none' ? 'active' : ''}" data-fi="none">無</button>
+                <button class="pill ${fadeIn.type === 'black' ? 'active' : ''}" data-fi="black">⬛ 漸黑</button>
+                <button class="pill ${fadeIn.type === 'white' ? 'active' : ''}" data-fi="white">⬜ 漸白</button>
+                <button class="pill ${fadeIn.type === 'exposure-up' ? 'active' : ''}" data-fi="exposure-up">☀️ 漸亮</button>
+                <button class="pill ${fadeIn.type === 'blur-focus' ? 'active' : ''}" data-fi="blur-focus">🌫️ 漸霧</button>
+              </div>
+              <input type="range" min="0.2" max="3.0" step="0.1" value="${fadeIn.dur}" id="fiDurRange" style="max-width:70px;">
+              <span class="val-badge" id="fiDurVal">${fadeIn.dur.toFixed(1)}s</span>
+            </div>
+            <div class="control-row">
+              <label>片尾出場</label>
+              <div class="pill-group" style="margin-bottom:0; flex:1;">
+                <button class="pill ${fadeOut.type === 'none' ? 'active' : ''}" data-fo="none">無</button>
+                <button class="pill ${fadeOut.type === 'black' ? 'active' : ''}" data-fo="black">⬛ 漸黑</button>
+                <button class="pill ${fadeOut.type === 'white' ? 'active' : ''}" data-fo="white">⬜ 漸白</button>
+                <button class="pill ${fadeOut.type === 'exposure-down' ? 'active' : ''}" data-fo="exposure-down">🌑 漸暗</button>
+                <button class="pill ${fadeOut.type === 'blur-defocus' ? 'active' : ''}" data-fo="blur-defocus">🌀 失焦</button>
+              </div>
+              <input type="range" min="0.2" max="3.0" step="0.1" value="${fadeOut.dur}" id="foDurRange" style="max-width:70px;">
+              <span class="val-badge" id="foDurVal">${fadeOut.dur.toFixed(1)}s</span>
+            </div>
           ` : ''}
-          <div style="font-size:11px; color:#93c5fd; font-weight:700; margin:6px 0 4px;">2. 動態粒子特效（下雪 ＆ 飄花瓣）</div>
+          <div style="font-size:11px; color:#93c5fd; font-weight:700; margin:6px 0 4px;">2. 動態粒子特效（下雪 ＆ 飄花瓣 · 重力與風力模擬）</div>
           <div class="pill-group"><button class="pill ${fx.particleType === 'none' ? 'active' : ''}" data-pt="none">無粒子</button><button class="pill ${fx.particleType === 'snow' ? 'active' : ''}" data-pt="snow">❄️ 下雪特效</button><button class="pill ${fx.particleType === 'petal' ? 'active' : ''}" data-pt="petal">🌸 飄花瓣特效</button></div>
           ${fx.particleType !== 'none' ? `
-            <div class="control-row"><label>粒子大小</label><input type="range" min="2" max="18" step="0.5" value="${fx.particleSize}" id="ptSizeRange"><span class="val-badge">${fx.particleSize}</span><label style="min-width:34px;">密度</label><input type="range" min="10" max="150" step="5" value="${fx.particleDensity}" id="ptDensRange"><span class="val-badge">${fx.particleDensity}</span></div>
+            <div class="control-row">
+              <label>粒子大小</label><input type="range" min="2" max="18" step="0.5" value="${fx.particleSize}" id="ptSizeRange"><span class="val-badge" id="ptSizeVal">${fx.particleSize}</span>
+              <label style="min-width:34px;">密度</label><input type="range" min="10" max="150" step="5" value="${fx.particleDensity}" id="ptDensRange"><span class="val-badge" id="ptDensVal">${fx.particleDensity}</span>
+            </div>
+            <div class="control-row">
+              <label>落下速度</label><input type="range" min="0.2" max="3.0" step="0.1" value="${fx.particleSpeed}" id="ptSpeedRange"><span class="val-badge" id="ptSpeedVal">${fx.particleSpeed.toFixed(1)}x</span>
+            </div>
             ${fx.particleType === 'petal' ? `<div class="pill-group">${PETAL_COLORS.map(pc => `<button class="pill ${fx.petalColor === pc.hex ? 'active' : ''}" data-pcol="${pc.hex}">${pc.name}</button>`).join('')}</div>` : ''}
           ` : ''}
-          <div style="font-size:11px; color:#ffcc33; font-weight:700; margin:6px 0 4px;">3. 舞台聚光燈效果</div>
-          <div class="control-row"><button class="pill ${sp.enabled ? 'active' : ''}" id="toggleSpotBtn">${sp.enabled ? '🔦 聚光燈：開啟中' : '🔦 開啟舞台聚光燈'}</button>${sp.enabled ? `<label style="min-width:52px;">打光角度</label><input type="range" min="-60" max="60" step="2" value="${sp.angle}" id="spotAngleRange"><span class="val-badge">${sp.angle}°</span>` : ''}</div>
+          <div style="font-size:11px; color:#ffcc33; font-weight:700; margin:6px 0 4px;">3. 舞台聚光燈效果（外圍景深失焦霧化）</div>
+          <div class="control-row"><button class="pill ${sp.enabled ? 'active' : ''}" id="toggleSpotBtn">${sp.enabled ? '🔦 聚光燈：開啟中' : '🔦 開啟舞台聚光燈'}</button>${sp.enabled ? `<label style="min-width:52px;">打光角度</label><input type="range" min="-60" max="60" step="2" value="${sp.angle}" id="spotAngleRange"><span class="val-badge" id="spotAngleVal">${sp.angle}°</span>` : ''}</div>
           ${sp.enabled ? `
-            <div class="control-row"><label>光圈寬度</label><input type="range" min="0.15" max="0.75" step="0.02" value="${sp.spread}" id="spotSpreadRange"><label style="min-width:52px;">環境暗度</label><input type="range" min="0.2" max="0.95" step="0.05" value="${sp.darkness}" id="spotDarkRange"></div>
-            <div class="control-row"><label>焦點左右</label><input type="range" min="0.05" max="0.95" step="0.02" value="${sp.focusX}" id="spotXRange"><label style="min-width:52px;">焦點上下</label><input type="range" min="0.1" max="0.95" step="0.02" value="${sp.focusY}" id="spotYRange"></div>
+            <div class="control-row">
+              <label>光圈寬度</label><input type="range" min="0.15" max="0.75" step="0.02" value="${sp.spread}" id="spotSpreadRange">
+              <label style="min-width:52px;">環境暗度</label><input type="range" min="0.2" max="0.95" step="0.05" value="${sp.darkness}" id="spotDarkRange">
+            </div>
+            <div class="control-row">
+              <label>光線強度</label><input type="range" min="0.5" max="2.5" step="0.05" value="${sp.intensity}" id="spotIntensityRange"><span class="val-badge" id="spotIntensityVal">${Math.round(sp.intensity * 100)}%</span>
+              <label style="min-width:52px;">霧化程度</label><input type="range" min="0" max="32" step="1" value="${sp.blurRadius}" id="spotBlurRange"><span class="val-badge" id="spotBlurVal">${sp.blurRadius}px</span>
+            </div>
+            <div class="control-row">
+              <label>焦點左右</label><input type="range" min="0.05" max="0.95" step="0.02" value="${sp.focusX}" id="spotXRange">
+              <label style="min-width:52px;">焦點上下</label><input type="range" min="0.1" max="0.95" step="0.02" value="${sp.focusY}" id="spotYRange">
+            </div>
           ` : ''}
         `;
         if (clip) {
           container.querySelectorAll('[data-fi]').forEach(btn => { btn.onclick = () => { pushUndo(); clip.fadeIn.type = btn.dataset.fi; renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); }; });
           container.querySelectorAll('[data-fo]').forEach(btn => { btn.onclick = () => { pushUndo(); clip.fadeOut.type = btn.dataset.fo; renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); }; });
-          document.getElementById('fiDurRange').oninput = (e) => { clip.fadeIn.dur = parseFloat(e.target.value); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-          document.getElementById('foDurRange').oninput = (e) => { clip.fadeOut.dur = parseFloat(e.target.value); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+          const fiDurRange = document.getElementById('fiDurRange');
+          if (fiDurRange) fiDurRange.oninput = (e) => { clip.fadeIn.dur = parseFloat(e.target.value); const v = document.getElementById('fiDurVal'); if (v) v.textContent = clip.fadeIn.dur.toFixed(1) + 's'; renderFrame(); scheduleAutoSaveDraft(); };
+          const foDurRange = document.getElementById('foDurRange');
+          if (foDurRange) foDurRange.oninput = (e) => { clip.fadeOut.dur = parseFloat(e.target.value); const v = document.getElementById('foDurVal'); if (v) v.textContent = clip.fadeOut.dur.toFixed(1) + 's'; renderFrame(); scheduleAutoSaveDraft(); };
         }
         container.querySelectorAll('[data-pt]').forEach(btn => { btn.onclick = () => { pushUndo(); fx.particleType = btn.dataset.pt; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); }; });
-        if (document.getElementById('ptSizeRange')) {
-          document.getElementById('ptSizeRange').oninput = (e) => { fx.particleSize = parseFloat(e.target.value); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-          document.getElementById('ptDensRange').oninput = (e) => { fx.particleDensity = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-        }
+        const ptSizeRange = document.getElementById('ptSizeRange');
+        if (ptSizeRange) ptSizeRange.oninput = (e) => { fx.particleSize = parseFloat(e.target.value); const v = document.getElementById('ptSizeVal'); if (v) v.textContent = fx.particleSize; renderFrame(); scheduleAutoSaveDraft(); };
+        const ptDensRange = document.getElementById('ptDensRange');
+        if (ptDensRange) ptDensRange.oninput = (e) => { fx.particleDensity = parseInt(e.target.value, 10); const v = document.getElementById('ptDensVal'); if (v) v.textContent = fx.particleDensity; renderFrame(); scheduleAutoSaveDraft(); };
+        const ptSpeedRange = document.getElementById('ptSpeedRange');
+        if (ptSpeedRange) ptSpeedRange.oninput = (e) => { fx.particleSpeed = parseFloat(e.target.value); const v = document.getElementById('ptSpeedVal'); if (v) v.textContent = fx.particleSpeed.toFixed(1) + 'x'; renderFrame(); scheduleAutoSaveDraft(); };
         container.querySelectorAll('[data-pcol]').forEach(btn => { btn.onclick = () => { pushUndo(); fx.petalColor = btn.dataset.pcol; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); }; });
-        document.getElementById('toggleSpotBtn').onclick = () => { pushUndo(); sp.enabled = !sp.enabled; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+        const toggleSpotBtn = document.getElementById('toggleSpotBtn');
+        if (toggleSpotBtn) toggleSpotBtn.onclick = () => { pushUndo(); sp.enabled = !sp.enabled; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
         if (sp.enabled) {
-          document.getElementById('spotAngleRange').oninput = (e) => { sp.angle = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-          document.getElementById('spotSpreadRange').oninput = (e) => { sp.spread = parseFloat(e.target.value); renderFrame(); scheduleAutoSaveDraft(); };
-          document.getElementById('spotDarkRange').oninput = (e) => { sp.darkness = parseFloat(e.target.value); renderFrame(); scheduleAutoSaveDraft(); };
-          document.getElementById('spotXRange').oninput = (e) => { sp.focusX = parseFloat(e.target.value); renderFrame(); scheduleAutoSaveDraft(); };
-          document.getElementById('spotYRange').oninput = (e) => { sp.focusY = parseFloat(e.target.value); renderFrame(); scheduleAutoSaveDraft(); };
+          const spotAngleRange = document.getElementById('spotAngleRange');
+          if (spotAngleRange) spotAngleRange.oninput = (e) => { sp.angle = parseInt(e.target.value, 10); const v = document.getElementById('spotAngleVal'); if (v) v.textContent = sp.angle + '°'; renderFrame(); scheduleAutoSaveDraft(); };
+          const spotSpreadRange = document.getElementById('spotSpreadRange');
+          if (spotSpreadRange) spotSpreadRange.oninput = (e) => { sp.spread = parseFloat(e.target.value); renderFrame(); scheduleAutoSaveDraft(); };
+          const spotDarkRange = document.getElementById('spotDarkRange');
+          if (spotDarkRange) spotDarkRange.oninput = (e) => { sp.darkness = parseFloat(e.target.value); renderFrame(); scheduleAutoSaveDraft(); };
+          const spotIntensityRange = document.getElementById('spotIntensityRange');
+          if (spotIntensityRange) spotIntensityRange.oninput = (e) => { sp.intensity = parseFloat(e.target.value); const v = document.getElementById('spotIntensityVal'); if (v) v.textContent = Math.round(sp.intensity * 100) + '%'; renderFrame(); scheduleAutoSaveDraft(); };
+          const spotBlurRange = document.getElementById('spotBlurRange');
+          if (spotBlurRange) spotBlurRange.oninput = (e) => { sp.blurRadius = parseInt(e.target.value, 10); const v = document.getElementById('spotBlurVal'); if (v) v.textContent = sp.blurRadius + 'px'; renderFrame(); scheduleAutoSaveDraft(); };
+          const spotXRange = document.getElementById('spotXRange');
+          if (spotXRange) spotXRange.oninput = (e) => { sp.focusX = parseFloat(e.target.value); renderFrame(); scheduleAutoSaveDraft(); };
+          const spotYRange = document.getElementById('spotYRange');
+          if (spotYRange) spotYRange.oninput = (e) => { sp.focusY = parseFloat(e.target.value); renderFrame(); scheduleAutoSaveDraft(); };
         }
       }
       else if (state.activeTab === 'keyframe') {
@@ -3808,12 +4036,18 @@
           <div class="control-row"><label>水平寬度</label><input type="range" min="0.1" max="3.0" step="0.05" value="${curTr.scaleX ?? 1}" id="kfScaleX"><span class="val-badge">${(curTr.scaleX ?? 1).toFixed(2)}x</span><label style="min-width:52px;">垂直高度</label><input type="range" min="0.1" max="3.0" step="0.05" value="${curTr.scaleY ?? 1}" id="kfScaleY"><span class="val-badge">${(curTr.scaleY ?? 1).toFixed(2)}x</span></div>
           <div class="control-row"><label>左右位移</label><input type="range" min="-600" max="600" step="4" value="${curTr.x}" id="kfX"><span class="val-badge">${Math.round(curTr.x)}</span><label style="min-width:52px;">上下位移</label><input type="range" min="-800" max="800" step="4" value="${curTr.y}" id="kfY"><span class="val-badge">${Math.round(curTr.y)}</span></div>
         `;
-        document.getElementById('addKfBtn').onclick = () => { pushUndo(); addManualKeyframeAtCurrentTime(clip, selObj.isPip); renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); showToast(`已在 ${localT.toFixed(1)}s 手動打下關鍵幀 ◆`); };
-        document.getElementById('clearKfBtn').onclick = () => { pushUndo(); clip.baseTransform = { ...getInterpolatedTransform(clip, localT) }; clip.keyframes = []; renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); showToast('已清空所有關鍵幀'); };
-        document.getElementById('kfScaleX').oninput = (e) => { updateClipActiveTransform(clip, localT, { scaleX: parseFloat(e.target.value) }); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-        document.getElementById('kfScaleY').oninput = (e) => { updateClipActiveTransform(clip, localT, { scaleY: parseFloat(e.target.value) }); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-        document.getElementById('kfX').oninput = (e) => { updateClipActiveTransform(clip, localT, { x: parseFloat(e.target.value) }); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-        document.getElementById('kfY').oninput = (e) => { updateClipActiveTransform(clip, localT, { y: parseFloat(e.target.value) }); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+        const addKfBtn = document.getElementById('addKfBtn');
+        if (addKfBtn) addKfBtn.onclick = () => { pushUndo(); addManualKeyframeAtCurrentTime(clip, selObj.isPip); renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); showToast(`已在 ${localT.toFixed(1)}s 手動打下關鍵幀 ◆`); };
+        const clearKfBtn = document.getElementById('clearKfBtn');
+        if (clearKfBtn) clearKfBtn.onclick = () => { pushUndo(); clip.baseTransform = { ...getInterpolatedTransform(clip, localT) }; clip.keyframes = []; renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); showToast('已清空所有關鍵幀'); };
+        const kfScaleX = document.getElementById('kfScaleX');
+        if (kfScaleX) kfScaleX.oninput = (e) => { updateClipActiveTransform(clip, localT, { scaleX: parseFloat(e.target.value) }); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+        const kfScaleY = document.getElementById('kfScaleY');
+        if (kfScaleY) kfScaleY.oninput = (e) => { updateClipActiveTransform(clip, localT, { scaleY: parseFloat(e.target.value) }); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+        const kfX = document.getElementById('kfX');
+        if (kfX) kfX.oninput = (e) => { updateClipActiveTransform(clip, localT, { x: parseFloat(e.target.value) }); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+        const kfY = document.getElementById('kfY');
+        if (kfY) kfY.oninput = (e) => { updateClipActiveTransform(clip, localT, { y: parseFloat(e.target.value) }); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
       }
       else if (state.activeTab === 'cutout') {
         if (!clip) { container.innerHTML = `<p style="color:var(--text-muted); text-align:center; margin-top:20px;">請先匯入並選取主影片或畫中畫，再設定去背、融合與遮罩 🪄</p>`; return; }
@@ -3831,18 +4065,25 @@
           ${msk.type === 'pen' ? `<div class="control-row"><button class="chip-btn" style="border-color:var(--gold); color:var(--gold);" id="togglePenBtn">${state.penEditMode ? '✅ 完成鋼筆點選' : '✒️ 繼續點選畫布錨點'}</button><button class="chip-btn danger" id="clearPenBtn">🗑️ 清除路徑 (${(msk.penPoints || []).length}點)</button></div>` : ''}
         `;
         container.querySelectorAll('[data-cut]').forEach(btn => { btn.onclick = () => { pushUndo(); clip.cutout.mode = btn.dataset.cut; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); }; });
-        if (document.getElementById('keyColorPick')) {
-          document.getElementById('keyColorPick').oninput = (e) => { clip.cutout.keyColor = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
-          document.getElementById('eyedropBtn').onclick = () => { state.eyedropperMode = !state.eyedropperMode; renderDrawer(); };
-          document.getElementById('keyTolRange').oninput = (e) => { clip.cutout.tolerance = parseInt(e.target.value, 10); renderFrame(); scheduleAutoSaveDraft(); };
+        const keyColorPick = document.getElementById('keyColorPick');
+        if (keyColorPick) {
+          keyColorPick.oninput = (e) => { clip.cutout.keyColor = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
+          const eyedropBtn = document.getElementById('eyedropBtn');
+          if (eyedropBtn) eyedropBtn.onclick = () => { state.eyedropperMode = !state.eyedropperMode; renderDrawer(); };
+          const keyTolRange = document.getElementById('keyTolRange');
+          if (keyTolRange) keyTolRange.oninput = (e) => { clip.cutout.tolerance = parseInt(e.target.value, 10); renderFrame(); scheduleAutoSaveDraft(); };
         }
         container.querySelectorAll('[data-blend]').forEach(btn => { btn.onclick = () => { pushUndo(); clip.blendMode = btn.dataset.blend; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); }; });
-        document.getElementById('clipOpacityRange').oninput = (e) => { clip.opacity = parseFloat(e.target.value); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+        const clipOpacityRange = document.getElementById('clipOpacityRange');
+        if (clipOpacityRange) clipOpacityRange.oninput = (e) => { clip.opacity = parseFloat(e.target.value); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
         container.querySelectorAll('[data-mask]').forEach(btn => { btn.onclick = () => { pushUndo(); clip.mask.type = btn.dataset.mask; state.penEditMode = (clip.mask.type === 'pen'); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); }; });
-        if (document.getElementById('maskFeatherRange')) document.getElementById('maskFeatherRange').oninput = (e) => { clip.mask.feather = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-        if (document.getElementById('togglePenBtn')) {
-          document.getElementById('togglePenBtn').onclick = () => { state.penEditMode = !state.penEditMode; renderDrawer(); renderFrame(); };
-          document.getElementById('clearPenBtn').onclick = () => { pushUndo(); clip.mask.penPoints = []; state.penEditMode = true; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+        const maskFeatherRange = document.getElementById('maskFeatherRange');
+        if (maskFeatherRange) maskFeatherRange.oninput = (e) => { clip.mask.feather = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+        const togglePenBtn = document.getElementById('togglePenBtn');
+        if (togglePenBtn) {
+          togglePenBtn.onclick = () => { state.penEditMode = !state.penEditMode; renderDrawer(); renderFrame(); };
+          const clearPenBtn = document.getElementById('clearPenBtn');
+          if (clearPenBtn) clearPenBtn.onclick = () => { pushUndo(); clip.mask.penPoints = []; state.penEditMode = true; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
         }
       }
       else if (state.activeTab === 'canvasbg') {
@@ -3855,11 +4096,12 @@
           ${bg.mode === 'custom' ? `<div class="control-row"><button class="box-btn primary" style="flex:1;" onclick="document.getElementById('bgFileInput').click()">＋ 匯入自訂底板圖片或影片</button></div><p style="color:var(--text-muted); font-size:11px; margin:4px 0 0;">目前自訂底板：${bg.mediaName || '尚未匯入檔案'}</p>` : ''}
         `;
         container.querySelectorAll('[data-bg]').forEach(btn => { btn.onclick = () => { pushUndo(); state.background.mode = btn.dataset.bg; if (state.background.mode === 'custom' && !state.background.mediaEl) document.getElementById('bgFileInput').click(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); }; });
-        if (document.getElementById('bgColor1')) document.getElementById('bgColor1').oninput = (e) => { state.background.color1 = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
-        if (document.getElementById('bgGrad1')) {
-          document.getElementById('bgGrad1').oninput = (e) => { state.background.color1 = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
-          document.getElementById('bgGrad2').oninput = (e) => { state.background.color2 = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
-        }
+        const bgColor1 = document.getElementById('bgColor1');
+        if (bgColor1) bgColor1.oninput = (e) => { state.background.color1 = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
+        const bgGrad1 = document.getElementById('bgGrad1');
+        const bgGrad2 = document.getElementById('bgGrad2');
+        if (bgGrad1) bgGrad1.oninput = (e) => { state.background.color1 = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
+        if (bgGrad2) bgGrad2.oninput = (e) => { state.background.color2 = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
       }
       else if (state.activeTab === 'text') {
         const cats = ['全部', '現代', '手寫', '圓體', '古典', '特色'];
@@ -3947,15 +4189,20 @@
           <div class="pill-group">${cats.map(c => `<button class="pill ${state.fontFilter === c ? 'active' : ''}" data-cat="${c}">${c}</button>`).join('')}<button class="pill" onclick="document.getElementById('fontFileInput').click()">＋ 本機字體</button></div>
           <div class="font-grid">${filteredFonts.map(f => `<button class="font-card ${sub && sub.font === f.family ? 'active' : ''}" data-family="${f.family.replace(/"/g, '"')}"><span class="sample" style="font-family:${f.family};">${f.name}</span><span class="meta">${f.desc}</span></button>`).join('')}</div>
         `;
-        document.getElementById('newSubBtn').onclick = addNewSubtitle;
-        document.getElementById('importSrtBtn').onclick = () => document.getElementById('srtFileInput').click();
-        if (document.getElementById('applyAllSubStyleBtn')) {
-          document.getElementById('applyAllSubStyleBtn').onclick = () => applySubtitleStyleToAll(sub);
-        }
-        if (document.getElementById('subToVoiceBtn')) document.getElementById('subToVoiceBtn').onclick = () => { state.activeTab = 'voice'; updateTabsUI(); renderDrawer(); };
-        if (document.getElementById('delSubBtn')) document.getElementById('delSubBtn').onclick = () => { state.lastSelectedType = 'sub'; deleteCurrentSelected(); };
+        const newSubBtn = document.getElementById('newSubBtn');
+        if (newSubBtn) newSubBtn.onclick = addNewSubtitle;
+        const importSrtBtn = document.getElementById('importSrtBtn');
+        if (importSrtBtn) importSrtBtn.onclick = () => document.getElementById('srtFileInput').click();
+        const applyAllSubStyleBtn = document.getElementById('applyAllSubStyleBtn');
+        if (applyAllSubStyleBtn) applyAllSubStyleBtn.onclick = () => applySubtitleStyleToAll(sub);
+        const subToVoiceBtn = document.getElementById('subToVoiceBtn');
+        if (subToVoiceBtn) subToVoiceBtn.onclick = () => { state.activeTab = 'voice'; updateTabsUI(); renderDrawer(); };
+        const delSubBtn = document.getElementById('delSubBtn');
+        if (delSubBtn) delSubBtn.onclick = () => { state.lastSelectedType = 'sub'; deleteCurrentSelected(); };
+
         if (sub) {
-          document.getElementById('subTextInput').oninput = (e) => { sub.text = e.target.value; renderTimeline(); renderFrame(); scheduleAutoSaveDraft(); };
+          const subTextInput = document.getElementById('subTextInput');
+          if (subTextInput) subTextInput.oninput = (e) => { sub.text = e.target.value; renderTimeline(); renderFrame(); scheduleAutoSaveDraft(); };
 
           container.querySelectorAll('[data-subanim]').forEach(btn => {
             btn.onclick = () => {
@@ -3967,49 +4214,58 @@
               scheduleAutoSaveDraft();
             };
           });
-          if (document.getElementById('subAnimDurRange')) {
-            document.getElementById('subAnimDurRange').oninput = (e) => {
+          const subAnimDurRange = document.getElementById('subAnimDurRange');
+          if (subAnimDurRange) {
+            subAnimDurRange.oninput = (e) => {
               sub.animDur = parseFloat(e.target.value);
               renderDrawer();
               renderFrame();
               scheduleAutoSaveDraft();
             };
           }
-          if (document.getElementById('previewSubAnimBtn')) {
-            document.getElementById('previewSubAnimBtn').onclick = () => {
+          const previewSubAnimBtn = document.getElementById('previewSubAnimBtn');
+          if (previewSubAnimBtn) {
+            previewSubAnimBtn.onclick = () => {
               seekTo(sub.start);
               togglePlay(true);
             };
           }
 
-          document.getElementById('orientHorizBtn').onclick = () => { pushUndo(); sub.orientation = 'horizontal'; renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-          document.getElementById('orientVertBtn').onclick = () => { pushUndo(); sub.orientation = 'vertical'; renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-          document.getElementById('subSizeRange').oninput = (e) => { sub.size = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-          document.getElementById('subColorPick').oninput = (e) => { sub.color = e.target.value; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+          const orientHorizBtn = document.getElementById('orientHorizBtn');
+          if (orientHorizBtn) orientHorizBtn.onclick = () => { pushUndo(); sub.orientation = 'horizontal'; renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+          const orientVertBtn = document.getElementById('orientVertBtn');
+          if (orientVertBtn) orientVertBtn.onclick = () => { pushUndo(); sub.orientation = 'vertical'; renderTimeline(); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+          const subSizeRange = document.getElementById('subSizeRange');
+          if (subSizeRange) subSizeRange.oninput = (e) => { sub.size = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+          const subColorPick = document.getElementById('subColorPick');
+          if (subColorPick) subColorPick.oninput = (e) => { sub.color = e.target.value; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
           container.querySelectorAll('[data-subcol]').forEach(dot => {
             dot.onclick = () => { pushUndo(); sub.color = dot.dataset.subcol; renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
           });
 
-          document.getElementById('toggleSubStrokeBtn').onclick = () => {
+          const toggleSubStrokeBtn = document.getElementById('toggleSubStrokeBtn');
+          if (toggleSubStrokeBtn) toggleSubStrokeBtn.onclick = () => {
             pushUndo();
             sub.strokeEnabled = !sub.strokeEnabled;
             renderDrawer(); renderFrame(); scheduleAutoSaveDraft();
           };
-          if (document.getElementById('subStrokeColorPick')) {
-            document.getElementById('subStrokeColorPick').oninput = (e) => { sub.stroke = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
-            document.getElementById('subStrokeWidthRange').oninput = (e) => { sub.strokeWidth = parseFloat(e.target.value); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-          }
+          const subStrokeColorPick = document.getElementById('subStrokeColorPick');
+          if (subStrokeColorPick) subStrokeColorPick.oninput = (e) => { sub.stroke = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
+          const subStrokeWidthRange = document.getElementById('subStrokeWidthRange');
+          if (subStrokeWidthRange) subStrokeWidthRange.oninput = (e) => { sub.strokeWidth = parseFloat(e.target.value); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
 
-          document.getElementById('toggleSubShadowBtn').onclick = () => {
+          const toggleSubShadowBtn = document.getElementById('toggleSubShadowBtn');
+          if (toggleSubShadowBtn) toggleSubShadowBtn.onclick = () => {
             pushUndo();
             sub.shadowEnabled = !sub.shadowEnabled;
             renderDrawer(); renderFrame(); scheduleAutoSaveDraft();
           };
-          if (document.getElementById('subShadowColorPick')) {
-            document.getElementById('subShadowColorPick').oninput = (e) => { sub.shadowColor = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
-            document.getElementById('subShadowBlurRange').oninput = (e) => { sub.shadowBlur = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-            document.getElementById('subShadowOffsetRange').oninput = (e) => { sub.shadowOffset = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
-          }
+          const subShadowColorPick = document.getElementById('subShadowColorPick');
+          if (subShadowColorPick) subShadowColorPick.oninput = (e) => { sub.shadowColor = e.target.value; renderFrame(); scheduleAutoSaveDraft(); };
+          const subShadowBlurRange = document.getElementById('subShadowBlurRange');
+          if (subShadowBlurRange) subShadowBlurRange.oninput = (e) => { sub.shadowBlur = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
+          const subShadowOffsetRange = document.getElementById('subShadowOffsetRange');
+          if (subShadowOffsetRange) subShadowOffsetRange.oninput = (e) => { sub.shadowOffset = parseInt(e.target.value, 10); renderDrawer(); renderFrame(); scheduleAutoSaveDraft(); };
 
           container.querySelectorAll('[data-subbg]').forEach(btn => {
             btn.onclick = () => {
@@ -4019,13 +4275,12 @@
               renderDrawer(); renderFrame(); scheduleAutoSaveDraft();
             };
           });
-          if (document.getElementById('subBgColorPick')) {
-            document.getElementById('subBgColorPick').oninput = (e) => {
-              sub.bgColor = e.target.value;
-              sub.bg = computeSubtitleBgCss(sub);
-              renderFrame(); scheduleAutoSaveDraft();
-            };
-          }
+          const subBgColorPick = document.getElementById('subBgColorPick');
+          if (subBgColorPick) subBgColorPick.oninput = (e) => {
+            sub.bgColor = e.target.value;
+            sub.bg = computeSubtitleBgCss(sub);
+            renderFrame(); scheduleAutoSaveDraft();
+          };
         }
         container.querySelectorAll('.pill[data-cat]').forEach(btn => { btn.onclick = () => { state.fontFilter = btn.dataset.cat; renderDrawer(); }; });
         container.querySelectorAll('.font-card').forEach(card => {
@@ -4056,7 +4311,8 @@
             renderDrawer(); renderFrame(); scheduleAutoSaveDraft();
           };
         });
-        document.getElementById('resetColorBtn').onclick = () => {
+        const resetColorBtn = document.getElementById('resetColorBtn');
+        if (resetColorBtn) resetColorBtn.onclick = () => {
           pushUndo();
           clip.color = { b: 100, c: 100, s: 100, warm: 0, sharp: 0 };
           renderDrawer(); renderFrame(); scheduleAutoSaveDraft();
@@ -4072,6 +4328,7 @@
         colorSliderDefs.forEach(({ id, valId, key, fmt }) => {
           const inp = document.getElementById(id);
           const badge = document.getElementById(valId);
+          if (!inp) return;
           let undoSaved = false;
           inp.addEventListener('pointerdown', () => { undoSaved = false; });
           inp.oninput = (e) => {
@@ -4101,15 +4358,21 @@
             <div class="control-row"><button class="chip-btn ${aClip.muted ? 'danger' : ''}" id="toggleAudMuteBtn">${aClip.muted ? '🔇 音軌已靜音' : '🔊 音軌開啟'}</button><label style="min-width:52px;">音軌增益</label><input type="range" min="0" max="3" step="0.05" value="${aClip.gain ?? 1}" id="audGainRange" ${aClip.muted ? 'disabled' : ''}><span class="val-badge">${Math.round((aClip.gain ?? 1) * 100)}%</span><button class="chip-btn danger" id="delAudClipBtn">🗑️</button></div>
           ` : `<p style="color:var(--text-muted); font-size:11px; text-align:center; margin:8px 0 0;">支援直接匯入音樂、AI 配音或「匯入影片轉音軌」，匯出時自動混音。</p>`}
         `;
-        if (document.getElementById('extractCurVidBtn') && hasVideoClip) document.getElementById('extractCurVidBtn').onclick = () => extractAudioFromClip(clip, selObj.isPip);
+        const extractCurVidBtn = document.getElementById('extractCurVidBtn');
+        if (extractCurVidBtn && hasVideoClip) extractCurVidBtn.onclick = () => extractAudioFromClip(clip, selObj.isPip);
         if (hasVideoClip) {
-          document.getElementById('toggleVidMuteBtn').onclick = () => { pushUndo(); clip.muted = !clip.muted; applyMediaAudioGain(clip.mediaEl, clip.muted, clip.audioGain ?? 1.0); renderTimeline(); renderDrawer(); scheduleAutoSaveDraft(); };
-          document.getElementById('vidGainRange').oninput = (e) => { clip.audioGain = parseFloat(e.target.value); applyMediaAudioGain(clip.mediaEl, clip.muted, clip.audioGain); renderTimeline(); renderDrawer(); scheduleAutoSaveDraft(); };
+          const toggleVidMuteBtn = document.getElementById('toggleVidMuteBtn');
+          if (toggleVidMuteBtn) toggleVidMuteBtn.onclick = () => { pushUndo(); clip.muted = !clip.muted; applyMediaAudioGain(clip.mediaEl, clip.muted, clip.audioGain ?? 1.0); renderTimeline(); renderDrawer(); scheduleAutoSaveDraft(); };
+          const vidGainRange = document.getElementById('vidGainRange');
+          if (vidGainRange) vidGainRange.oninput = (e) => { clip.audioGain = parseFloat(e.target.value); applyMediaAudioGain(clip.mediaEl, clip.muted, clip.audioGain); renderTimeline(); renderDrawer(); scheduleAutoSaveDraft(); };
         }
         if (aClip) {
-          document.getElementById('toggleAudMuteBtn').onclick = () => { pushUndo(); aClip.muted = !aClip.muted; applyMediaAudioGain(aClip.mediaEl, aClip.muted, aClip.gain ?? 1.0); renderTimeline(); renderDrawer(); scheduleAutoSaveDraft(); };
-          document.getElementById('audGainRange').oninput = (e) => { aClip.gain = parseFloat(e.target.value); applyMediaAudioGain(aClip.mediaEl, aClip.muted, aClip.gain); renderTimeline(); renderDrawer(); scheduleAutoSaveDraft(); };
-          document.getElementById('delAudClipBtn').onclick = () => { state.selectedAudioId = aClip.id; state.lastSelectedType = 'audio'; deleteCurrentSelected(); };
+          const toggleAudMuteBtn = document.getElementById('toggleAudMuteBtn');
+          if (toggleAudMuteBtn) toggleAudMuteBtn.onclick = () => { pushUndo(); aClip.muted = !aClip.muted; applyMediaAudioGain(aClip.mediaEl, aClip.muted, aClip.gain ?? 1.0); renderTimeline(); renderDrawer(); scheduleAutoSaveDraft(); };
+          const audGainRange = document.getElementById('audGainRange');
+          if (audGainRange) audGainRange.oninput = (e) => { aClip.gain = parseFloat(e.target.value); applyMediaAudioGain(aClip.mediaEl, aClip.muted, aClip.gain); renderTimeline(); renderDrawer(); scheduleAutoSaveDraft(); };
+          const delAudClipBtn = document.getElementById('delAudClipBtn');
+          if (delAudClipBtn) delAudClipBtn.onclick = () => { state.selectedAudioId = aClip.id; state.lastSelectedType = 'audio'; deleteCurrentSelected(); };
         }
       }
     }
